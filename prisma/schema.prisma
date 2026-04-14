@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Client {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String?
+  phone         String?
+  phone2        String?
+  cedula        String?  // Documento de identidad
+  clientType    String   // COMPRADOR, VENDEDOR, ARRENDATARIO, PROPIETARIO, INVERSOR
+  source        String?  // REFERIDO, PORTAL_WEB, REDES_SOCIALES, LLAMADA, OFICINA, OTRO
+  status        String   @default("ACTIVO") // ACTIVO, INACTIVO, PROSPECTO, CERRADO
+
+  // Búsqueda del cliente (qué busca)
+  searchType       String?  // COMPRA, ALQUILER, COMPRA_Y_ALQUILER
+  searchZone       String?  // Zona de interés
+  searchPropertyType String? // APARTAMENTO, CASA, LOCAL, OFICINA, TERRENO, NAVE, OTRO
+  budgetMin        Float?
+  budgetMax        Float?
+  bedrooms         Int?
+  bathrooms        Int?
+  searchNotes      String?  // Notas adicionales sobre la búsqueda
+
+  // Datos adicionales
+  address       String?
+  city          String?
+  notes         String?
+  driveLink     String?  // Link a carpeta de Google Drive
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relaciones
+  ownedProperties Property[] @relation("PropertyOwner")
+  deals          Deal[]
+}
+
+model Property {
+  id             String   @id @default(cuid())
+  title          String   // Nombre corto de la propiedad
+  propertyType   String   // APARTAMENTO, CASA, LOCAL, OFICINA, TERRENO, NAVE, PENTHOUSE, VILLA, OTRO
+  operationType  String   // VENTA, ALQUILER, VENTA_Y_ALQUILER
+  status         String   @default("DISPONIBLE") // DISPONIBLE, RESERVADA, VENDIDA, ALQUILADA, NO_DISPONIBLE
+
+  // Ubicación
+  address        String?
+  sector         String?  // Sector / Barrio
+  city           String?
+  state          String?  // Provincia / Estado
+  country        String   @default("República Dominicana")
+  referencePoint String?  // Punto de referencia
+
+  // Precios
+  salePrice      Float?
+  rentPrice      Float?
+  currency       String   @default("USD") // USD, DOP, EUR
+  maintenanceFee Float?   // Cuota de mantenimiento
+
+  // Características
+  area           Float?   // Metros cuadrados construidos
+  landArea       Float?   // Metros cuadrados de terreno
+  bedrooms       Int?
+  bathrooms      Int?
+  parkingSpots   Int?
+  floors         Int?     // Niveles
+  yearBuilt      Int?
+
+  // Amenidades
+  hasPool        Boolean  @default(false)
+  hasGym         Boolean  @default(false)
+  hasElevator    Boolean  @default(false)
+  hasSecurity    Boolean  @default(false)
+  hasGenerator   Boolean  @default(false)
+  hasFurniture   Boolean  @default(false)
+  hasAC          Boolean  @default(false)
+  hasBalcony     Boolean  @default(false)
+  hasGarden      Boolean  @default(false)
+
+  // Documentación
+  driveLink      String?  // Link a Google Drive (fotos y contratos)
+  description    String?
+  notes          String?
+
+  // Propietario
+  ownerId        String?
+  owner          Client?  @relation("PropertyOwner", fields: [ownerId], references: [id])
+  ownerName      String?  // En caso de que el propietario no esté registrado como cliente
+  ownerPhone     String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relaciones
+  deals          Deal[]
+}
+
+model Deal {
+  id              String   @id @default(cuid())
+  dealType        String   // VENTA, ALQUILER
+  status          String   @default("EN_PROCESO") // EN_PROCESO, CERRADO, CANCELADO, PENDIENTE_FIRMA, PENDIENTE_PAGO
+
+  // Relaciones con Cliente y Propiedad
+  clientId        String?
+  client          Client?  @relation(fields: [clientId], references: [id])
+  propertyId      String?
+  property        Property? @relation(fields: [propertyId], references: [id])
+
+  // Datos del negocio
+  agreedPrice     Float?   // Precio acordado
+  currency        String   @default("USD")
+
+  // Comisiones
+  commissionPct   Float?   // Porcentaje de comisión
+  commissionAmount Float?  // Monto de comisión cobrado
+  commissionPaid  Boolean  @default(false)
+  commissionDate  DateTime? // Fecha en que se cobró la comisión
+
+  // Datos específicos de alquiler
+  contractStartDate DateTime? // Fecha inicio de contrato
+  contractEndDate   DateTime? // Fecha fin de contrato
+  monthlyRent       Float?    // Renta mensual
+  securityDeposit   Float?    // Depósito de seguridad
+
+  // Datos de cierre
+  closingDate     DateTime? // Fecha de cierre del negocio
+
+  // Documentación
+  driveLink       String?  // Link a Google Drive con documentos
+  notes           String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
