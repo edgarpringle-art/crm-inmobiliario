@@ -34,7 +34,7 @@ export async function queryOne<T = Row>(sql: string, args: unknown[] = []): Prom
 export async function insert(table: string, data: Record<string, unknown>): Promise<string> {
   const id = data.id as string || generateCuid();
   const now = new Date().toISOString();
-  const fullData = { ...data, id, createdAt: now, updatedAt: now };
+  const fullData: Record<string, unknown> = { ...data, id, createdAt: now, updatedAt: now };
 
   const keys = Object.keys(fullData);
   const placeholders = keys.map(() => "?").join(", ");
