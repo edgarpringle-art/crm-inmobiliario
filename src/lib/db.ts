@@ -48,7 +48,7 @@ export async function insert(table: string, data: Record<string, unknown>): Prom
 // Helper to update a row
 export async function update(table: string, id: string, data: Record<string, unknown>): Promise<void> {
   const now = new Date().toISOString();
-  const fullData = { ...data, updatedAt: now };
+  const fullData: Record<string, unknown> = { ...data, updatedAt: now };
 
   // Remove id and createdAt from update data
   delete fullData.id;
