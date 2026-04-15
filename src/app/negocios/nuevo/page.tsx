@@ -213,9 +213,6 @@ export default function NuevoNegocioPage() {
               <button type="button" onClick={() => splitCommission(2)} className="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
                 Dividir 50/50
               </button>
-              <button type="button" onClick={() => splitCommission(3)} className="px-3 py-1.5 text-xs font-semibold bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors">
-                Dividir en 3
-              </button>
             </div>
           </div>
 
