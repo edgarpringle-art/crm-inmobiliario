@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import PageHeader from "@/components/PageHeader";
 import FormField from "@/components/FormField";
-import { DEAL_TYPES, DEAL_STATUSES, CURRENCIES } from "@/lib/constants";
+import { DEAL_TYPES, DEAL_STATUSES, CURRENCIES, AGENTS } from "@/lib/constants";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 
@@ -24,7 +24,7 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
   const [clients, setClients] = useState<Option[]>([]);
   const [properties, setProperties] = useState<Option[]>([]);
   const [form, setForm] = useState({
-    dealType: "VENTA", status: "EN_PROCESO",
+    dealType: "VENTA", status: "EN_PROCESO", assignedAgent: "",
     clientId: "", propertyId: "",
     agreedPrice: "", currency: "USD",
     commissionPct: "", commissionAmount: "", commissionPaid: false, commissionDate: "",
@@ -40,7 +40,7 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
     ]).then(([data, c, p]) => {
       setClients(c); setProperties(p);
       setForm({
-        dealType: data.dealType, status: data.status,
+        dealType: data.dealType, status: data.status, assignedAgent: data.assignedAgent || "",
         clientId: data.clientId || "", propertyId: data.propertyId || "",
         agreedPrice: data.agreedPrice?.toString() || "", currency: data.currency || "USD",
         commissionPct: data.commissionPct?.toString() || "",
@@ -73,7 +73,7 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
     setSaving(true);
     try {
       const body = {
-        dealType: form.dealType, status: form.status,
+        dealType: form.dealType, status: form.status, assignedAgent: form.assignedAgent || null,
         clientId: form.clientId || null, propertyId: form.propertyId || null,
         agreedPrice: form.agreedPrice ? parseFloat(form.agreedPrice) : null,
         currency: form.currency,
@@ -107,6 +107,7 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Tipo" required><select className={inputClass} value={form.dealType} onChange={(e) => update("dealType", e.target.value)}>{DEAL_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></FormField>
             <FormField label="Estado"><select className={inputClass} value={form.status} onChange={(e) => update("status", e.target.value)}>{DEAL_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></FormField>
+            <FormField label="Agente Asignado"><select className={inputClass} value={form.assignedAgent} onChange={(e) => update("assignedAgent", e.target.value)}><option value="">Seleccionar...</option>{AGENTS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}</select></FormField>
           </div>
         </div>
 

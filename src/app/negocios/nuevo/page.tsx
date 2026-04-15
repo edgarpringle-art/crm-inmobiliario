@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import PageHeader from "@/components/PageHeader";
 import FormField from "@/components/FormField";
-import { DEAL_TYPES, DEAL_STATUSES, CURRENCIES } from "@/lib/constants";
+import { DEAL_TYPES, DEAL_STATUSES, CURRENCIES, AGENTS } from "@/lib/constants";
 import { HiPlus, HiTrash } from "react-icons/hi";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
@@ -31,7 +31,7 @@ export default function NuevoNegocioPage() {
   const [properties, setProperties] = useState<Option[]>([]);
   const [payments, setPayments] = useState<CommissionPayment[]>([]);
   const [form, setForm] = useState({
-    dealType: "VENTA", status: "EN_PROCESO",
+    dealType: "VENTA", status: "EN_PROCESO", assignedAgent: "",
     clientId: "", propertyId: "",
     agreedPrice: "", currency: "USD",
     commissionPct: "", commissionAmount: "",
@@ -120,7 +120,7 @@ export default function NuevoNegocioPage() {
         : false;
 
       const body = {
-        dealType: form.dealType, status: form.status,
+        dealType: form.dealType, status: form.status, assignedAgent: form.assignedAgent || null,
         clientId: form.clientId || null, propertyId: form.propertyId || null,
         agreedPrice: form.agreedPrice ? parseFloat(form.agreedPrice) : null,
         currency: form.currency,
@@ -159,6 +159,12 @@ export default function NuevoNegocioPage() {
             <FormField label="Estado">
               <select className={inputClass} value={form.status} onChange={(e) => update("status", e.target.value)}>
                 {DEAL_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </FormField>
+            <FormField label="Agente Asignado" required>
+              <select className={inputClass} value={form.assignedAgent} onChange={(e) => update("assignedAgent", e.target.value)}>
+                <option value="">Seleccionar agente...</option>
+                {AGENTS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
               </select>
             </FormField>
           </div>

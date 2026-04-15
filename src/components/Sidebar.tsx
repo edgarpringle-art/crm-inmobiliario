@@ -11,6 +11,7 @@ import {
   HiMenuAlt2,
   HiX,
   HiChevronRight,
+  HiCurrencyDollar,
 } from "react-icons/hi";
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/clientes", label: "Clientes", icon: HiUsers, description: "Gestionar clientes" },
   { href: "/propiedades", label: "Propiedades", icon: HiOfficeBuilding, description: "Inventario de propiedades" },
   { href: "/negocios", label: "Negocios", icon: HiBriefcase, description: "Ventas y alquileres" },
+  { href: "/contabilidad", label: "Contabilidad", icon: HiCurrencyDollar, description: "Comisiones por agente" },
 ];
 
 export default function Sidebar() {

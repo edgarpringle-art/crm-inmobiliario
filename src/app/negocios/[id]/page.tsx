@@ -8,7 +8,7 @@ import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import {
-  DEAL_TYPES, DEAL_STATUSES,
+  DEAL_TYPES, DEAL_STATUSES, AGENTS,
   formatCurrency, formatDate, getLabel, getStatusColor,
 } from "@/lib/constants";
 import { HiCheckCircle, HiClock, HiExclamation } from "react-icons/hi";
@@ -26,7 +26,7 @@ interface DealDetail {
   agreedPrice: number | null; currency: string;
   commissionPct: number | null; commissionAmount: number | null;
   commissionPaid: boolean; commissionDate: string | null;
-  commissionPayments: string | null;
+  commissionPayments: string | null; assignedAgent: string | null;
   contractStartDate: string | null; contractEndDate: string | null;
   monthlyRent: number | null; securityDeposit: number | null;
   closingDate: string | null; driveLink: string | null; notes: string | null;
@@ -111,6 +111,7 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
           <div className="flex items-center gap-3 mb-4">
             <StatusBadge label={getLabel(DEAL_TYPES, deal.dealType)} colorClass={deal.dealType === "VENTA" ? "bg-blue-100 text-blue-700" : "bg-teal-100 text-teal-700"} />
             <StatusBadge label={getLabel(DEAL_STATUSES, deal.status)} colorClass={getStatusColor(DEAL_STATUSES, deal.status)} />
+            {deal.assignedAgent && <StatusBadge label={getLabel(AGENTS, deal.assignedAgent)} colorClass="bg-indigo-100 text-indigo-700" />}
             {deal.commissionPaid && <StatusBadge label="Comision Pagada" colorClass="bg-green-100 text-green-700" />}
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

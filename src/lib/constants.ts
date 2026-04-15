@@ -73,6 +73,18 @@ export const SEARCH_TYPES = [
   { value: "COMPRA_Y_ALQUILER", label: "Compra y Alquiler" },
 ];
 
+export const AGENTS = [
+  { value: "EDGAR", label: "Edgar Pringle", initials: "EP", color: "from-blue-500 to-blue-600" },
+  { value: "ANA_LORENA", label: "Ana Lorena Chanis", initials: "AC", color: "from-purple-500 to-purple-600" },
+];
+
+export const MONTHS = [
+  { value: 1, label: "Enero" }, { value: 2, label: "Febrero" }, { value: 3, label: "Marzo" },
+  { value: 4, label: "Abril" }, { value: 5, label: "Mayo" }, { value: 6, label: "Junio" },
+  { value: 7, label: "Julio" }, { value: 8, label: "Agosto" }, { value: 9, label: "Septiembre" },
+  { value: 10, label: "Octubre" }, { value: 11, label: "Noviembre" }, { value: 12, label: "Diciembre" },
+];
+
 export function formatCurrency(amount: number | null | undefined, currency: string = "USD"): string {
   if (amount == null) return "—";
   const symbols: Record<string, string> = { USD: "$", DOP: "RD$", EUR: "€" };
