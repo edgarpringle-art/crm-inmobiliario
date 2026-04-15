@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import PageHeader from "@/components/PageHeader";
 import FormField from "@/components/FormField";
+import LocationSelect from "@/components/LocationSelect";
 import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "@/lib/constants";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
@@ -111,9 +112,15 @@ export default function NuevaPropiedadPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Ubicación</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Dirección"><input className={inputClass} value={form.address} onChange={(e) => update("address", e.target.value)} /></FormField>
-            <FormField label="Sector / Barrio"><input className={inputClass} value={form.sector} onChange={(e) => update("sector", e.target.value)} /></FormField>
-            <FormField label="Ciudad"><input className={inputClass} value={form.city} onChange={(e) => update("city", e.target.value)} /></FormField>
-            <FormField label="Provincia / Estado"><input className={inputClass} value={form.state} onChange={(e) => update("state", e.target.value)} /></FormField>
+            <FormField label="Sector / Barrio">
+              <LocationSelect value={form.sector} onChange={(v) => update("sector", v)} placeholder="Buscar sector..." />
+            </FormField>
+            <FormField label="Ciudad">
+              <LocationSelect value={form.city} onChange={(v) => update("city", v)} placeholder="Buscar ciudad..." />
+            </FormField>
+            <FormField label="Provincia / Estado">
+              <LocationSelect value={form.state} onChange={(v) => update("state", v)} placeholder="Buscar provincia..." />
+            </FormField>
             <FormField label="País"><input className={inputClass} value={form.country} onChange={(e) => update("country", e.target.value)} /></FormField>
             <FormField label="Punto de Referencia"><input className={inputClass} value={form.referencePoint} onChange={(e) => update("referencePoint", e.target.value)} /></FormField>
           </div>

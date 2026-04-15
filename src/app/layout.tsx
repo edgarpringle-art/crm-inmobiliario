@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CRM Inmobiliario",
-  description: "Sistema de gestión de clientes y propiedades",
+  title: "CRM Inmobiliario | E. Pringle Real Estate",
+  description: "Sistema de gestión de clientes y propiedades inmobiliarias",
 };
 
 export default function RootLayout({
@@ -29,12 +29,39 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-screen flex">
+      <body className="min-h-screen flex bg-background">
         <Sidebar />
-        <main className="flex-1 ml-64 p-8 overflow-auto">
-          {children}
+        <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 overflow-auto pt-16 lg:pt-8">
+          <div className="max-w-7xl mx-auto animate-slide-in">
+            {children}
+          </div>
         </main>
-        <Toaster position="top-right" />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              borderRadius: "12px",
+              padding: "14px 20px",
+              fontSize: "14px",
+              fontWeight: "500",
+            },
+            success: {
+              style: {
+                background: "#ecfdf5",
+                color: "#065f46",
+                border: "1px solid #a7f3d0",
+              },
+            },
+            error: {
+              style: {
+                background: "#fef2f2",
+                color: "#991b1b",
+                border: "1px solid #fecaca",
+              },
+            },
+          }}
+        />
       </body>
     </html>
   );

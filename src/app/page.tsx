@@ -18,6 +18,8 @@ import {
   HiBriefcase,
   HiCurrencyDollar,
   HiExclamation,
+  HiTrendingUp,
+  HiPlus,
 } from "react-icons/hi";
 
 interface DashboardData {
@@ -65,9 +67,9 @@ function getDaysRemaining(endDate: string): number {
 }
 
 function getDaysRemainingColor(days: number): string {
-  if (days < 15) return "text-red-600 bg-red-50";
-  if (days < 30) return "text-yellow-700 bg-yellow-50";
-  return "text-gray-600 bg-gray-50";
+  if (days < 15) return "text-red-600 bg-red-50 border-red-200";
+  if (days < 30) return "text-amber-700 bg-amber-50 border-amber-200";
+  return "text-gray-600 bg-gray-50 border-gray-200";
 }
 
 const statCards = [
@@ -75,38 +77,41 @@ const statCards = [
     key: "clients" as const,
     title: "Total Clientes",
     icon: HiUsers,
-    iconBg: "bg-blue-100",
+    gradient: "stat-blue",
     iconColor: "text-blue-600",
     getValue: (d: DashboardData) => d.totalClients,
     getSub: (d: DashboardData) => `${d.activeClients} activos`,
+    href: "/clientes",
   },
   {
     key: "properties" as const,
     title: "Total Propiedades",
     icon: HiOfficeBuilding,
-    iconBg: "bg-purple-100",
+    gradient: "stat-purple",
     iconColor: "text-purple-600",
     getValue: (d: DashboardData) => d.totalProperties,
     getSub: (d: DashboardData) => `${d.availableProperties} disponibles`,
+    href: "/propiedades",
   },
   {
     key: "deals" as const,
     title: "Negocios Cerrados",
     icon: HiBriefcase,
-    iconBg: "bg-orange-100",
+    gradient: "stat-orange",
     iconColor: "text-orange-600",
     getValue: (d: DashboardData) => d.closedDeals,
     getSub: (d: DashboardData) => `de ${d.totalDeals} total`,
+    href: "/negocios",
   },
   {
     key: "commissions" as const,
     title: "Comisiones Totales",
     icon: HiCurrencyDollar,
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
+    gradient: "stat-green",
+    iconColor: "text-emerald-600",
     getValue: (d: DashboardData) => formatCurrency(d.totalCommissions),
     getSub: () => "acumulado",
-    valueColor: "text-green-600",
+    href: "/negocios",
   },
 ];
 
@@ -145,13 +150,15 @@ export default function DashboardPage() {
   if (error || !data) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-red-600 font-medium">
-            {error || "No se pudieron cargar los datos"}
-          </p>
+        <div className="text-center bg-white rounded-2xl shadow-sm p-8 max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+            <HiExclamation className="w-8 h-8 text-red-500" />
+          </div>
+          <p className="text-red-600 font-semibold text-lg mb-1">Error de conexion</p>
+          <p className="text-gray-500 text-sm mb-4">{error || "No se pudieron cargar los datos"}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-3 text-sm text-blue-600 hover:underline"
+            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
           >
             Reintentar
           </button>
@@ -162,136 +169,156 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Dashboard"
-        subtitle={getTodayFormatted()}
-      />
+      {/* Header with quick actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Bienvenido <span className="gradient-text">Edgar</span>
+          </h1>
+          <p className="text-sm text-gray-500 mt-1 capitalize">{getTodayFormatted()}</p>
+        </div>
+        <div className="flex gap-2 mt-4 sm:mt-0">
+          <Link href="/clientes/nuevo" className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
+            <HiPlus className="w-4 h-4" /> Cliente
+          </Link>
+          <Link href="/propiedades/nuevo" className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
+            <HiPlus className="w-4 h-4" /> Propiedad
+          </Link>
+          <Link href="/negocios/nuevo" className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl text-sm font-medium hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm shadow-blue-200">
+            <HiPlus className="w-4 h-4" /> Negocio
+          </Link>
+        </div>
+      </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {statCards.map((card) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        {statCards.map((card, index) => {
           const Icon = card.icon;
           return (
-            <div
+            <Link
               key={card.key}
-              className="bg-white rounded-xl shadow-sm p-6 flex items-start gap-4"
+              href={card.href}
+              className="card-hover bg-white rounded-2xl shadow-sm p-6 flex items-start gap-4 border border-gray-100/80"
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <div
-                className={`flex items-center justify-center w-12 h-12 rounded-full ${card.iconBg}`}
-              >
+              <div className={`flex items-center justify-center w-12 h-12 rounded-2xl ${card.gradient}`}>
                 <Icon className={`w-6 h-6 ${card.iconColor}`} />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
                   {card.title}
                 </p>
-                <p
-                  className={`text-2xl font-bold mt-1 ${
-                    "valueColor" in card && card.valueColor
-                      ? card.valueColor
-                      : "text-gray-900"
-                  }`}
-                >
+                <p className="text-2xl font-bold mt-1 text-gray-900">
                   {card.getValue(data)}
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                  <HiTrendingUp className="w-3 h-3" />
                   {card.getSub(data)}
                 </p>
               </div>
-            </div>
+            </Link>
           );
         })}
+      </div>
+
+      {/* Pipeline Visual */}
+      <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 border border-gray-100/80">
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Pipeline de Negocios</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {DEAL_STATUSES.map((status) => {
+            const count = data.recentDeals.filter((d) => d.status === status.value).length;
+            return (
+              <div key={status.value} className="text-center p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full mb-2 ${status.color}`}>
+                  <span className="text-lg font-bold">{count}</span>
+                </div>
+                <p className="text-xs font-medium text-gray-600">{status.label}</p>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Negocios Recientes */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Negocios Recientes
-          </h2>
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100/80">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-bold text-gray-900">Negocios Recientes</h2>
+            <Link href="/negocios" className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+              Ver todos
+            </Link>
+          </div>
           {data.recentDeals.length === 0 ? (
-            <p className="text-sm text-gray-400 py-6 text-center">
-              No hay negocios recientes
-            </p>
+            <div className="text-center py-8">
+              <HiBriefcase className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+              <p className="text-sm text-gray-400">No hay negocios recientes</p>
+              <Link href="/negocios/nuevo" className="text-sm text-blue-600 font-medium hover:underline mt-2 inline-block">
+                Crear primer negocio
+              </Link>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                    <th className="pb-3 pr-3">Propiedad</th>
-                    <th className="pb-3 pr-3">Cliente</th>
-                    <th className="pb-3 pr-3">Tipo</th>
-                    <th className="pb-3 pr-3">Precio</th>
-                    <th className="pb-3 pr-3">Estado</th>
-                    <th className="pb-3">Cierre</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {data.recentDeals.map((deal) => (
-                    <tr
-                      key={deal.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-3 pr-3">
-                        <Link
-                          href={`/negocios/${deal.id}`}
-                          className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
-                        >
-                          {deal.property?.title || "Sin propiedad"}
-                        </Link>
-                      </td>
-                      <td className="py-3 pr-3 text-gray-700">
-                        {deal.client
-                          ? `${deal.client.firstName} ${deal.client.lastName}`
-                          : "Sin cliente"}
-                      </td>
-                      <td className="py-3 pr-3">
-                        <StatusBadge
-                          label={getLabel(DEAL_TYPES, deal.dealType)}
-                          colorClass={
-                            deal.dealType === "VENTA"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-teal-100 text-teal-800"
-                          }
-                        />
-                      </td>
-                      <td className="py-3 pr-3 text-gray-700 font-medium whitespace-nowrap">
-                        {formatCurrency(deal.agreedPrice, deal.currency)}
-                      </td>
-                      <td className="py-3 pr-3">
-                        <StatusBadge
-                          label={getLabel(DEAL_STATUSES, deal.status)}
-                          colorClass={getStatusColor(DEAL_STATUSES, deal.status)}
-                        />
-                      </td>
-                      <td className="py-3 text-gray-500 whitespace-nowrap">
-                        {formatDate(deal.closingDate)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-3">
+              {data.recentDeals.map((deal) => (
+                <Link
+                  key={deal.id}
+                  href={`/negocios/${deal.id}`}
+                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    deal.dealType === "VENTA" ? "bg-blue-100" : "bg-teal-100"
+                  }`}>
+                    <span className={`text-sm font-bold ${
+                      deal.dealType === "VENTA" ? "text-blue-600" : "text-teal-600"
+                    }`}>
+                      {deal.dealType === "VENTA" ? "V" : "A"}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {deal.property?.title || "Sin propiedad"}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {deal.client ? `${deal.client.firstName} ${deal.client.lastName}` : "Sin cliente"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-gray-900">
+                      {formatCurrency(deal.agreedPrice, deal.currency)}
+                    </p>
+                    <StatusBadge
+                      label={getLabel(DEAL_STATUSES, deal.status)}
+                      colorClass={getStatusColor(DEAL_STATUSES, deal.status)}
+                    />
+                  </div>
+                </Link>
+              ))}
             </div>
           )}
         </div>
 
         {/* Contratos por Vencer */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Contratos por Vencer
-            </h2>
-            {data.expiringContracts.length > 0 && (
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600 text-xs font-bold">
-                {data.expiringContracts.length}
-              </span>
-            )}
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100/80">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-gray-900">Contratos por Vencer</h2>
+              {data.expiringContracts.length > 0 && (
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600 text-xs font-bold animate-pulse-dot">
+                  {data.expiringContracts.length}
+                </span>
+              )}
+            </div>
           </div>
           {data.expiringContracts.length === 0 ? (
-            <p className="text-sm text-gray-400 py-6 text-center">
-              No hay contratos por vencer
-            </p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-green-50 flex items-center justify-center">
+                <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium text-gray-600">Todo en orden</p>
+              <p className="text-xs text-gray-400 mt-1">No hay contratos por vencer</p>
+            </div>
           ) : (
             <div className="space-y-3">
               {data.expiringContracts.map((contract) => {
@@ -302,11 +329,11 @@ export default function DashboardPage() {
                   <Link
                     key={contract.id}
                     href={`/negocios/${contract.id}`}
-                    className="block rounded-lg border border-gray-100 p-4 hover:bg-gray-50 hover:border-gray-200 transition-all"
+                    className={`block rounded-xl border p-4 hover:shadow-md transition-all ${daysColor}`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">
+                        <p className="font-semibold text-gray-900 truncate">
                           {contract.property?.title || "Sin propiedad"}
                         </p>
                         <p className="text-sm text-gray-500 mt-0.5">
@@ -315,28 +342,16 @@ export default function DashboardPage() {
                             : "Sin cliente"}
                         </p>
                         <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
-                          <span>
-                            Vence: {formatDate(contract.contractEndDate)}
-                          </span>
-                          <span className="font-medium text-gray-600">
-                            {formatCurrency(
-                              contract.monthlyRent,
-                              contract.currency
-                            )}
-                            /mes
+                          <span>Vence: {formatDate(contract.contractEndDate)}</span>
+                          <span className="font-semibold text-gray-600">
+                            {formatCurrency(contract.monthlyRent, contract.currency)}/mes
                           </span>
                         </div>
                       </div>
                       <div className="flex-shrink-0">
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${daysColor}`}
-                        >
-                          {daysLeft < 15 && (
-                            <HiExclamation className="w-3.5 h-3.5" />
-                          )}
-                          {daysLeft <= 0
-                            ? "Vencido"
-                            : `${daysLeft} ${daysLeft === 1 ? "dia" : "dias"}`}
+                        <span className="inline-flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold">
+                          {daysLeft < 15 && <HiExclamation className="w-4 h-4" />}
+                          {daysLeft <= 0 ? "Vencido" : `${daysLeft}d`}
                         </span>
                       </div>
                     </div>
