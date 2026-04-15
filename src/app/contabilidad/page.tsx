@@ -95,22 +95,28 @@ export default function ContabilidadPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Build agent summaries
-  const agentSummaries: AgentSummary[] = AGENTS.map((agent) => {
-    const agentDeals = deals.filter((d) => d.assignedAgent === agent.value);
+  // Build agent summaries (AMBOS deals split 50/50 into each individual agent)
+  const individualAgents = AGENTS.filter((a) => a.value !== "AMBOS");
+  const ambosDeals = deals.filter((d) => d.assignedAgent === "AMBOS");
+
+  const agentSummaries: AgentSummary[] = individualAgents.map((agent) => {
+    const ownDeals = deals.filter((d) => d.assignedAgent === agent.value);
+    const relevantDeals = [...ownDeals, ...ambosDeals];
     let totalCommissions = 0;
     let collectedCommissions = 0;
     let pendingCommissions = 0;
 
-    for (const deal of agentDeals) {
-      const commission = deal.commissionAmount || 0;
+    for (const deal of relevantDeals) {
+      const isShared = deal.assignedAgent === "AMBOS";
+      const split = isShared ? 0.5 : 1;
+      const commission = (deal.commissionAmount || 0) * split;
       totalCommissions += commission;
 
       const payments = parsePayments(deal.commissionPayments);
       if (payments.length > 0) {
         for (const p of payments) {
-          if (p.paid) collectedCommissions += p.amount;
-          else pendingCommissions += p.amount;
+          if (p.paid) collectedCommissions += p.amount * split;
+          else pendingCommissions += p.amount * split;
         }
       } else {
         if (deal.commissionPaid) collectedCommissions += commission;
@@ -123,12 +129,12 @@ export default function ContabilidadPage() {
       label: agent.label,
       initials: agent.initials,
       color: agent.color,
-      totalDeals: agentDeals.length,
-      closedDeals: agentDeals.filter((d) => d.status === "CERRADO").length,
+      totalDeals: ownDeals.length + ambosDeals.length,
+      closedDeals: relevantDeals.filter((d) => d.status === "CERRADO").length,
       totalCommissions,
       collectedCommissions,
       pendingCommissions,
-      deals: agentDeals,
+      deals: relevantDeals,
     };
   });
 
@@ -144,9 +150,18 @@ export default function ContabilidadPage() {
   // Unassigned deals
   const unassignedDeals = deals.filter((d) => !d.assignedAgent);
 
-  // Monthly payments
-  const monthlyPayments = getPaymentsByMonth(deals, selectedMonth, selectedYear);
-  const monthlyByAgent = AGENTS.map((agent) => ({
+  // Monthly payments (split AMBOS 50/50 into each individual agent)
+  const rawMonthlyPayments = getPaymentsByMonth(deals, selectedMonth, selectedYear);
+  const monthlyPayments: typeof rawMonthlyPayments = [];
+  for (const p of rawMonthlyPayments) {
+    if (p.agent === "AMBOS") {
+      monthlyPayments.push({ ...p, agent: "EDGAR", amount: p.amount * 0.5 });
+      monthlyPayments.push({ ...p, agent: "ANA_LORENA", amount: p.amount * 0.5 });
+    } else {
+      monthlyPayments.push(p);
+    }
+  }
+  const monthlyByAgent = individualAgents.map((agent) => ({
     ...agent,
     payments: monthlyPayments.filter((p) => p.agent === agent.value),
     total: monthlyPayments.filter((p) => p.agent === agent.value).reduce((s, p) => s + p.amount, 0),
@@ -396,7 +411,7 @@ export default function ContabilidadPage() {
                   </div>
                   <StatusBadge
                     label={deal.assignedAgent ? getLabel(AGENTS, deal.assignedAgent) : "Sin asignar"}
-                    colorClass={deal.assignedAgent === "EDGAR" ? "bg-blue-100 text-blue-700" : deal.assignedAgent === "ANA_LORENA" ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}
+                    colorClass={deal.assignedAgent === "EDGAR" ? "bg-blue-100 text-blue-700" : deal.assignedAgent === "ANA_LORENA" ? "bg-purple-100 text-purple-700" : deal.assignedAgent === "AMBOS" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-500"}
                   />
                 </div>
               );
