@@ -105,6 +105,6 @@ export function getStatusColor(statuses: { value: string; color: string }[], val
   return statuses.find((s) => s.value === value)?.color || "bg-gray-100 text-gray-800";
 }
 
-export function getLabel(options: { value: string; label: string }[], value: string): string {
-  return options.find((o) => o.value === value)?.label || value;
+export function getLabel(options: { value: string | number; label: string }[], value: string | number): string {
+  return options.find((o) => o.value === value)?.label || String(value);
 }
