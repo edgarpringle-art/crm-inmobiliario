@@ -67,9 +67,10 @@ function getDaysRemaining(endDate: string): number {
 }
 
 function getDaysRemainingColor(days: number): string {
+  if (days < 0) return "text-red-600 bg-red-50 border-red-200";
   if (days < 15) return "text-red-600 bg-red-50 border-red-200";
   if (days < 30) return "text-amber-700 bg-amber-50 border-amber-200";
-  return "text-gray-600 bg-gray-50 border-gray-200";
+  return "text-blue-600 bg-blue-50 border-blue-200";
 }
 
 const statCards = [

@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const now = new Date().toISOString();
     const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 60);
     const thirtyDaysStr = thirtyDaysFromNow.toISOString();
 
     const [totalClientsRow, activeClientsRow, totalPropertiesRow, availablePropertiesRow, totalDealsRow, closedDealsRow, commissionsRow] = await Promise.all([

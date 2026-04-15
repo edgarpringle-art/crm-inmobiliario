@@ -12,6 +12,8 @@ import {
   formatCurrency, formatDate, getLabel, getStatusColor,
 } from "@/lib/constants";
 
+interface PortalLink { name: string; url: string; }
+
 interface PropertyDetail {
   id: string; title: string; propertyType: string; operationType: string; status: string;
   address: string | null; sector: string | null; city: string | null; state: string | null;
@@ -21,7 +23,7 @@ interface PropertyDetail {
   parkingSpots: number | null; floors: number | null; yearBuilt: number | null;
   hasPool: boolean; hasGym: boolean; hasElevator: boolean; hasSecurity: boolean;
   hasGenerator: boolean; hasFurniture: boolean; hasAC: boolean; hasBalcony: boolean; hasGarden: boolean;
-  driveLink: string | null; description: string | null; notes: string | null;
+  driveLink: string | null; portalLinks: string | null; description: string | null; notes: string | null;
   owner: { id: string; firstName: string; lastName: string; phone: string | null; email: string | null } | null;
   ownerName: string | null; ownerPhone: string | null;
   createdAt: string;
@@ -127,6 +129,24 @@ export default function PropiedadDetailPage({ params }: { params: Promise<{ id: 
             </div>
           )}
         </div>
+
+        {(() => {
+          const portals: PortalLink[] = property.portalLinks ? (() => { try { return JSON.parse(property.portalLinks!); } catch { return []; } })() : [];
+          return portals.length > 0 ? (
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Portales Inmobiliarios</h2>
+              <div className="flex flex-wrap gap-3">
+                {portals.map((p, i) => (
+                  <a key={i} href={p.url} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl text-sm font-medium transition-colors border border-indigo-200">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    {p.name}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null;
+        })()}
 
         {property.description && (
           <div className="bg-white rounded-xl shadow-sm p-6">

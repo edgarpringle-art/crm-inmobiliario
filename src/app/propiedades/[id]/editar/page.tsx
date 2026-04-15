@@ -6,11 +6,15 @@ import toast from "react-hot-toast";
 import PageHeader from "@/components/PageHeader";
 import FormField from "@/components/FormField";
 import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "@/lib/constants";
+import { HiPlus, HiTrash } from "react-icons/hi";
+
+interface PortalLink { name: string; url: string; }
+const PORTAL_NAMES = ["Encuentra24", "Corotos", "SuperCasas", "Lamudi", "Inmobiliaria.com.do", "Otro"];
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 const checkboxClass = "w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500";
 
-interface ClientOption { id: string; firstName: string; lastName: string }
+interface PersonOption { id: string; firstName: string; lastName: string }
 
 const amenities = [
   { field: "hasPool", label: "Piscina" }, { field: "hasGym", label: "Gimnasio" },
@@ -25,7 +29,10 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [clients, setClients] = useState<ClientOption[]>([]);
+  const [clients, setClients] = useState<PersonOption[]>([]);
+  const [owners, setOwners] = useState<PersonOption[]>([]);
+  const [portalLinks, setPortalLinks] = useState<PortalLink[]>([]);
+  const [newPortal, setNewPortal] = useState({ name: "Encuentra24", url: "" });
   const [form, setForm] = useState({
     title: "", propertyType: "APARTAMENTO", operationType: "VENTA", status: "DISPONIBLE",
     address: "", sector: "", city: "", state: "", country: "República Dominicana", referencePoint: "",
@@ -41,8 +48,10 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
     Promise.all([
       fetch(`/api/properties/${id}`).then((r) => r.json()),
       fetch("/api/clients").then((r) => r.json()),
-    ]).then(([data, clientsData]) => {
+      fetch("/api/owners").then((r) => r.json()).catch(() => []),
+    ]).then(([data, clientsData, ownersData]) => {
       setClients(clientsData);
+      setOwners(Array.isArray(ownersData) ? ownersData : []);
       setForm({
         title: data.title || "", propertyType: data.propertyType, operationType: data.operationType, status: data.status,
         address: data.address || "", sector: data.sector || "", city: data.city || "",
@@ -59,6 +68,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         ownerId: data.ownerId || "", ownerName: data.ownerName || "", ownerPhone: data.ownerPhone || "",
         driveLink: data.driveLink || "", description: data.description || "", notes: data.notes || "",
       });
+      if (data.portalLinks) { try { setPortalLinks(JSON.parse(data.portalLinks)); } catch { /* ignore */ } }
       setLoading(false);
     });
   }, [id]);
@@ -87,6 +97,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         address: form.address || null, sector: form.sector || null, city: form.city || null,
         state: form.state || null, referencePoint: form.referencePoint || null,
         driveLink: form.driveLink || null, description: form.description || null, notes: form.notes || null,
+        portalLinks: portalLinks.length > 0 ? JSON.stringify(portalLinks) : null,
       };
       const res = await fetch(`/api/properties/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error("Error");
@@ -162,10 +173,38 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Propietario</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Cliente"><select className={inputClass} value={form.ownerId} onChange={(e) => update("ownerId", e.target.value)}><option value="">Sin vincular</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}</select></FormField>
+            <FormField label="Propietario (del sistema)">
+              <select className={inputClass} value={form.ownerId} onChange={(e) => update("ownerId", e.target.value)}>
+                <option value="">Sin vincular</option>
+                {owners.length > 0 && <optgroup label="Propietarios">{owners.map((o) => <option key={o.id} value={o.id}>{o.firstName} {o.lastName}</option>)}</optgroup>}
+                {clients.length > 0 && <optgroup label="Clientes">{clients.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}</optgroup>}
+              </select>
+            </FormField>
             <div />
             <FormField label="Nombre Propietario"><input className={inputClass} value={form.ownerName} onChange={(e) => update("ownerName", e.target.value)} /></FormField>
             <FormField label="Teléfono Propietario"><input className={inputClass} value={form.ownerPhone} onChange={(e) => update("ownerPhone", e.target.value)} /></FormField>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Portales Inmobiliarios</h2>
+          {portalLinks.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {portalLinks.map((p, i) => (
+                <div key={i} className="flex items-center gap-2 p-2 bg-indigo-50 rounded-lg border border-indigo-100">
+                  <span className="text-sm font-medium text-indigo-700 w-32 flex-shrink-0">{p.name}</span>
+                  <span className="text-xs text-gray-500 flex-1 truncate">{p.url}</span>
+                  <button type="button" onClick={() => setPortalLinks((prev) => prev.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600"><HiTrash className="w-4 h-4" /></button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <select className={`${inputClass} w-40 flex-shrink-0`} value={newPortal.name} onChange={(e) => setNewPortal((p) => ({ ...p, name: e.target.value }))}>
+              {PORTAL_NAMES.map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <input className={inputClass} placeholder="URL del listing" value={newPortal.url} onChange={(e) => setNewPortal((p) => ({ ...p, url: e.target.value }))} />
+            <button type="button" onClick={() => { if (newPortal.url) { setPortalLinks((prev) => [...prev, { ...newPortal }]); setNewPortal((p) => ({ ...p, url: "" })); } }} className="bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 flex-shrink-0"><HiPlus className="w-5 h-5" /></button>
           </div>
         </div>
 

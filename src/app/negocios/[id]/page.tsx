@@ -21,6 +21,8 @@ interface CommissionPayment {
   paid: boolean;
 }
 
+interface DocItem { id: string; label: string; checked: boolean; }
+
 interface DealDetail {
   id: string; dealType: string; status: string;
   agreedPrice: number | null; currency: string;
@@ -30,6 +32,7 @@ interface DealDetail {
   contractStartDate: string | null; contractEndDate: string | null;
   monthlyRent: number | null; securityDeposit: number | null;
   closingDate: string | null; driveLink: string | null; notes: string | null;
+  documentChecklist: string | null;
   createdAt: string;
   client: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null } | null;
   property: { id: string; title: string; address: string | null; propertyType: string; owner: { id: string; firstName: string; lastName: string } | null } | null;
@@ -45,6 +48,7 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
   const [deal, setDeal] = useState<DealDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDelete, setShowDelete] = useState(false);
+  const [newDocLabel, setNewDocLabel] = useState("");
 
   useEffect(() => {
     fetch(`/api/deals/${id}`).then((r) => r.json()).then(setDeal).finally(() => setLoading(false));
@@ -81,6 +85,34 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
       } : prev);
       toast.success("Pago actualizado");
     }
+  }
+
+  async function updateChecklist(docs: DocItem[]) {
+    const res = await fetch(`/api/deals/${id}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ documentChecklist: JSON.stringify(docs) }),
+    });
+    if (res.ok) setDeal((prev) => prev ? { ...prev, documentChecklist: JSON.stringify(docs) } : prev);
+  }
+
+  async function toggleDoc(docId: string) {
+    if (!deal) return;
+    const docs: DocItem[] = deal.documentChecklist ? JSON.parse(deal.documentChecklist) : [];
+    await updateChecklist(docs.map((d) => d.id === docId ? { ...d, checked: !d.checked } : d));
+  }
+
+  async function addDoc() {
+    if (!newDocLabel.trim() || !deal) return;
+    const docs: DocItem[] = deal.documentChecklist ? JSON.parse(deal.documentChecklist) : [];
+    const newDoc: DocItem = { id: Date.now().toString(), label: newDocLabel.trim(), checked: false };
+    await updateChecklist([...docs, newDoc]);
+    setNewDocLabel("");
+  }
+
+  async function removeDoc(docId: string) {
+    if (!deal) return;
+    const docs: DocItem[] = deal.documentChecklist ? JSON.parse(deal.documentChecklist) : [];
+    await updateChecklist(docs.filter((d) => d.id !== docId));
   }
 
   if (loading) return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" /></div>;
@@ -265,6 +297,52 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{deal.notes}</p>
           </div>
         )}
+
+        {/* Document Checklist */}
+        {(() => {
+          const docs: DocItem[] = deal.documentChecklist ? (() => { try { return JSON.parse(deal.documentChecklist!); } catch { return []; } })() : [];
+          const checkedCount = docs.filter((d) => d.checked).length;
+          return (
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900">Checklist de Documentos</h2>
+                {docs.length > 0 && (
+                  <span className="text-xs font-semibold text-gray-500">{checkedCount}/{docs.length}</span>
+                )}
+              </div>
+              {docs.length > 0 && (
+                <div className="w-full bg-gray-100 rounded-full h-1.5 mb-4">
+                  <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{ width: `${docs.length > 0 ? (checkedCount / docs.length) * 100 : 0}%` }} />
+                </div>
+              )}
+              <div className="space-y-2 mb-4">
+                {docs.map((doc) => (
+                  <div key={doc.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 group">
+                    <button onClick={() => toggleDoc(doc.id)} className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-all ${doc.checked ? "bg-green-500 border-green-500" : "border-gray-300 hover:border-green-400"}`}>
+                      {doc.checked && <HiCheckCircle className="w-4 h-4 text-white" />}
+                    </button>
+                    <span className={`flex-1 text-sm ${doc.checked ? "line-through text-gray-400" : "text-gray-700"}`}>{doc.label}</span>
+                    <button onClick={() => removeDoc(doc.id)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Ej: Cédula del comprador, Contrato firmado..."
+                  value={newDocLabel}
+                  onChange={(e) => setNewDocLabel(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addDoc()}
+                />
+                <button onClick={addDoc} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors">
+                  + Agregar
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <ConfirmDialog isOpen={showDelete} onClose={() => setShowDelete(false)} onConfirm={handleDelete}
