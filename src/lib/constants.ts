@@ -79,6 +79,16 @@ export const AGENTS = [
   { value: "AMBOS", label: "Ambos", initials: "EP/AC", color: "from-indigo-500 to-pink-500" },
 ];
 
+export const EXPENSE_CATEGORIES = [
+  { value: "MARKETING", label: "Marketing" },
+  { value: "OFICINA", label: "Oficina" },
+  { value: "TRANSPORTE", label: "Transporte" },
+  { value: "LEGAL", label: "Legal/Notarial" },
+  { value: "TECNOLOGIA", label: "Tecnología" },
+  { value: "SERVICIOS", label: "Servicios" },
+  { value: "OTRO", label: "Otro" },
+];
+
 export const MONTHS = [
   { value: 1, label: "Enero" }, { value: 2, label: "Febrero" }, { value: 3, label: "Marzo" },
   { value: 4, label: "Abril" }, { value: 5, label: "Mayo" }, { value: 6, label: "Junio" },

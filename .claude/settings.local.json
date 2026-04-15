@@ -29,7 +29,8 @@
       "Bash(sed -i '0,/try {/{s/try {/try {\\\\n    const prisma = await getPrisma\\(\\);/}' src/app/api/properties/\\\\[id\\\\]/route.ts)",
       "Bash(sed -i '/export async function PUT/,/try {/{s/try {/try {\\\\n    const prisma = await getPrisma\\(\\);/}' src/app/api/properties/\\\\[id\\\\]/route.ts)",
       "Bash(sed -i '/export async function DELETE/,/try {/{s/try {/try {\\\\n    const prisma = await getPrisma\\(\\);/}' src/app/api/properties/\\\\[id\\\\]/route.ts)",
-      "Bash(dir \"C:\\\\Users\\\\PC\\\\Desktop\\\\Proyectos Claude\\\\CRM\")"
+      "Bash(dir \"C:\\\\Users\\\\PC\\\\Desktop\\\\Proyectos Claude\\\\CRM\")",
+      "Bash(npx tsc:*)"
     ]
   }
 }
