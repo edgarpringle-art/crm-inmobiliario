@@ -10,13 +10,34 @@ import {
   DEAL_TYPES, DEAL_STATUSES,
   formatCurrency, formatDate, getLabel, getStatusColor,
 } from "@/lib/constants";
+import { HiBriefcase, HiCheckCircle, HiClock } from "react-icons/hi";
+
+interface CommissionPayment {
+  id: string;
+  label: string;
+  amount: number;
+  date: string | null;
+  paid: boolean;
+}
 
 interface Deal {
   id: string; dealType: string; status: string; agreedPrice: number | null; currency: string;
-  commissionAmount: number | null; closingDate: string | null;
+  commissionAmount: number | null; commissionPaid: boolean; commissionPayments: string | null;
+  closingDate: string | null;
   contractStartDate: string | null; contractEndDate: string | null; monthlyRent: number | null;
   client: { id: string; firstName: string; lastName: string } | null;
   property: { id: string; title: string; address: string | null } | null;
+}
+
+function getPaymentProgress(deal: Deal): { paid: number; total: number; pct: number } | null {
+  if (!deal.commissionPayments) return null;
+  try {
+    const payments: CommissionPayment[] = JSON.parse(deal.commissionPayments);
+    if (payments.length === 0) return null;
+    const total = payments.reduce((s, p) => s + p.amount, 0);
+    const paid = payments.filter((p) => p.paid).reduce((s, p) => s + p.amount, 0);
+    return { paid, total, pct: total > 0 ? Math.round((paid / total) * 100) : 0 };
+  } catch { return null; }
 }
 
 export default function NegociosPage() {
@@ -42,16 +63,17 @@ export default function NegociosPage() {
   return (
     <div>
       <PageHeader title="Negocios" subtitle={`${deals.length} registros`}>
-        <Link href="/negocios/nuevo" className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg font-medium transition-colors">
-          + Nuevo Negocio
+        <Link href="/negocios/nuevo" className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm shadow-blue-200">
+          <HiBriefcase className="w-4 h-4" />
+          Nuevo Negocio
         </Link>
       </PageHeader>
 
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="flex-1">
           <SearchBar value={search} onChange={setSearch} placeholder="Buscar por cliente, propiedad..." />
         </div>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white text-sm">
           <option value="">Todos los estados</option>
           {DEAL_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
@@ -62,53 +84,68 @@ export default function NegociosPage() {
       ) : deals.length === 0 ? (
         <EmptyState title="No hay negocios" message="Registra tu primer negocio." actionLabel="Nuevo Negocio" actionHref="/negocios/nuevo" />
       ) : (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <th className="px-6 py-3">Propiedad</th>
-                <th className="px-6 py-3">Cliente</th>
-                <th className="px-6 py-3">Tipo</th>
-                <th className="px-6 py-3">Precio</th>
-                <th className="px-6 py-3">Comisión</th>
-                <th className="px-6 py-3">Estado</th>
-                <th className="px-6 py-3">Fecha Cierre</th>
-                <th className="px-6 py-3">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {deals.map((deal) => (
-                <tr key={deal.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    {deal.property ? (
-                      <Link href={`/propiedades/${deal.property.id}`} className="text-blue-600 hover:underline font-medium">
-                        {deal.property.title}
-                      </Link>
-                    ) : "—"}
-                  </td>
-                  <td className="px-6 py-4">
-                    {deal.client ? (
-                      <Link href={`/clientes/${deal.client.id}`} className="text-blue-600 hover:underline">
-                        {deal.client.firstName} {deal.client.lastName}
-                      </Link>
-                    ) : "—"}
-                  </td>
-                  <td className="px-6 py-4">
-                    <StatusBadge label={getLabel(DEAL_TYPES, deal.dealType)} colorClass={deal.dealType === "VENTA" ? "bg-blue-100 text-blue-700" : "bg-teal-100 text-teal-700"} />
-                  </td>
-                  <td className="px-6 py-4 font-medium">{formatCurrency(deal.agreedPrice, deal.currency)}</td>
-                  <td className="px-6 py-4 text-green-600 font-medium">{formatCurrency(deal.commissionAmount, deal.currency)}</td>
-                  <td className="px-6 py-4">
+        <div className="space-y-3">
+          {deals.map((deal) => {
+            const progress = getPaymentProgress(deal);
+            return (
+              <Link
+                key={deal.id}
+                href={`/negocios/${deal.id}`}
+                className="card-hover flex items-center gap-4 bg-white rounded-2xl shadow-sm p-5 border border-gray-100/80 hover:border-blue-100"
+              >
+                {/* Type icon */}
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  deal.dealType === "VENTA" ? "bg-blue-100" : "bg-teal-100"
+                }`}>
+                  <span className={`text-lg font-bold ${deal.dealType === "VENTA" ? "text-blue-600" : "text-teal-600"}`}>
+                    {deal.dealType === "VENTA" ? "V" : "A"}
+                  </span>
+                </div>
+
+                {/* Main info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-bold text-gray-900 truncate">
+                      {deal.property?.title || "Sin propiedad"}
+                    </h3>
                     <StatusBadge label={getLabel(DEAL_STATUSES, deal.status)} colorClass={getStatusColor(DEAL_STATUSES, deal.status)} />
-                  </td>
-                  <td className="px-6 py-4 text-gray-500">{formatDate(deal.closingDate)}</td>
-                  <td className="px-6 py-4">
-                    <Link href={`/negocios/${deal.id}`} className="text-blue-600 hover:text-blue-800 font-medium">Ver</Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  <p className="text-sm text-gray-400">
+                    {deal.client ? `${deal.client.firstName} ${deal.client.lastName}` : "Sin cliente"}
+                    {deal.closingDate ? ` · Cierre: ${formatDate(deal.closingDate)}` : ""}
+                  </p>
+                </div>
+
+                {/* Commission progress */}
+                <div className="hidden sm:block text-right min-w-[140px]">
+                  <p className="text-lg font-bold text-gray-900">{formatCurrency(deal.agreedPrice, deal.currency)}</p>
+                  <div className="flex items-center gap-1.5 justify-end mt-1">
+                    {progress ? (
+                      <>
+                        <div className="w-16 bg-gray-100 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full transition-all ${progress.pct === 100 ? "bg-green-500" : "bg-amber-500"}`}
+                            style={{ width: `${progress.pct}%` }}
+                          />
+                        </div>
+                        <span className={`text-xs font-semibold ${progress.pct === 100 ? "text-green-600" : "text-amber-600"}`}>
+                          {progress.pct}%
+                        </span>
+                        {progress.pct === 100
+                          ? <HiCheckCircle className="w-4 h-4 text-green-500" />
+                          : <HiClock className="w-4 h-4 text-amber-500" />
+                        }
+                      </>
+                    ) : (
+                      <span className="text-xs text-green-600 font-semibold">
+                        {formatCurrency(deal.commissionAmount, deal.currency)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
