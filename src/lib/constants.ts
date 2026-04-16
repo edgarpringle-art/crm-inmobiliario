@@ -80,12 +80,19 @@ export const AGENTS = [
 ];
 
 export const EXPENSE_CATEGORIES = [
+  { value: "COMMUNITY_MANAGER", label: "Community Manager" },
+  { value: "NOTARIA", label: "Notaría" },
+  { value: "OPERACION", label: "Gasto Operación" },
+  { value: "PORTAL_INMOBILIARIO", label: "Portal Inmobiliario" },
+  { value: "CRM", label: "CRM" },
+  { value: "AUTO", label: "Auto" },
+  { value: "ALQUILER", label: "Alquiler" },
+  { value: "IMPUESTOS", label: "Impuestos" },
+  { value: "COMIDA", label: "Comida/Entretenimiento" },
+  { value: "PUBLICIDAD", label: "Publicidad" },
+  { value: "PAPELERIA", label: "Papelería" },
   { value: "MARKETING", label: "Marketing" },
   { value: "OFICINA", label: "Oficina" },
-  { value: "TRANSPORTE", label: "Transporte" },
-  { value: "LEGAL", label: "Legal/Notarial" },
-  { value: "TECNOLOGIA", label: "Tecnología" },
-  { value: "SERVICIOS", label: "Servicios" },
   { value: "OTRO", label: "Otro" },
 ];
 
