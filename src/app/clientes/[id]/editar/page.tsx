@@ -17,7 +17,7 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
-    firstName: "", lastName: "", email: "", phone: "", phone2: "", cedula: "",
+    firstName: "", lastName: "", email: "", phone: "", phone2: "",
     clientType: "COMPRADOR", source: "", status: "PROSPECTO",
     searchType: "", searchZone: "", searchPropertyType: "", budgetMin: "", budgetMax: "",
     bedrooms: "", bathrooms: "", searchNotes: "",
@@ -34,7 +34,6 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
           email: data.email || "",
           phone: data.phone || "",
           phone2: data.phone2 || "",
-          cedula: data.cedula || "",
           clientType: data.clientType || "COMPRADOR",
           source: data.source || "",
           status: data.status || "PROSPECTO",
@@ -79,7 +78,6 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
         email: form.email || null,
         phone: form.phone || null,
         phone2: form.phone2 || null,
-        cedula: form.cedula || null,
         searchZone: form.searchZone || null,
         searchNotes: form.searchNotes || null,
         address: form.address || null,
@@ -116,7 +114,6 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
             <FormField label="Email"><input type="email" className={inputClass} value={form.email} onChange={(e) => update("email", e.target.value)} /></FormField>
             <FormField label="Teléfono"><input className={inputClass} value={form.phone} onChange={(e) => update("phone", e.target.value)} /></FormField>
             <FormField label="Teléfono 2"><input className={inputClass} value={form.phone2} onChange={(e) => update("phone2", e.target.value)} /></FormField>
-            <FormField label="Cédula / Documento"><input className={inputClass} value={form.cedula} onChange={(e) => update("cedula", e.target.value)} /></FormField>
           </div>
         </div>
 

@@ -63,7 +63,7 @@ export const DEAL_STATUSES = [
 
 export const CURRENCIES = [
   { value: "USD", label: "USD ($)" },
-  { value: "DOP", label: "DOP (RD$)" },
+  { value: "PAB", label: "PAB (B/.)" },
   { value: "EUR", label: "EUR (€)" },
 ];
 
@@ -98,7 +98,7 @@ export const MONTHS = [
 
 export function formatCurrency(amount: number | null | undefined, currency: string = "USD"): string {
   if (amount == null) return "—";
-  const symbols: Record<string, string> = { USD: "$", DOP: "RD$", EUR: "€" };
+  const symbols: Record<string, string> = { USD: "$", PAB: "B/.", EUR: "€" };
   const symbol = symbols[currency] || currency;
   return `${symbol}${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }

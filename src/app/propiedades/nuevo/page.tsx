@@ -7,6 +7,7 @@ import PageHeader from "@/components/PageHeader";
 import FormField from "@/components/FormField";
 import LocationSelect from "@/components/LocationSelect";
 import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "@/lib/constants";
+import { getProvinces, getDistricts, getSectors } from "@/lib/locations";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 const checkboxClass = "w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500";
@@ -29,9 +30,12 @@ export default function NuevaPropiedadPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [clients, setClients] = useState<ClientOption[]>([]);
+  const [provinces, setProvinces] = useState<string[]>([]);
+  const [districts, setDistricts] = useState<string[]>([]);
+  const [sectors, setSectors] = useState<string[]>([]);
   const [form, setForm] = useState({
     title: "", propertyType: "APARTAMENTO", operationType: "VENTA", status: "DISPONIBLE",
-    address: "", sector: "", city: "", state: "", country: "República Dominicana", referencePoint: "",
+    address: "", sector: "", city: "", state: "", country: "Panamá", referencePoint: "",
     salePrice: "", rentPrice: "", currency: "USD", maintenanceFee: "",
     area: "", landArea: "", bedrooms: "", bathrooms: "", parkingSpots: "", floors: "", yearBuilt: "",
     hasPool: false, hasGym: false, hasElevator: false, hasSecurity: false, hasGenerator: false,
@@ -42,7 +46,22 @@ export default function NuevaPropiedadPage() {
 
   useEffect(() => {
     fetch("/api/clients").then((r) => r.json()).then(setClients);
+    setProvinces(getProvinces());
   }, []);
+
+  useEffect(() => {
+    if (form.state) {
+      setDistricts(getDistricts(form.state));
+      setForm((p) => ({ ...p, city: "" }));
+    }
+  }, [form.state]);
+
+  useEffect(() => {
+    if (form.city) {
+      setSectors(getSectors(form.city));
+      setForm((p) => ({ ...p, sector: "" }));
+    }
+  }, [form.city]);
 
   function update(field: string, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -112,16 +131,25 @@ export default function NuevaPropiedadPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Ubicación</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Dirección"><input className={inputClass} value={form.address} onChange={(e) => update("address", e.target.value)} /></FormField>
-            <FormField label="Sector / Barrio">
-              <LocationSelect value={form.sector} onChange={(v) => update("sector", v)} placeholder="Buscar sector..." />
+            <FormField label="Provincia">
+              <select className={inputClass} value={form.state} onChange={(e) => update("state", e.target.value)}>
+                <option value="">Seleccionar...</option>
+                {provinces.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
             </FormField>
-            <FormField label="Ciudad">
-              <LocationSelect value={form.city} onChange={(v) => update("city", v)} placeholder="Buscar ciudad..." />
+            <FormField label="Distrito">
+              <select className={inputClass} value={form.city} onChange={(e) => update("city", e.target.value)} disabled={!form.state}>
+                <option value="">Seleccionar...</option>
+                {districts.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
             </FormField>
-            <FormField label="Provincia / Estado">
-              <LocationSelect value={form.state} onChange={(v) => update("state", v)} placeholder="Buscar provincia..." />
+            <FormField label="Corregimiento / Sector">
+              <select className={inputClass} value={form.sector} onChange={(e) => update("sector", e.target.value)} disabled={!form.city}>
+                <option value="">Seleccionar...</option>
+                {sectors.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
             </FormField>
-            <FormField label="País"><input className={inputClass} value={form.country} onChange={(e) => update("country", e.target.value)} /></FormField>
+            <FormField label="País"><input className={inputClass} value={form.country} onChange={(e) => update("country", e.target.value)} disabled /></FormField>
             <FormField label="Punto de Referencia"><input className={inputClass} value={form.referencePoint} onChange={(e) => update("referencePoint", e.target.value)} /></FormField>
           </div>
         </div>
@@ -185,7 +213,9 @@ export default function NuevaPropiedadPage() {
           <div className="grid grid-cols-1 gap-4">
             <FormField label="Link Google Drive"><input className={inputClass} value={form.driveLink} onChange={(e) => update("driveLink", e.target.value)} placeholder="https://drive.google.com/..." /></FormField>
             <FormField label="Descripción"><textarea className={inputClass} rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} /></FormField>
-            <FormField label="Notas"><textarea className={inputClass} rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} /></FormField>
+            <FormField label="Resumen para WhatsApp">
+              <textarea className={inputClass} rows={2} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Ej: Apartamento 3H, 2B, Vista al mar, Piscina y gimnasio. Precio: US$350,000. Contacta para más info." />
+            </FormField>
           </div>
         </div>
 

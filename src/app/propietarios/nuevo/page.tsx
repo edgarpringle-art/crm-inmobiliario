@@ -11,7 +11,7 @@ const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:rin
 export default function NuevoPropietarioPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", phone2: "", cedula: "", address: "", city: "", notes: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", phone2: "", address: "", city: "", notes: "" });
 
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
@@ -41,7 +41,6 @@ export default function NuevoPropietarioPage() {
             <FormField label="Teléfono"><input className={inputClass} value={form.phone} onChange={(e) => update("phone", e.target.value)} /></FormField>
             <FormField label="Teléfono 2"><input className={inputClass} value={form.phone2} onChange={(e) => update("phone2", e.target.value)} /></FormField>
             <FormField label="Email"><input type="email" className={inputClass} value={form.email} onChange={(e) => update("email", e.target.value)} /></FormField>
-            <FormField label="Cédula"><input className={inputClass} value={form.cedula} onChange={(e) => update("cedula", e.target.value)} /></FormField>
             <FormField label="Dirección"><input className={inputClass} value={form.address} onChange={(e) => update("address", e.target.value)} /></FormField>
             <FormField label="Ciudad"><input className={inputClass} value={form.city} onChange={(e) => update("city", e.target.value)} /></FormField>
             <div className="md:col-span-2"><FormField label="Notas"><textarea className={inputClass} rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} /></FormField></div>

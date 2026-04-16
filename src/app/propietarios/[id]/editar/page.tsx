@@ -13,14 +13,13 @@ export default function EditarPropietarioPage({ params }: { params: Promise<{ id
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", phone2: "", cedula: "", address: "", city: "", notes: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", phone2: "", address: "", city: "", notes: "" });
 
   useEffect(() => {
     fetch(`/api/owners/${id}`).then((r) => r.json()).then((data) => {
       setForm({
         firstName: data.firstName || "", lastName: data.lastName || "",
         email: data.email || "", phone: data.phone || "", phone2: data.phone2 || "",
-        cedula: data.cedula || "", address: data.address || "", city: data.city || "", notes: data.notes || "",
       });
       setLoading(false);
     });
@@ -54,7 +53,6 @@ export default function EditarPropietarioPage({ params }: { params: Promise<{ id
             <FormField label="Teléfono"><input className={inputClass} value={form.phone} onChange={(e) => update("phone", e.target.value)} /></FormField>
             <FormField label="Teléfono 2"><input className={inputClass} value={form.phone2} onChange={(e) => update("phone2", e.target.value)} /></FormField>
             <FormField label="Email"><input type="email" className={inputClass} value={form.email} onChange={(e) => update("email", e.target.value)} /></FormField>
-            <FormField label="Cédula"><input className={inputClass} value={form.cedula} onChange={(e) => update("cedula", e.target.value)} /></FormField>
             <FormField label="Dirección"><input className={inputClass} value={form.address} onChange={(e) => update("address", e.target.value)} /></FormField>
             <FormField label="Ciudad"><input className={inputClass} value={form.city} onChange={(e) => update("city", e.target.value)} /></FormField>
             <div className="md:col-span-2"><FormField label="Notas"><textarea className={inputClass} rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} /></FormField></div>

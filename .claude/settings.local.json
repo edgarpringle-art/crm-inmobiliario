@@ -30,7 +30,15 @@
       "Bash(sed -i '/export async function PUT/,/try {/{s/try {/try {\\\\n    const prisma = await getPrisma\\(\\);/}' src/app/api/properties/\\\\[id\\\\]/route.ts)",
       "Bash(sed -i '/export async function DELETE/,/try {/{s/try {/try {\\\\n    const prisma = await getPrisma\\(\\);/}' src/app/api/properties/\\\\[id\\\\]/route.ts)",
       "Bash(dir \"C:\\\\Users\\\\PC\\\\Desktop\\\\Proyectos Claude\\\\CRM\")",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(node -e \"const {createClient} = require\\('@libsql/client'\\); const c = createClient\\({url: 'file:./dev.db'}\\); c.execute\\(\\\\\"SELECT name FROM sqlite_master WHERE type='table' AND name IN \\('Task','Activity','Owner','Gasto'\\)\\\\\"\\).then\\(r => console.log\\(r.rows\\)\\).catch\\(e => console.error\\(e.message\\)\\);\")",
+      "Bash(curl -s -o - -w \"\\\\nHTTP %{http_code}\\\\n\" http://localhost:3001/api/tasks)",
+      "Bash(curl -s -X POST -H \"Content-Type: application/json\" -d \"{\\\\\"title\\\\\":\\\\\"Test tarea\\\\\",\\\\\"priority\\\\\":\\\\\"ALTA\\\\\",\\\\\"assignedAgent\\\\\":\\\\\"EDGAR\\\\\",\\\\\"dueDate\\\\\":\\\\\"2026-04-20\\\\\"}\" -o - -w \"\\\\nHTTP %{http_code}\\\\n\" http://localhost:3001/api/tasks)",
+      "Bash(curl -s -X POST -H \"Content-Type: application/json\" -d \"{\\\\\"title\\\\\":\\\\\"Test con hora\\\\\",\\\\\"priority\\\\\":\\\\\"ALTA\\\\\",\\\\\"assignedAgent\\\\\":\\\\\"EDGAR\\\\\",\\\\\"dueDate\\\\\":\\\\\"2026-04-20\\\\\",\\\\\"dueTime\\\\\":\\\\\"14:30\\\\\"}\" -o - -w \"\\\\nHTTP %{http_code}\\\\n\" http://localhost:3001/api/tasks)",
+      "Read(//c/Users/PC/.claude/**)",
+      "Bash(curl -s http://localhost:3000/ -o /dev/null -w \"HTTP %{http_code}\\\\n\" --max-time 3)",
+      "Bash(curl -s http://localhost:3000/api/tasks --max-time 3)",
+      "Bash(wmic process:*)"
     ]
   }
 }
