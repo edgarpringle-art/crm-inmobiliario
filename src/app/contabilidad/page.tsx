@@ -162,20 +162,45 @@ export default function ContabilidadPage() {
       monthlyPayments.push(p);
     }
   }
-  const monthlyByAgent = individualAgents.map((agent) => ({
-    ...agent,
-    payments: monthlyPayments.filter((p) => p.agent === agent.value),
-    total: monthlyPayments.filter((p) => p.agent === agent.value).reduce((s, p) => s + p.amount, 0),
-  }));
   const monthlyCommissionsTotal = monthlyPayments.reduce((s, p) => s + p.amount, 0);
 
-  // Monthly expenses
+  // Monthly expenses (null agent or "AMBOS" → split 50/50)
   const monthlyGastos = gastos.filter((g) => {
     const d = new Date(g.date);
     return d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear;
   });
   const monthlyGastosTotal = monthlyGastos.reduce((s, g) => s + g.amount, 0);
   const monthlyNet = monthlyCommissionsTotal - monthlyGastosTotal;
+
+  function gastosForAgent(agentValue: string) {
+    let total = 0;
+    const items: { description: string; amount: number; category: string; shared: boolean }[] = [];
+    for (const g of monthlyGastos) {
+      if (g.assignedAgent === agentValue) {
+        total += g.amount;
+        items.push({ description: g.description, amount: g.amount, category: g.category, shared: false });
+      } else if (!g.assignedAgent || g.assignedAgent === "AMBOS") {
+        total += g.amount * 0.5;
+        items.push({ description: g.description, amount: g.amount * 0.5, category: g.category, shared: true });
+      }
+    }
+    return { total, items };
+  }
+
+  const monthlyByAgent = individualAgents.map((agent) => {
+    const payments = monthlyPayments.filter((p) => p.agent === agent.value);
+    const commissions = payments.reduce((s, p) => s + p.amount, 0);
+    const { total: expenses, items: expenseItems } = gastosForAgent(agent.value);
+    return {
+      ...agent,
+      payments,
+      total: commissions,
+      commissions,
+      expenses,
+      net: commissions - expenses,
+      expenseItems,
+    };
+  });
 
   // Last 6 months chart data
   const chartMonths = Array.from({ length: 6 }, (_, i) => {
@@ -379,34 +404,71 @@ export default function ContabilidadPage() {
               </div>
             </div>
 
-            {/* Commissions by agent */}
-            {monthlyCommissionsTotal > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                {monthlyByAgent.map((agent) => (
-                  <div key={agent.value} className="bg-gray-50 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${agent.color} flex items-center justify-center`}>
-                          <span className="text-white font-bold text-xs">{agent.initials}</span>
-                        </div>
-                        <span className="font-semibold text-gray-900 text-sm">{agent.label}</span>
+            {/* Summary by agent: bruto - gastos = neto */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              {monthlyByAgent.map((agent) => (
+                <div key={agent.value} className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${agent.color} flex items-center justify-center`}>
+                        <span className="text-white font-bold text-xs">{agent.initials}</span>
                       </div>
-                      <span className="font-bold text-green-600">{formatCurrency(agent.total)}</span>
+                      <span className="font-semibold text-gray-900 text-sm">{agent.label}</span>
                     </div>
-                    {agent.payments.length > 0 ? (
-                      <div className="space-y-1.5">
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="bg-white rounded-lg p-2 text-center border border-green-100">
+                      <p className="text-[10px] font-semibold text-green-600 uppercase">Bruto</p>
+                      <p className="text-sm font-bold text-green-700 mt-0.5">{formatCurrency(agent.commissions)}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-2 text-center border border-red-100">
+                      <p className="text-[10px] font-semibold text-red-600 uppercase">Gastos</p>
+                      <p className="text-sm font-bold text-red-700 mt-0.5">{formatCurrency(agent.expenses)}</p>
+                    </div>
+                    <div className={`bg-white rounded-lg p-2 text-center border ${agent.net >= 0 ? "border-blue-100" : "border-orange-100"}`}>
+                      <p className={`text-[10px] font-semibold uppercase ${agent.net >= 0 ? "text-blue-600" : "text-orange-600"}`}>Neto</p>
+                      <p className={`text-sm font-bold mt-0.5 ${agent.net >= 0 ? "text-blue-700" : "text-orange-700"}`}>{formatCurrency(agent.net)}</p>
+                    </div>
+                  </div>
+
+                  {agent.payments.length > 0 && (
+                    <div className="mb-2">
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1">Comisiones</p>
+                      <div className="space-y-1">
                         {agent.payments.map((p, i) => (
                           <div key={i} className="flex items-center justify-between text-xs">
-                            <span className="text-gray-500">{p.dealTitle} - {p.label}</span>
-                            <span className="font-semibold text-gray-700">{formatCurrency(p.amount)}</span>
+                            <span className="text-gray-500 truncate pr-2">{p.dealTitle} - {p.label}</span>
+                            <span className="font-semibold text-green-700 flex-shrink-0">+{formatCurrency(p.amount)}</span>
                           </div>
                         ))}
                       </div>
-                    ) : <p className="text-xs text-gray-400">Sin cobros este mes</p>}
-                  </div>
-                ))}
-              </div>
-            )}
+                    </div>
+                  )}
+
+                  {agent.expenseItems.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1">Gastos</p>
+                      <div className="space-y-1">
+                        {agent.expenseItems.map((g, i) => (
+                          <div key={i} className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 truncate pr-2">
+                              {g.description}
+                              {g.shared && <span className="ml-1 text-[10px] text-gray-400">(50%)</span>}
+                            </span>
+                            <span className="font-semibold text-red-600 flex-shrink-0">-{formatCurrency(g.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {agent.payments.length === 0 && agent.expenseItems.length === 0 && (
+                    <p className="text-xs text-gray-400">Sin movimientos este mes</p>
+                  )}
+                </div>
+              ))}
+            </div>
           </>
         )}
       </div>
