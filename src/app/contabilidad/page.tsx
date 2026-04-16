@@ -9,7 +9,7 @@ import {
 } from "@/lib/constants";
 import {
   HiCurrencyDollar, HiBriefcase, HiCheckCircle, HiClock,
-  HiTrendingUp, HiTrash, HiPlus, HiX, HiChartBar,
+  HiTrendingUp, HiTrash, HiPlus, HiX, HiChartBar, HiPencil,
 } from "react-icons/hi";
 
 interface CommissionPayment {
@@ -77,10 +77,31 @@ export default function ContabilidadPage() {
   const [agentFilter, setAgentFilter] = useState("ALL");
   const [showGastoForm, setShowGastoForm] = useState(false);
   const [savingGasto, setSavingGasto] = useState(false);
+  const [editingGastoId, setEditingGastoId] = useState<string | null>(null);
   const [gastoForm, setGastoForm] = useState({
     description: "", amount: "", currency: "USD",
     category: "OTRO", assignedAgent: "", date: new Date().toISOString().split("T")[0], notes: "",
   });
+
+  function resetGastoForm() {
+    setGastoForm({ description: "", amount: "", currency: "USD", category: "OTRO", assignedAgent: "", date: new Date().toISOString().split("T")[0], notes: "" });
+    setEditingGastoId(null);
+  }
+
+  function startEditGasto(g: Gasto) {
+    setEditingGastoId(g.id);
+    setGastoForm({
+      description: g.description || "",
+      amount: String(g.amount ?? ""),
+      currency: g.currency || "USD",
+      category: g.category || "OTRO",
+      assignedAgent: g.assignedAgent || "",
+      date: (g.date || "").slice(0, 10) || new Date().toISOString().split("T")[0],
+      notes: g.notes || "",
+    });
+    setShowGastoForm(true);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   useEffect(() => {
     Promise.all([
@@ -185,27 +206,43 @@ export default function ContabilidadPage() {
     e.preventDefault();
     setSavingGasto(true);
     try {
-      const res = await fetch("/api/gastos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...gastoForm,
-          amount: parseFloat(gastoForm.amount),
-          assignedAgent: gastoForm.assignedAgent || null,
-          date: gastoForm.date,
-          notes: gastoForm.notes || null,
-        }),
-      });
-      if (res.ok) {
-        const newGasto = await res.json();
-        setGastos((prev) => [newGasto, ...prev]);
-        setShowGastoForm(false);
-        setGastoForm({ description: "", amount: "", currency: "USD", category: "OTRO", assignedAgent: "", date: new Date().toISOString().split("T")[0], notes: "" });
+      const payload = {
+        ...gastoForm,
+        amount: parseFloat(gastoForm.amount),
+        assignedAgent: gastoForm.assignedAgent || null,
+        date: gastoForm.date,
+        notes: gastoForm.notes || null,
+      };
+      if (editingGastoId) {
+        const res = await fetch(`/api/gastos/${editingGastoId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setGastos((prev) => prev.map((g) => (g.id === editingGastoId ? { ...g, ...updated } : g)));
+          setShowGastoForm(false);
+          resetGastoForm();
+        }
+      } else {
+        const res = await fetch("/api/gastos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const newGasto = await res.json();
+          setGastos((prev) => [newGasto, ...prev]);
+          setShowGastoForm(false);
+          resetGastoForm();
+        }
       }
     } finally { setSavingGasto(false); }
   }
 
   async function handleDeleteGasto(id: string) {
+    if (!confirm("¿Eliminar este gasto?")) return;
     const res = await fetch(`/api/gastos/${id}`, { method: "DELETE" });
     if (res.ok) setGastos((prev) => prev.filter((g) => g.id !== id));
   }
@@ -378,7 +415,7 @@ export default function ContabilidadPage() {
       <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 mb-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-gray-900">Gastos</h2>
-          <button onClick={() => setShowGastoForm(!showGastoForm)} className="flex items-center gap-2 bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+          <button onClick={() => { if (showGastoForm) { resetGastoForm(); } setShowGastoForm(!showGastoForm); }} className="flex items-center gap-2 bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
             {showGastoForm ? <HiX className="w-4 h-4" /> : <HiPlus className="w-4 h-4" />}
             {showGastoForm ? "Cancelar" : "Agregar Gasto"}
           </button>
@@ -423,9 +460,16 @@ export default function ContabilidadPage() {
                 <input className={inputClass} value={gastoForm.notes} onChange={(e) => setGastoForm((p) => ({ ...p, notes: e.target.value }))} placeholder="Opcional..." />
               </div>
             </div>
-            <button type="submit" disabled={savingGasto} className="bg-red-600 text-white hover:bg-red-700 px-5 py-2 rounded-xl text-sm font-medium disabled:opacity-50">
-              {savingGasto ? "Guardando..." : "Guardar Gasto"}
-            </button>
+            <div className="flex gap-2">
+              <button type="submit" disabled={savingGasto} className="bg-red-600 text-white hover:bg-red-700 px-5 py-2 rounded-xl text-sm font-medium disabled:opacity-50">
+                {savingGasto ? "Guardando..." : editingGastoId ? "Actualizar Gasto" : "Guardar Gasto"}
+              </button>
+              {editingGastoId && (
+                <button type="button" onClick={() => { resetGastoForm(); setShowGastoForm(false); }} className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-5 py-2 rounded-xl text-sm font-medium">
+                  Cancelar
+                </button>
+              )}
+            </div>
           </form>
         )}
 
@@ -446,7 +490,10 @@ export default function ContabilidadPage() {
                   </p>
                 </div>
                 <p className="text-sm font-bold text-red-600 flex-shrink-0">{formatCurrency(g.amount, g.currency)}</p>
-                <button onClick={() => handleDeleteGasto(g.id)} className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0">
+                <button onClick={() => startEditGasto(g)} className="text-gray-300 hover:text-blue-500 transition-colors flex-shrink-0" title="Editar">
+                  <HiPencil className="w-4 h-4" />
+                </button>
+                <button onClick={() => handleDeleteGasto(g.id)} className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0" title="Eliminar">
                   <HiTrash className="w-4 h-4" />
                 </button>
               </div>
