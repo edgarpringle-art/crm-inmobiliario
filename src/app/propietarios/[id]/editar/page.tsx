@@ -20,6 +20,7 @@ export default function EditarPropietarioPage({ params }: { params: Promise<{ id
       setForm({
         firstName: data.firstName || "", lastName: data.lastName || "",
         email: data.email || "", phone: data.phone || "", phone2: data.phone2 || "",
+        address: data.address || "", city: data.city || "", notes: data.notes || "",
       });
       setLoading(false);
     });
