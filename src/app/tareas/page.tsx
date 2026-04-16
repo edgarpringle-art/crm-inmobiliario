@@ -3,7 +3,38 @@
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import { AGENTS, formatDate, getLabel } from "@/lib/constants";
-import { HiCheckCircle, HiClock, HiExclamation, HiPlus, HiTrash, HiX } from "react-icons/hi";
+import { HiCheckCircle, HiClock, HiExclamation, HiPlus, HiTrash, HiX, HiCalendar } from "react-icons/hi";
+
+const AGENT_EMAILS: Record<string, string> = {
+  EDGAR: "edgarpringle@gmail.com",
+  ANA_LORENA: "alchanis@gmail.com",
+};
+
+function buildCalendarUrl(task: Task): string {
+  // Format date as YYYYMMDD for all-day event
+  const dateStr = task.dueDate ? task.dueDate.replace(/-/g, "") : "";
+  const nextDay = task.dueDate
+    ? new Date(new Date(task.dueDate).getTime() + 86400000).toISOString().split("T")[0].replace(/-/g, "")
+    : "";
+
+  const details = [
+    task.description || "",
+    task.client ? `Cliente: ${task.client.firstName} ${task.client.lastName}` : "",
+    task.assignedAgent ? `Responsable: ${getLabel(AGENTS, task.assignedAgent)}` : "",
+  ].filter(Boolean).join("\n");
+
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: task.title,
+    dates: `${dateStr}/${nextDay}`,
+    details,
+  });
+
+  const email = task.assignedAgent ? AGENT_EMAILS[task.assignedAgent] : null;
+  if (email) params.append("add", email);
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
 
 interface Task {
   id: string;
@@ -147,9 +178,17 @@ export default function TareasPage() {
               <input className={inputClass} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} placeholder="Detalles adicionales..." />
             </div>
           </div>
-          <button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700 px-5 py-2 rounded-xl text-sm font-medium disabled:opacity-50">
-            {saving ? "Guardando..." : "Crear Tarea"}
-          </button>
+          <div className="flex items-center gap-3 flex-wrap">
+            <button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700 px-5 py-2 rounded-xl text-sm font-medium disabled:opacity-50">
+              {saving ? "Guardando..." : "Crear Tarea"}
+            </button>
+            {form.dueDate && form.assignedAgent && (
+              <p className="text-xs text-gray-400 flex items-center gap-1">
+                <HiCalendar className="w-3.5 h-3.5 text-blue-400" />
+                Se mostrará opción de agregar al calendario al guardar
+              </p>
+            )}
+          </div>
         </form>
       )}
 
@@ -198,9 +237,22 @@ export default function TareasPage() {
                     )}
                   </div>
                 </div>
-                <button onClick={() => deleteTask(task.id)} className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0 mt-0.5">
-                  <HiTrash className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {task.dueDate && task.assignedAgent && AGENT_EMAILS[task.assignedAgent] && !task.completed && (
+                    <a
+                      href={buildCalendarUrl(task)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`Agregar al calendario de ${getLabel(AGENTS, task.assignedAgent)}`}
+                      className="text-blue-400 hover:text-blue-600 transition-colors"
+                    >
+                      <HiCalendar className="w-4 h-4" />
+                    </a>
+                  )}
+                  <button onClick={() => deleteTask(task.id)} className="text-gray-300 hover:text-red-500 transition-colors">
+                    <HiTrash className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             );
           })}
