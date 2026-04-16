@@ -21,7 +21,8 @@ interface Deal {
   agreedPrice: number | null; currency: string;
   commissionAmount: number | null; commissionPaid: boolean;
   commissionPayments: string | null; assignedAgent: string | null;
-  closingDate: string | null; createdAt: string;
+  closingDate: string | null; commissionDate: string | null;
+  contractStartDate: string | null; createdAt: string;
   client: { firstName: string; lastName: string } | null;
   property: { title: string } | null;
 }
@@ -44,22 +45,34 @@ function parsePayments(raw: string | null): CommissionPayment[] {
   try { return JSON.parse(raw); } catch { return []; }
 }
 
+function parseLocalDate(s: string): Date {
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    const [y, m, d] = s.slice(0, 10).split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+  return new Date(s);
+}
+
 function getCommissionsByMonth(deals: Deal[], month: number, year: number) {
   const results: { agent: string; amount: number; label: string; dealTitle: string }[] = [];
   for (const deal of deals) {
     const payments = parsePayments(deal.commissionPayments);
     for (const p of payments) {
       if (p.paid && p.date) {
-        const d = new Date(p.date);
+        const d = parseLocalDate(p.date);
         if (d.getMonth() + 1 === month && d.getFullYear() === year) {
           results.push({ agent: deal.assignedAgent || "SIN_ASIGNAR", amount: p.amount, label: p.label, dealTitle: deal.property?.title || "Sin propiedad" });
         }
       }
     }
-    if (payments.length === 0 && deal.commissionPaid && deal.closingDate) {
-      const d = new Date(deal.closingDate);
-      if (d.getMonth() + 1 === month && d.getFullYear() === year && deal.commissionAmount) {
-        results.push({ agent: deal.assignedAgent || "SIN_ASIGNAR", amount: deal.commissionAmount, label: "Pago completo", dealTitle: deal.property?.title || "Sin propiedad" });
+    if (payments.length === 0 && deal.commissionPaid && deal.commissionAmount) {
+      // Payment date priority: commissionDate → closingDate → contractStartDate
+      const paymentDateStr = deal.commissionDate || deal.closingDate || deal.contractStartDate;
+      if (paymentDateStr) {
+        const d = parseLocalDate(paymentDateStr);
+        if (d.getMonth() + 1 === month && d.getFullYear() === year) {
+          results.push({ agent: deal.assignedAgent || "SIN_ASIGNAR", amount: deal.commissionAmount, label: "Pago completo", dealTitle: deal.property?.title || "Sin propiedad" });
+        }
       }
     }
   }
