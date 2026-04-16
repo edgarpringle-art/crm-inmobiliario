@@ -105,10 +105,19 @@ export function formatCurrency(amount: number | null | undefined, currency: stri
 
 export function formatDate(date: string | Date | null | undefined): string {
   if (!date) return "—";
-  return new Date(date).toLocaleDateString("es-DO", {
+  // If it's a YYYY-MM-DD string, parse as local date (avoid UTC shift in Panamá/UTC-5)
+  let d: Date;
+  if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [y, m, day] = date.split("-").map(Number);
+    d = new Date(y, m - 1, day);
+  } else {
+    d = new Date(date);
+  }
+  return d.toLocaleDateString("es-DO", {
     year: "numeric",
     month: "short",
     day: "numeric",
+    timeZone: "America/Panama",
   });
 }
 

@@ -11,11 +11,22 @@ const AGENT_EMAILS: Record<string, string> = {
 };
 
 function buildCalendarUrl(task: Task): string {
-  // Format date as YYYYMMDD for all-day event
   const dateStr = task.dueDate ? task.dueDate.replace(/-/g, "") : "";
-  const nextDay = task.dueDate
-    ? new Date(new Date(task.dueDate).getTime() + 86400000).toISOString().split("T")[0].replace(/-/g, "")
-    : "";
+
+  let dates = "";
+  if (task.dueDate && task.dueTime) {
+    // Timed event: 1 hour duration in local time (Panamá = UTC-5)
+    const [h, m] = task.dueTime.split(":").map(Number);
+    const start = new Date(`${task.dueDate}T${task.dueTime}:00-05:00`);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    dates = `${fmt(start)}/${fmt(end)}`;
+    void h; void m;
+  } else if (task.dueDate) {
+    // All-day event
+    const nextDay = new Date(new Date(task.dueDate).getTime() + 86400000).toISOString().split("T")[0].replace(/-/g, "");
+    dates = `${dateStr}/${nextDay}`;
+  }
 
   const details = [
     task.description || "",
@@ -26,8 +37,9 @@ function buildCalendarUrl(task: Task): string {
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: task.title,
-    dates: `${dateStr}/${nextDay}`,
+    dates,
     details,
+    ctz: "America/Panama",
   });
 
   const email = task.assignedAgent ? AGENT_EMAILS[task.assignedAgent] : null;
@@ -41,6 +53,7 @@ interface Task {
   title: string;
   description: string | null;
   dueDate: string | null;
+  dueTime: string | null;
   priority: string;
   completed: boolean | number;
   assignedAgent: string | null;
@@ -62,7 +75,12 @@ const inputClass = "w-full px-3 py-2 text-sm border border-gray-200 rounded-xl f
 function getDueDateStatus(dueDate: string | null, completed: boolean | number) {
   if (completed) return null;
   if (!dueDate) return null;
-  const days = Math.ceil((new Date(dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+  // Parse YYYY-MM-DD as local date (avoid UTC shift)
+  const [y, m, d] = dueDate.split("-").map(Number);
+  const due = new Date(y, m - 1, d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   if (days < 0) return { label: "Vencida", class: "text-red-600", icon: "!" };
   if (days === 0) return { label: "Hoy", class: "text-red-500", icon: "!" };
   if (days <= 2) return { label: `${days}d`, class: "text-amber-600", icon: "!" };
@@ -77,7 +95,7 @@ export default function TareasPage() {
   const [filter, setFilter] = useState<"pending" | "completed" | "all">("pending");
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    title: "", description: "", dueDate: "", priority: "MEDIA", assignedAgent: "", clientId: "",
+    title: "", description: "", dueDate: "", dueTime: "", priority: "MEDIA", assignedAgent: "", clientId: "",
   });
 
   useEffect(() => {
@@ -96,13 +114,13 @@ export default function TareasPage() {
     try {
       const res = await fetch("/api/tasks", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, dueDate: form.dueDate || null, assignedAgent: form.assignedAgent || null, clientId: form.clientId || null, description: form.description || null }),
+        body: JSON.stringify({ ...form, dueDate: form.dueDate || null, dueTime: form.dueTime || null, assignedAgent: form.assignedAgent || null, clientId: form.clientId || null, description: form.description || null }),
       });
       if (res.ok) {
         const newTask = await res.json();
         setTasks((prev) => [{ ...newTask, client: clients.find((c) => c.id === form.clientId) ? { firstName: clients.find((c) => c.id === form.clientId)!.firstName, lastName: clients.find((c) => c.id === form.clientId)!.lastName } : null, deal: null }, ...prev]);
         setShowForm(false);
-        setForm({ title: "", description: "", dueDate: "", priority: "MEDIA", assignedAgent: "", clientId: "" });
+        setForm({ title: "", description: "", dueDate: "", dueTime: "", priority: "MEDIA", assignedAgent: "", clientId: "" });
       }
     } finally { setSaving(false); }
   }
@@ -128,7 +146,14 @@ export default function TareasPage() {
   });
 
   const pendingCount = tasks.filter((t) => !t.completed).length;
-  const overdueCount = tasks.filter((t) => !t.completed && t.dueDate && new Date(t.dueDate) < new Date()).length;
+  const overdueCount = tasks.filter((t) => {
+    if (t.completed || !t.dueDate) return false;
+    const [y, m, d] = t.dueDate.split("-").map(Number);
+    const due = new Date(y, m - 1, d);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return due < today;
+  }).length;
 
   if (loading) return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" /></div>;
 
@@ -152,6 +177,10 @@ export default function TareasPage() {
             <div>
               <label className="text-xs font-semibold text-gray-500 mb-1 block">Fecha límite</label>
               <input type="date" className={inputClass} value={form.dueDate} onChange={(e) => setForm((p) => ({ ...p, dueDate: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">Hora</label>
+              <input type="time" className={inputClass} value={form.dueTime} onChange={(e) => setForm((p) => ({ ...p, dueTime: e.target.value }))} disabled={!form.dueDate} />
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-500 mb-1 block">Prioridad</label>
@@ -231,7 +260,7 @@ export default function TareasPage() {
                       <span className={`flex items-center gap-1 text-xs font-medium ${dueDateStatus?.class || "text-gray-400"}`}>
                         {dueDateStatus?.icon && <HiExclamation className="w-3 h-3" />}
                         <HiClock className="w-3 h-3" />
-                        {formatDate(task.dueDate)}
+                        {formatDate(task.dueDate)}{task.dueTime && ` · ${task.dueTime}`}
                         {dueDateStatus && ` (${dueDateStatus.label})`}
                       </span>
                     )}
