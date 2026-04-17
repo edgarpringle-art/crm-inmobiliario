@@ -13,6 +13,7 @@ import {
   HiChevronRight,
   HiCurrencyDollar,
   HiClipboardCheck,
+  HiChat,
 } from "react-icons/hi";
 
 const navItems = [
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/negocios", label: "Negocios", icon: HiBriefcase, description: "Ventas y alquileres" },
   { href: "/tareas", label: "Tareas", icon: HiClipboardCheck, description: "Seguimientos y recordatorios" },
   { href: "/contabilidad", label: "Contabilidad", icon: HiCurrencyDollar, description: "Comisiones por agente" },
+  { href: "/grupos", label: "Grupos WA", icon: HiChat, description: "Feed de grupos WhatsApp" },
 ];
 
 export default function Sidebar() {
