@@ -37,6 +37,7 @@ interface AgentSummary {
   agent: string; label: string; initials: string; color: string;
   totalDeals: number; closedDeals: number;
   totalCommissions: number; collectedCommissions: number; pendingCommissions: number;
+  totalExpenses: number; netIncome: number;
   deals: Deal[];
 }
 
@@ -127,6 +128,17 @@ export default function ContabilidadPage() {
   const individualAgents = AGENTS.filter((a) => a.value !== "AMBOS");
   const ambosDeals = deals.filter((d) => d.assignedAgent === "AMBOS");
 
+  // Total gastos per agent (direct + 50% AMBOS/empresa)
+  function totalGastosForAgent(agentValue: string) {
+    let total = 0;
+    for (const g of gastos) {
+      if (g.assignedAgent === agentValue) total += g.amount;
+      else if (!g.assignedAgent || g.assignedAgent === "AMBOS") total += g.amount * 0.5;
+    }
+    return total;
+  }
+  const totalGastosCompany = gastos.reduce((s, g) => s + g.amount, 0);
+
   const agentSummaries: AgentSummary[] = individualAgents.map((agent) => {
     const ownDeals = deals.filter((d) => d.assignedAgent === agent.value);
     const relevantDeals = [...ownDeals, ...ambosDeals];
@@ -146,11 +158,14 @@ export default function ContabilidadPage() {
         else pendingCommissions += commission;
       }
     }
+    const totalExpenses = totalGastosForAgent(agent.value);
     return {
       agent: agent.value, label: agent.label, initials: agent.initials, color: agent.color,
       totalDeals: ownDeals.length + ambosDeals.length,
       closedDeals: relevantDeals.filter((d) => d.status === "CERRADO").length,
-      totalCommissions, collectedCommissions, pendingCommissions, deals: relevantDeals,
+      totalCommissions, collectedCommissions, pendingCommissions,
+      totalExpenses, netIncome: collectedCommissions - totalExpenses,
+      deals: relevantDeals,
     };
   });
 
@@ -161,6 +176,7 @@ export default function ContabilidadPage() {
     collectedCommissions: acc.collectedCommissions + a.collectedCommissions,
     pendingCommissions: acc.pendingCommissions + a.pendingCommissions,
   }), { totalDeals: 0, closedDeals: 0, totalCommissions: 0, collectedCommissions: 0, pendingCommissions: 0 });
+  const companyNet = companyTotal.collectedCommissions - totalGastosCompany;
 
   const unassignedDeals = deals.filter((d) => !d.assignedAgent);
 
@@ -297,12 +313,16 @@ export default function ContabilidadPage() {
           <HiTrendingUp className="w-5 h-5 text-blue-600" />
           Resumen General - E. Pringle Real Estate
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
           <div className="bg-blue-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-blue-600 uppercase">Negocios</p><p className="text-2xl font-bold text-blue-800 mt-1">{companyTotal.totalDeals}</p></div>
           <div className="bg-green-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-green-600 uppercase">Cerrados</p><p className="text-2xl font-bold text-green-800 mt-1">{companyTotal.closedDeals}</p></div>
           <div className="bg-purple-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-purple-600 uppercase">Total Comisiones</p><p className="text-xl font-bold text-purple-800 mt-1">{formatCurrency(companyTotal.totalCommissions)}</p></div>
-          <div className="bg-emerald-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-emerald-600 uppercase">Cobrado</p><p className="text-xl font-bold text-emerald-800 mt-1">{formatCurrency(companyTotal.collectedCommissions)}</p></div>
-          <div className="bg-amber-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-amber-600 uppercase">Pendiente</p><p className="text-xl font-bold text-amber-800 mt-1">{formatCurrency(companyTotal.pendingCommissions)}</p></div>
+          <div className="bg-amber-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-amber-600 uppercase">Pendiente Cobro</p><p className="text-xl font-bold text-amber-800 mt-1">{formatCurrency(companyTotal.pendingCommissions)}</p></div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100"><p className="text-xs font-semibold text-emerald-600 uppercase">Ingreso Bruto</p><p className="text-xl font-bold text-emerald-800 mt-1">{formatCurrency(companyTotal.collectedCommissions)}</p><p className="text-[10px] text-emerald-500 mt-0.5">Comisiones cobradas</p></div>
+          <div className="bg-red-50 rounded-xl p-4 text-center border border-red-100"><p className="text-xs font-semibold text-red-600 uppercase">Gastos Totales</p><p className="text-xl font-bold text-red-800 mt-1">{formatCurrency(totalGastosCompany)}</p><p className="text-[10px] text-red-500 mt-0.5">Todos los gastos</p></div>
+          <div className={`rounded-xl p-4 text-center border ${companyNet >= 0 ? "bg-blue-50 border-blue-100" : "bg-orange-50 border-orange-100"}`}><p className={`text-xs font-semibold uppercase ${companyNet >= 0 ? "text-blue-600" : "text-orange-600"}`}>Ingreso Neto</p><p className={`text-xl font-bold mt-1 ${companyNet >= 0 ? "text-blue-800" : "text-orange-800"}`}>{formatCurrency(companyNet)}</p><p className={`text-[10px] mt-0.5 ${companyNet >= 0 ? "text-blue-500" : "text-orange-500"}`}>Bruto − Gastos</p></div>
         </div>
       </div>
 
@@ -328,10 +348,15 @@ export default function ContabilidadPage() {
                 <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2.5 rounded-full transition-all" style={{ width: `${agent.totalCommissions > 0 ? Math.min((agent.collectedCommissions / agent.totalCommissions) * 100, 100) : 0}%` }} />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-3 mb-3">
               <div className="bg-gray-50 rounded-xl p-3 text-center"><p className="text-[10px] font-semibold text-gray-400 uppercase">Total</p><p className="text-sm font-bold text-gray-900 mt-0.5">{formatCurrency(agent.totalCommissions)}</p></div>
               <div className="bg-green-50 rounded-xl p-3 text-center"><p className="text-[10px] font-semibold text-green-600 uppercase">Cobrado</p><p className="text-sm font-bold text-green-700 mt-0.5">{formatCurrency(agent.collectedCommissions)}</p></div>
               <div className="bg-amber-50 rounded-xl p-3 text-center"><p className="text-[10px] font-semibold text-amber-600 uppercase">Pendiente</p><p className="text-sm font-bold text-amber-700 mt-0.5">{formatCurrency(agent.pendingCommissions)}</p></div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
+              <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100"><p className="text-[10px] font-semibold text-emerald-600 uppercase">Bruto</p><p className="text-sm font-bold text-emerald-700 mt-0.5">{formatCurrency(agent.collectedCommissions)}</p></div>
+              <div className="bg-red-50 rounded-xl p-3 text-center border border-red-100"><p className="text-[10px] font-semibold text-red-600 uppercase">Gastos</p><p className="text-sm font-bold text-red-700 mt-0.5">{formatCurrency(agent.totalExpenses)}</p></div>
+              <div className={`rounded-xl p-3 text-center border ${agent.netIncome >= 0 ? "bg-blue-50 border-blue-100" : "bg-orange-50 border-orange-100"}`}><p className={`text-[10px] font-semibold uppercase ${agent.netIncome >= 0 ? "text-blue-600" : "text-orange-600"}`}>Neto</p><p className={`text-sm font-bold mt-0.5 ${agent.netIncome >= 0 ? "text-blue-700" : "text-orange-700"}`}>{formatCurrency(agent.netIncome)}</p></div>
             </div>
           </div>
         ))}
