@@ -13,13 +13,11 @@ import {
   HiChevronRight,
   HiCurrencyDollar,
   HiClipboardCheck,
-  HiKey,
 } from "react-icons/hi";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: HiHome, description: "Resumen general" },
   { href: "/clientes", label: "Clientes", icon: HiUsers, description: "Gestionar clientes" },
-  { href: "/propietarios", label: "Propietarios", icon: HiKey, description: "Dueños de propiedades" },
   { href: "/propiedades", label: "Propiedades", icon: HiOfficeBuilding, description: "Inventario de propiedades" },
   { href: "/negocios", label: "Negocios", icon: HiBriefcase, description: "Ventas y alquileres" },
   { href: "/tareas", label: "Tareas", icon: HiClipboardCheck, description: "Seguimientos y recordatorios" },
