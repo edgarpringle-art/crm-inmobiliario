@@ -243,7 +243,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
           <div className="grid grid-cols-1 gap-4">
             <FormField label="Link Google Drive"><input className={inputClass} value={form.driveLink} onChange={(e) => update("driveLink", e.target.value)} /></FormField>
             <FormField label="Descripción"><textarea className={inputClass} rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} /></FormField>
-            <FormField label="Resumen para WhatsApp"><textarea className={inputClass} rows={2} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Ej: Apartamento 3H, 2B, Vista al mar, Piscina y gimnasio. Precio: US$350,000. Contacta para más info." /></FormField>
+            <FormField label="Notas adicionales WhatsApp (opcional)"><textarea className={inputClass} rows={2} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Ej: Remodelado, vista al mar, acepta mascotas. (El resumen se genera automáticamente)" /></FormField>
           </div>
         </div>
 
