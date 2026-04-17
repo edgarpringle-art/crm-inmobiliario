@@ -21,7 +21,8 @@ const amenities = [
   { field: "hasPool", label: "Piscina" }, { field: "hasGym", label: "Gimnasio" },
   { field: "hasElevator", label: "Ascensor" }, { field: "hasSecurity", label: "Seguridad" },
   { field: "hasGenerator", label: "Planta Eléctrica" }, { field: "hasFurniture", label: "Amueblado" },
-  { field: "hasAC", label: "Aire Acondicionado" }, { field: "hasBalcony", label: "Balcón" },
+  { field: "hasAppliances", label: "Línea Blanca" },
+  { field: "hasAC", label: "Aires" }, { field: "hasBalcony", label: "Balcón" },
   { field: "hasGarden", label: "Jardín" },
 ];
 
@@ -43,7 +44,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
     salePrice: "", rentPrice: "", currency: "USD", maintenanceFee: "",
     area: "", landArea: "", bedrooms: "", bathrooms: "", parkingSpots: "", floors: "", yearBuilt: "",
     hasPool: false, hasGym: false, hasElevator: false, hasSecurity: false, hasGenerator: false,
-    hasFurniture: false, hasAC: false, hasBalcony: false, hasGarden: false,
+    hasFurniture: false, hasAppliances: false, hasAC: false, hasBalcony: false, hasGarden: false,
     ownerId: "", ownerName: "", ownerPhone: "",
     driveLink: "", description: "", notes: "",
   });
@@ -66,9 +67,10 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         bedrooms: data.bedrooms?.toString() || "", bathrooms: data.bathrooms?.toString() || "",
         parkingSpots: data.parkingSpots?.toString() || "", floors: data.floors?.toString() || "",
         yearBuilt: data.yearBuilt?.toString() || "",
-        hasPool: data.hasPool, hasGym: data.hasGym, hasElevator: data.hasElevator,
-        hasSecurity: data.hasSecurity, hasGenerator: data.hasGenerator, hasFurniture: data.hasFurniture,
-        hasAC: data.hasAC, hasBalcony: data.hasBalcony, hasGarden: data.hasGarden,
+        hasPool: !!data.hasPool, hasGym: !!data.hasGym, hasElevator: !!data.hasElevator,
+        hasSecurity: !!data.hasSecurity, hasGenerator: !!data.hasGenerator, hasFurniture: !!data.hasFurniture,
+        hasAppliances: !!data.hasAppliances,
+        hasAC: !!data.hasAC, hasBalcony: !!data.hasBalcony, hasGarden: !!data.hasGarden,
         ownerId: data.ownerId || "", ownerName: data.ownerName || "", ownerPhone: data.ownerPhone || "",
         driveLink: data.driveLink || "", description: data.description || "", notes: data.notes || "",
       });

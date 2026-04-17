@@ -21,7 +21,8 @@ const amenities = [
   { field: "hasSecurity", label: "Seguridad" },
   { field: "hasGenerator", label: "Planta Eléctrica" },
   { field: "hasFurniture", label: "Amueblado" },
-  { field: "hasAC", label: "Aire Acondicionado" },
+  { field: "hasAppliances", label: "Línea Blanca" },
+  { field: "hasAC", label: "Aires" },
   { field: "hasBalcony", label: "Balcón" },
   { field: "hasGarden", label: "Jardín" },
 ];
@@ -39,7 +40,7 @@ export default function NuevaPropiedadPage() {
     salePrice: "", rentPrice: "", currency: "USD", maintenanceFee: "",
     area: "", landArea: "", bedrooms: "", bathrooms: "", parkingSpots: "", floors: "", yearBuilt: "",
     hasPool: false, hasGym: false, hasElevator: false, hasSecurity: false, hasGenerator: false,
-    hasFurniture: false, hasAC: false, hasBalcony: false, hasGarden: false,
+    hasFurniture: false, hasAppliances: false, hasAC: false, hasBalcony: false, hasGarden: false,
     ownerId: "", ownerName: "", ownerPhone: "",
     driveLink: "", description: "", notes: "",
   });

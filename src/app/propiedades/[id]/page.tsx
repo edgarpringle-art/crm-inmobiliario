@@ -22,7 +22,8 @@ interface PropertyDetail {
   area: number | null; landArea: number | null; bedrooms: number | null; bathrooms: number | null;
   parkingSpots: number | null; floors: number | null; yearBuilt: number | null;
   hasPool: boolean; hasGym: boolean; hasElevator: boolean; hasSecurity: boolean;
-  hasGenerator: boolean; hasFurniture: boolean; hasAC: boolean; hasBalcony: boolean; hasGarden: boolean;
+  hasGenerator: boolean; hasFurniture: boolean; hasAppliances: boolean;
+  hasAC: boolean; hasBalcony: boolean; hasGarden: boolean;
   driveLink: string | null; portalLinks: string | null; description: string | null; notes: string | null;
   owner: { id: string; firstName: string; lastName: string; phone: string | null; email: string | null } | null;
   ownerName: string | null; ownerPhone: string | null;
@@ -32,8 +33,8 @@ interface PropertyDetail {
 
 const amenityLabels: Record<string, string> = {
   hasPool: "Piscina", hasGym: "Gimnasio", hasElevator: "Ascensor", hasSecurity: "Seguridad",
-  hasGenerator: "Planta Eléctrica", hasFurniture: "Amueblado", hasAC: "Aire Acondicionado",
-  hasBalcony: "Balcón", hasGarden: "Jardín",
+  hasGenerator: "Planta Eléctrica", hasFurniture: "Amueblado", hasAppliances: "Línea Blanca",
+  hasAC: "Aires", hasBalcony: "Balcón", hasGarden: "Jardín",
 };
 
 const propertyTypeEmoji: Record<string, string> = {
