@@ -17,6 +17,7 @@ interface Oferta {
   grupo_nombre: string;
   fecha: string;
   hora: string;
+  mensaje_original: string | null;
 }
 
 interface Busqueda {
@@ -32,6 +33,7 @@ interface Busqueda {
   grupo_nombre: string;
   fecha: string;
   hora: string;
+  mensaje_original: string | null;
 }
 
 type Tab = "ofertas" | "busquedas";
@@ -156,82 +158,110 @@ export default function GruposPage() {
 }
 
 function OfertaCard({ o }: { o: Oferta }) {
+  const [expanded, setExpanded] = useState(false);
   return (
-    <div className="bg-slate-800 border border-slate-600 rounded-xl p-4 flex gap-4 items-start hover:border-slate-500 transition-colors">
-      <div className="w-10 h-10 rounded-lg bg-green-800/60 border border-green-600/60 flex items-center justify-center flex-shrink-0">
-        <span className="text-green-300 text-xs font-bold">OF</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap gap-2 items-center mb-1">
-          <span className="font-semibold text-white text-sm">{o.tipo || "—"} · {o.zona || "—"}</span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-green-800/60 text-green-300 border border-green-600/60">
-            {o.modalidad}
-          </span>
+    <div className="bg-slate-800 border border-slate-600 rounded-xl p-4 hover:border-slate-500 transition-colors">
+      <div className="flex gap-4 items-start">
+        <div className="w-10 h-10 rounded-lg bg-green-800/60 border border-green-600/60 flex items-center justify-center flex-shrink-0">
+          <span className="text-green-300 text-xs font-bold">OF</span>
         </div>
-        <p className="text-green-300 font-bold text-sm mb-1">{o.precio_texto || "—"}</p>
-        <p className="text-slate-200 text-xs mb-2 line-clamp-2">{o.descripcion || ""}</p>
-        <div className="flex flex-wrap gap-3 text-xs text-slate-300">
-          {o.habitaciones && <span>🛏 {o.habitaciones} hab</span>}
-          {o.m2 && <span>📐 {o.m2} m²</span>}
-          <span>📌 {o.grupo_nombre}</span>
-          <span>🕐 {o.fecha} {o.hora}</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap gap-2 items-center mb-1">
+            <span className="font-semibold text-white text-sm">{o.tipo || "—"} · {o.zona || "—"}</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-green-800/60 text-green-300 border border-green-600/60">
+              {o.modalidad}
+            </span>
+          </div>
+          <p className="text-green-300 font-bold text-sm mb-1">{o.precio_texto || "—"}</p>
+          <p className="text-slate-200 text-xs mb-2 line-clamp-2">{o.descripcion || ""}</p>
+          <div className="flex flex-wrap gap-3 text-xs text-slate-300">
+            {o.habitaciones && <span>🛏 {o.habitaciones} hab</span>}
+            {o.m2 && <span>📐 {o.m2} m²</span>}
+            <span>📌 {o.grupo_nombre}</span>
+            <span>🕐 {o.fecha} {o.hora}</span>
+            {o.mensaje_original && (
+              <button onClick={() => setExpanded(!expanded)} className="text-slate-400 hover:text-white underline">
+                {expanded ? "Ocultar mensaje" : "Ver mensaje original"}
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="flex-shrink-0 text-right">
+          {o.contacto_nombre && (
+            <p className="text-xs text-white font-semibold">{o.contacto_nombre}</p>
+          )}
+          {o.contacto_tel && (
+            <a
+              href={`https://wa.me/${o.contacto_tel.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-green-300 hover:text-green-200 mt-1 block"
+            >
+              📲 {o.contacto_tel}
+            </a>
+          )}
         </div>
       </div>
-      <div className="flex-shrink-0 text-right">
-        {o.contacto_nombre && (
-          <p className="text-xs text-white font-semibold">{o.contacto_nombre}</p>
-        )}
-        {o.contacto_tel && (
-          <a
-            href={`https://wa.me/${o.contacto_tel.replace(/\D/g, "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-green-300 hover:text-green-200 mt-1 block"
-          >
-            📲 {o.contacto_tel}
-          </a>
-        )}
-      </div>
+      {expanded && o.mensaje_original && (
+        <div className="mt-3 p-3 bg-slate-900 border border-slate-700 rounded-lg">
+          <p className="text-xs text-slate-400 mb-1 font-semibold">Mensaje original:</p>
+          <p className="text-sm text-slate-200 whitespace-pre-wrap">{o.mensaje_original}</p>
+        </div>
+      )}
     </div>
   );
 }
 
 function BusquedaCard({ b }: { b: Busqueda }) {
+  const [expanded, setExpanded] = useState(false);
   return (
-    <div className="bg-slate-800 border border-slate-600 rounded-xl p-4 flex gap-4 items-start hover:border-slate-500 transition-colors">
-      <div className="w-10 h-10 rounded-lg bg-blue-800/60 border border-blue-600/60 flex items-center justify-center flex-shrink-0">
-        <span className="text-blue-300 text-xs font-bold">BQ</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap gap-2 items-center mb-1">
-          <span className="font-semibold text-white text-sm">{b.tipo || "—"} · {b.zona || "—"}</span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-800/60 text-blue-300 border border-blue-600/60">
-            {b.modalidad}
-          </span>
+    <div className="bg-slate-800 border border-slate-600 rounded-xl p-4 hover:border-slate-500 transition-colors">
+      <div className="flex gap-4 items-start">
+        <div className="w-10 h-10 rounded-lg bg-blue-800/60 border border-blue-600/60 flex items-center justify-center flex-shrink-0">
+          <span className="text-blue-300 text-xs font-bold">BQ</span>
         </div>
-        <p className="text-blue-300 font-bold text-sm mb-1">{b.presupuesto_texto || "—"}</p>
-        <p className="text-slate-200 text-xs mb-2 line-clamp-2">{b.requisitos || ""}</p>
-        <div className="flex flex-wrap gap-3 text-xs text-slate-300">
-          {b.habitaciones_min && <span>🛏 {b.habitaciones_min}+ hab</span>}
-          <span>📌 {b.grupo_nombre}</span>
-          <span>🕐 {b.fecha} {b.hora}</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap gap-2 items-center mb-1">
+            <span className="font-semibold text-white text-sm">{b.tipo || "—"} · {b.zona || "—"}</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-800/60 text-blue-300 border border-blue-600/60">
+              {b.modalidad}
+            </span>
+          </div>
+          <p className="text-blue-300 font-bold text-sm mb-1">{b.presupuesto_texto || "—"}</p>
+          <p className="text-slate-200 text-xs mb-2 line-clamp-2">{b.requisitos || ""}</p>
+          <div className="flex flex-wrap gap-3 text-xs text-slate-300">
+            {b.habitaciones_min && <span>🛏 {b.habitaciones_min}+ hab</span>}
+            <span>📌 {b.grupo_nombre}</span>
+            <span>🕐 {b.fecha} {b.hora}</span>
+            {b.mensaje_original && (
+              <button onClick={() => setExpanded(!expanded)} className="text-slate-400 hover:text-white underline">
+                {expanded ? "Ocultar mensaje" : "Ver mensaje original"}
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="flex-shrink-0 text-right">
+          {b.contacto_nombre && (
+            <p className="text-xs text-white font-semibold">{b.contacto_nombre}</p>
+          )}
+          {b.contacto_tel && (
+            <a
+              href={`https://wa.me/${b.contacto_tel.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-300 hover:text-blue-200 mt-1 block"
+            >
+              📲 {b.contacto_tel}
+            </a>
+          )}
         </div>
       </div>
-      <div className="flex-shrink-0 text-right">
-        {b.contacto_nombre && (
-          <p className="text-xs text-white font-semibold">{b.contacto_nombre}</p>
-        )}
-        {b.contacto_tel && (
-          <a
-            href={`https://wa.me/${b.contacto_tel.replace(/\D/g, "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-blue-300 hover:text-blue-200 mt-1 block"
-          >
-            📲 {b.contacto_tel}
-          </a>
-        )}
-      </div>
+      {expanded && b.mensaje_original && (
+        <div className="mt-3 p-3 bg-slate-900 border border-slate-700 rounded-lg">
+          <p className="text-xs text-slate-400 mb-1 font-semibold">Mensaje original:</p>
+          <p className="text-sm text-slate-200 whitespace-pre-wrap">{b.mensaje_original}</p>
+        </div>
+      )}
     </div>
   );
 }
