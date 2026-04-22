@@ -14,6 +14,7 @@ import {
   HiCurrencyDollar,
   HiClipboardCheck,
   HiChat,
+  HiSparkles,
 } from "react-icons/hi";
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/tareas", label: "Tareas", icon: HiClipboardCheck, description: "Seguimientos y recordatorios" },
   { href: "/contabilidad", label: "Contabilidad", icon: HiCurrencyDollar, description: "Comisiones por agente" },
   { href: "/grupos", label: "Grupos WA", icon: HiChat, description: "Feed de grupos WhatsApp" },
+  { href: "/matches", label: "Matches", icon: HiSparkles, description: "Coincidencias automáticas" },
 ];
 
 export default function Sidebar() {
