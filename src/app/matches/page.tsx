@@ -22,6 +22,8 @@ interface Entidad {
   hora?: string;
   modo?: string;
   msg_original?: string | null;
+  crm_id?: string | null;
+  crm_tabla?: string | null;
 }
 
 interface Match {
@@ -178,6 +180,16 @@ function MatchCard({ m }: { m: Match }) {
           {m.oferta.grupo_nombre && (
             <p className="text-slate-400 text-xs mt-1">📌 {m.oferta.grupo_nombre}</p>
           )}
+          {miOferta && m.oferta.crm_id && m.oferta.crm_tabla === "properties" && (
+            <a
+              href={`/propiedades/${m.oferta.crm_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-2 px-3 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-semibold rounded-lg transition-colors"
+            >
+              Ver ficha de la propiedad →
+            </a>
+          )}
         </div>
 
         {/* Búsqueda */}
@@ -207,6 +219,16 @@ function MatchCard({ m }: { m: Match }) {
           )}
           {m.busqueda.grupo_nombre && (
             <p className="text-slate-400 text-xs mt-1">📌 {m.busqueda.grupo_nombre}</p>
+          )}
+          {miBusqueda && m.busqueda.crm_id && m.busqueda.crm_tabla === "clients" && (
+            <a
+              href={`/clientes/${m.busqueda.crm_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-2 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition-colors"
+            >
+              Ver ficha del cliente →
+            </a>
           )}
         </div>
       </div>
