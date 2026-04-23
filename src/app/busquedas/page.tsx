@@ -73,12 +73,11 @@ export default function BusquedasPage() {
       <PageHeader
         title="Búsquedas"
         subtitle="Clientes buscando propiedades"
-        action={
-          <Link href="/busquedas/nuevo" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200">
-            <HiPlus className="w-4 h-4" /> Nueva Búsqueda
-          </Link>
-        }
-      />
+      >
+        <Link href="/busquedas/nuevo" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200">
+          <HiPlus className="w-4 h-4" /> Nueva Búsqueda
+        </Link>
+      </PageHeader>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
