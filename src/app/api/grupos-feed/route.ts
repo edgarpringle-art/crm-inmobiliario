@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
   try {
     const res = await fetch(
-      `${EP_REALTY_URL}/api/v1/feed?dias=${dias}&limit=500`,
+      `${EP_REALTY_URL}/api/v1/feed?dias=${dias}&limit=10000`,
       {
         headers: {
           Authorization: `Bearer ${EP_REALTY_TOKEN}`,

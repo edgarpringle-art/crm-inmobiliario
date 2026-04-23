@@ -8,6 +8,7 @@ import { HiPlus, HiSearch, HiPhone, HiPencil, HiTrash } from "react-icons/hi";
 
 interface Busqueda {
   id: string;
+  clientId: string | null;
   nombre: string;
   telefono: string | null;
   telefono2: string | null;
@@ -24,6 +25,21 @@ interface Busqueda {
   assignedAgent: string | null;
   status: string;
   createdAt: string;
+  hasPool?: number; hasGym?: number; hasElevator?: number; hasSecurity?: number;
+  hasGenerator?: number; hasFurniture?: number; hasAppliances?: number;
+  hasAC?: number; hasBalcony?: number; hasGarden?: number;
+}
+
+const AMENITY_LABELS: Record<string, string> = {
+  hasPool: "Piscina", hasGym: "Gym", hasElevator: "Ascensor",
+  hasSecurity: "Seguridad", hasGenerator: "Planta", hasFurniture: "Amoblado",
+  hasAppliances: "Línea Blanca", hasAC: "Aires", hasBalcony: "Balcón", hasGarden: "Jardín",
+};
+
+function getAmenities(b: Busqueda): string[] {
+  return Object.entries(AMENITY_LABELS)
+    .filter(([k]) => (b as unknown as Record<string, unknown>)[k])
+    .map(([, label]) => label);
 }
 
 const MODALIDAD_LABEL: Record<string, string> = {
@@ -189,6 +205,17 @@ export default function BusquedasPage() {
                       {zonas.map((z) => (
                         <span key={z} className="text-[10px] font-medium px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
                           📍 {z}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Amenidades */}
+                  {getAmenities(b).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {getAmenities(b).map((a) => (
+                        <span key={a} className="text-[10px] font-medium px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full">
+                          ✓ {a}
                         </span>
                       ))}
                     </div>
