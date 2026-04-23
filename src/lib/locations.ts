@@ -12,10 +12,27 @@ export const PA_LOCATIONS: Location[] = [
     province: "Panamá",
     district: "Panamá",
     sectors: [
-      "Casco Viejo", "El Cangrejo", "Punta Pacifica", "Costa del Este",
-      "Amador", "Calidonia", "Curundu", "La Exposición", "San Miguelito",
-      "Parque Lefevre", "Belisario Porras", "Juan Díaz", "Tocumen",
-      "Condado del Rey", "Clayton", "Ancón", "Balboa",
+      // Zona Bancaria / Centro
+      "El Cangrejo", "Obarrio", "Marbella", "Bella Vista", "La Cresta",
+      "El Carmen", "Campo Alegre", "Vía España", "La Alameda", "Urb. Marbella",
+      // Costero / Lujo
+      "Punta Pacífica", "Punta Paitilla", "Coco del Mar", "Avenida Balboa",
+      "Costa del Este", "Santa María Golf", "Versalles", "Brisas del Golf",
+      "Santa Elena", "Riviera",
+      // San Francisco / Este
+      "San Francisco", "Betania", "Hato Pintado", "Pueblo Nuevo",
+      "Parque Lefevre", "Río Abajo", "Chanis", "El Ingenio", "Miraflores",
+      "Villa del Rey", "El Prado",
+      // Casco / Sur
+      "Casco Viejo", "Santa Ana", "Calidonia", "El Chorrillo",
+      "La Exposición", "Curundú", "Amador",
+      // Zona del Canal
+      "Clayton", "Albrook", "Ancón", "Balboa", "Quarry Heights",
+      "Panamá Pacífico", "Howard",
+      // Norte / Afueras
+      "Las Cumbres", "Chilibre", "Alcalde Díaz", "Pedregal",
+      "Juan Díaz", "Tocumen", "24 de Diciembre", "Las Mañanitas",
+      "Las Garzas", "Pacora",
     ],
   },
   {
