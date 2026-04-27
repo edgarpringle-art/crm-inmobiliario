@@ -68,7 +68,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
   const waText = encodeURIComponent(
     `Hola, me interesa la propiedad: ${p.title}${loc ? ` en ${loc}` : ""}\nhttps://crm-inmobiliario-eta.vercel.app/p/${p.id}`
   );
-  const edgarPhone = "50766040000"; // placeholder — update with real number
+  const edgarPhone = "50763183113";
 
   return (
     <div className="min-h-screen bg-gray-50">
