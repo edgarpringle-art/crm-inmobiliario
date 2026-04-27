@@ -92,15 +92,31 @@ function buildWhatsappSummary(p: PropertyDetail): string {
   return lines.join("\n");
 }
 
+interface MatchBusqueda {
+  id: string;
+  nombre: string;
+  telefono: string | null;
+  modalidad: string;
+  tipoPropiedad: string | null;
+  presupuestoMin: number | null;
+  presupuestoMax: number | null;
+  currency: string;
+  zonas: string | null;
+  score: number;
+  reasons: string[];
+}
+
 export default function PropiedadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const router = useRouter();
   const [property, setProperty] = useState<PropertyDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDelete, setShowDelete] = useState(false);
+  const [matches, setMatches] = useState<MatchBusqueda[]>([]);
 
   useEffect(() => {
     fetch(`/api/properties/${id}`).then((r) => r.json()).then(setProperty).finally(() => setLoading(false));
+    fetch(`/api/match-busquedas?propertyId=${id}`).then((r) => r.json()).then((d) => setMatches(Array.isArray(d) ? d : [])).catch(() => setMatches([]));
   }, [id]);
 
   async function handleDelete() {
@@ -129,20 +145,22 @@ export default function PropiedadDetailPage({ params }: { params: Promise<{ id: 
   return (
     <div>
       <PageHeader title={property.title}>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => {
+              const publicUrl = `${window.location.origin}/p/${id}`;
+              navigator.clipboard.writeText(publicUrl);
+              toast.success("Link público copiado — comparte por WhatsApp");
+            }}
+            className="bg-purple-600 text-white hover:bg-purple-700 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+            Link Público
+          </button>
           {property.driveLink && (
-            <>
-              <button
-                onClick={() => { navigator.clipboard.writeText(property.driveLink!); alert("¡Link copiado! Pégalo en WhatsApp o email."); }}
-                className="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-                Compartir
-              </button>
-              <a href={property.driveLink} target="_blank" rel="noopener noreferrer" className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors">
-                Google Drive
-              </a>
-            </>
+            <a href={property.driveLink} target="_blank" rel="noopener noreferrer" className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors">
+              Google Drive
+            </a>
           )}
           <Link href={`/propiedades/${id}/editar`} className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg font-medium transition-colors">Editar</Link>
           <button onClick={() => setShowDelete(true)} className="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition-colors">Eliminar</button>
@@ -252,6 +270,58 @@ export default function PropiedadDetailPage({ params }: { params: Promise<{ id: 
             <p className="text-sm text-gray-700 whitespace-pre-wrap">{property.description}</p>
           </div>
         )}
+
+        {/* Búsquedas Compatibles */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2">
+            🎯 Búsquedas Compatibles
+            {matches.length > 0 && (
+              <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{matches.length}</span>
+            )}
+          </h2>
+          <p className="text-xs text-gray-400 mb-4">Clientes del CRM cuya búsqueda coincide con esta propiedad.</p>
+          {matches.length === 0 ? (
+            <p className="text-sm text-gray-400">No hay búsquedas activas que coincidan.</p>
+          ) : (
+            <div className="space-y-2">
+              {matches.map((m) => {
+                const zonas: string[] = m.zonas ? (() => { try { return JSON.parse(m.zonas!); } catch { return []; } })() : [];
+                const presupuesto = m.presupuestoMax
+                  ? `${formatCurrency(m.presupuestoMin ?? 0, m.currency)} – ${formatCurrency(m.presupuestoMax, m.currency)}`
+                  : m.presupuestoMin ? `Desde ${formatCurrency(m.presupuestoMin, m.currency)}` : null;
+                const scoreColor = m.score >= 80 ? "bg-green-100 text-green-700" : m.score >= 60 ? "bg-yellow-100 text-yellow-700" : "bg-gray-100 text-gray-600";
+                return (
+                  <div key={m.id} className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                    <span className={`text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0 ${scoreColor}`}>{m.score}%</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-gray-900">{m.nombre}</p>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${m.modalidad === "COMPRA" ? "bg-blue-100 text-blue-700" : "bg-teal-100 text-teal-700"}`}>
+                          {m.modalidad}
+                        </span>
+                        {m.tipoPropiedad && <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">{m.tipoPropiedad}</span>}
+                        {presupuesto && <span className="text-[10px] text-gray-500">{presupuesto}</span>}
+                        {zonas.slice(0, 2).map((z) => (
+                          <span key={z} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">📍{z}</span>
+                        ))}
+                      </div>
+                    </div>
+                    {m.telefono && (
+                      <a
+                        href={`https://wa.me/${m.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${m.nombre}, encontré una propiedad que puede interesarte: ${property.title}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-shrink-0 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                      >
+                        WA →
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {property.deals.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm p-6">
