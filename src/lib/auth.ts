@@ -19,7 +19,7 @@ const USERS: Record<string, { password: string; role: Role; displayName: string 
   },
   ana: {
     password: process.env.ANA_PASSWORD || "ana2026",
-    role: "agent",
+    role: "admin",
     displayName: "Ana Lorena Chanis",
   },
   valentina: {
