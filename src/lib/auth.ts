@@ -1,40 +1,45 @@
 // Auth utilities — works in both Edge (middleware) and Node (API routes)
-// Uses Web Crypto API which is available in both runtimes
+// Session creation/verification uses Web Crypto API (works in both runtimes).
+// User lookup hits the DB (Node.js runtime only — used in /api/auth/login).
 
-export type Role = "admin" | "agent";
+import { query } from "@/lib/db";
+
+export type Role = "broker" | "admin" | "agent";
 
 export interface SessionUser {
-  username: string;
+  username: string;       // Agent.code
   role: Role;
-  displayName: string;
+  displayName: string;    // Agent.fullName
 }
-
-// User definitions — passwords come from env vars
-// Defaults are only for local dev, must set real passwords in Vercel
-const USERS: Record<string, { password: string; role: Role; displayName: string }> = {
-  edgar: {
-    password: process.env.EDGAR_PASSWORD || "edgar2026",
-    role: "admin",
-    displayName: "Edgar Pringle",
-  },
-  ana: {
-    password: process.env.ANA_PASSWORD || "ana2026",
-    role: "admin",
-    displayName: "Ana Lorena Chanis",
-  },
-  valentina: {
-    password: process.env.VALENTINA_PASSWORD || "valentina2026",
-    role: "agent",
-    displayName: "Valentina",
-  },
-};
 
 const SECRET = process.env.AUTH_SECRET || "crm-dev-secret-change-in-production";
 
-export function lookupUser(username: string, password: string): SessionUser | null {
-  const u = USERS[username.toLowerCase()];
-  if (!u || u.password !== password) return null;
-  return { username: username.toLowerCase(), role: u.role, displayName: u.displayName };
+/** Looks up an agent by code + password. Returns SessionUser if active. */
+export async function lookupUser(username: string, password: string): Promise<SessionUser | null> {
+  const code = username.toLowerCase().trim();
+  try {
+    const rows = await query<{
+      code: string;
+      password: string;
+      role: string;
+      fullName: string;
+      active: number;
+    }>(
+      "SELECT code, password, role, fullName, active FROM Agent WHERE code = ?",
+      [code]
+    );
+    if (!rows.length) return null;
+    const a = rows[0];
+    if (!a.active) return null;
+    if (a.password !== password) return null;
+    return {
+      username: a.code,
+      role: (a.role as Role) || "agent",
+      displayName: a.fullName,
+    };
+  } catch {
+    return null;
+  }
 }
 
 async function hmac(message: string): Promise<string> {

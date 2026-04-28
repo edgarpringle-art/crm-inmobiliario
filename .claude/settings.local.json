@@ -44,7 +44,15 @@
       "Bash(TURSO_URL='libsql://crm-inmobiliario-crmbr.aws-ap-northeast-1.turso.io' TURSO_TOKEN='eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzYxOTY0NDYsImlkIjoiMDE5ZDhkOGUtNzIwMS03ZmIwLWFlYTktYzc2OTA1NTA2MTBhIiwicmlkIjoiY2E3ZDcyMTAtNjA4MS00MTc4LWFjNzAtZjJjMmQwMDczMDIyIn0.PKdIoIMGDNgOD2qe3S_RWf-r8-RR5UQopNGkLIEuvxQ_k7XxNYINKGgbdZFzz0Fb45DcAtuASqFreZJ00Wn9Dg' node scripts/turso-import.js)",
       "Bash(rm -f scripts/turso-import.js scripts/import-data.sql scripts/import-excel-data.js)",
       "Bash(ls scripts/)",
-      "Bash(rmdir scripts:*)"
+      "Bash(rmdir scripts:*)",
+      "Bash(node -e ' *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Add public property page, match inverso, expanded busquedas form *)",
+      "Bash(git push *)",
+      "Bash(git commit -m 'Set real WhatsApp contact number on public property page *)",
+      "Bash(git commit -m 'Add authentication: login page, session cookies, role-based access *)",
+      "Bash(git commit -m 'Give Ana Lorena admin role \\(full access including contabilidad\\) *)",
+      "Bash(git commit -m 'Phase 1: Multi-agent foundation *)"
     ]
   }
 }

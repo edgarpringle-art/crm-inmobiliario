@@ -3,7 +3,7 @@ import { lookupUser, createSession, COOKIE_SESSION, COOKIE_USER, COOKIE_OPTIONS 
 
 export async function POST(req: NextRequest) {
   const { username, password } = await req.json();
-  const user = lookupUser(username, password);
+  const user = await lookupUser(username, password);
 
   if (!user) {
     return NextResponse.json(

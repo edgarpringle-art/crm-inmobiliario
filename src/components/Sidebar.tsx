@@ -17,23 +17,35 @@ import {
   HiSparkles,
   HiSearch,
   HiLogout,
+  HiUserGroup,
 } from "react-icons/hi";
 
-const ALL_NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: HiHome, description: "Resumen general", adminOnly: false },
-  { href: "/clientes", label: "Clientes", icon: HiUsers, description: "Gestionar clientes", adminOnly: false },
-  { href: "/busquedas", label: "Búsquedas", icon: HiSearch, description: "Clientes buscando propiedades", adminOnly: false },
-  { href: "/propiedades", label: "Propiedades", icon: HiOfficeBuilding, description: "Inventario de propiedades", adminOnly: false },
-  { href: "/negocios", label: "Negocios", icon: HiBriefcase, description: "Ventas y alquileres", adminOnly: false },
-  { href: "/tareas", label: "Tareas", icon: HiClipboardCheck, description: "Seguimientos y recordatorios", adminOnly: false },
-  { href: "/contabilidad", label: "Contabilidad", icon: HiCurrencyDollar, description: "Comisiones por agente", adminOnly: true },
-  { href: "/grupos", label: "Grupos WA", icon: HiChat, description: "Feed de grupos WhatsApp", adminOnly: false },
-  { href: "/matches", label: "Matches", icon: HiSparkles, description: "Coincidencias automáticas", adminOnly: false },
+type Role = "broker" | "admin" | "agent";
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof HiHome;
+  description: string;
+  visibleFor: Role[];
+}
+
+const ALL_NAV_ITEMS: NavItem[] = [
+  { href: "/", label: "Dashboard", icon: HiHome, description: "Resumen general", visibleFor: ["broker", "admin", "agent"] },
+  { href: "/clientes", label: "Clientes", icon: HiUsers, description: "Gestionar clientes", visibleFor: ["broker", "admin", "agent"] },
+  { href: "/busquedas", label: "Búsquedas", icon: HiSearch, description: "Clientes buscando propiedades", visibleFor: ["broker", "admin", "agent"] },
+  { href: "/propiedades", label: "Propiedades", icon: HiOfficeBuilding, description: "Inventario de propiedades", visibleFor: ["broker", "admin", "agent"] },
+  { href: "/negocios", label: "Negocios", icon: HiBriefcase, description: "Ventas y alquileres", visibleFor: ["broker", "admin", "agent"] },
+  { href: "/tareas", label: "Tareas", icon: HiClipboardCheck, description: "Seguimientos y recordatorios", visibleFor: ["broker", "admin", "agent"] },
+  { href: "/contabilidad", label: "Contabilidad", icon: HiCurrencyDollar, description: "Empresa: comisiones y gastos", visibleFor: ["broker", "admin"] },
+  { href: "/agentes", label: "Agentes", icon: HiUserGroup, description: "Gestión de usuarios", visibleFor: ["broker"] },
+  { href: "/grupos", label: "Grupos WA", icon: HiChat, description: "Feed de grupos WhatsApp", visibleFor: ["broker", "admin", "agent"] },
+  { href: "/matches", label: "Matches", icon: HiSparkles, description: "Coincidencias automáticas", visibleFor: ["broker", "admin", "agent"] },
 ];
 
 interface CrmUser {
   username: string;
-  role: "admin" | "agent";
+  role: Role;
   displayName: string;
 }
 
@@ -42,7 +54,7 @@ function parseCrmUser(cookie: string): CrmUser | null {
     const parts = cookie.split(":");
     if (parts.length < 3) return null;
     const [username, role, ...nameParts] = parts;
-    return { username, role: role as "admin" | "agent", displayName: nameParts.join(":") };
+    return { username, role: role as Role, displayName: nameParts.join(":") };
   } catch {
     return null;
   }
@@ -65,8 +77,8 @@ export default function Sidebar() {
     setCrmUser(getCrmUserFromCookies());
   }, []);
 
-  const role = crmUser?.role ?? "agent";
-  const navItems = ALL_NAV_ITEMS.filter((item) => !item.adminOnly || role === "admin");
+  const role: Role = crmUser?.role ?? "agent";
+  const navItems = ALL_NAV_ITEMS.filter((item) => item.visibleFor.includes(role));
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -136,7 +148,9 @@ export default function Sidebar() {
         {crmUser && (
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-800/60">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-              role === "admin"
+              role === "broker"
+                ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white"
+                : role === "admin"
                 ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white"
                 : "bg-slate-700 text-slate-300"
             }`}>
@@ -144,7 +158,9 @@ export default function Sidebar() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-slate-200 truncate">{crmUser.displayName}</p>
-              <p className="text-[10px] text-slate-500">{role === "admin" ? "Administrador" : "Agente"}</p>
+              <p className="text-[10px] text-slate-500">
+                {role === "broker" ? "Broker" : role === "admin" ? "Admin" : "Agente"}
+              </p>
             </div>
           </div>
         )}
