@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne, update, remove } from "@/lib/db";
+import { getCurrentUser, type SessionUser } from "@/lib/auth";
 
 type RouteParams = { params: Promise<{ id: string }> };
+
+interface DealRow {
+  id: string;
+  assignedAgent: string | null;
+}
+
+/** Returns true if the user is allowed to access this deal. */
+function canAccess(user: SessionUser | null, deal: DealRow | null): boolean {
+  if (!deal) return false;
+  if (!user) return false;
+  if (user.role === "broker" || user.role === "admin") return true;
+  // agent: only their own deals
+  return (deal.assignedAgent || "").toLowerCase() === user.username.toLowerCase();
+}
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
+    const me = await getCurrentUser();
+    const dealRow = await queryOne<DealRow>("SELECT id, assignedAgent FROM Deal WHERE id = ?", [id]);
+    if (!dealRow) return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
+    if (!canAccess(me, dealRow)) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+
     const rows = await query(`
       SELECT d.*,
         cl.id as clientId_rel, cl.firstName as clientFirstName, cl.lastName as clientLastName, cl.email as clientEmail, cl.phone as clientPhone,
@@ -15,8 +35,6 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       LEFT JOIN Property p ON d.propertyId = p.id
       WHERE d.id = ?
     `, [id]);
-
-    if (!rows[0]) return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
 
     const d = rows[0] as Record<string, unknown>;
     const deal = {
@@ -35,10 +53,17 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const existing = await queryOne("SELECT id FROM Deal WHERE id = ?", [id]);
+    const me = await getCurrentUser();
+    const existing = await queryOne<DealRow>("SELECT id, assignedAgent FROM Deal WHERE id = ?", [id]);
     if (!existing) return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
+    if (!canAccess(me, existing)) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
     const body = await request.json();
+    // Prevent agents from re-assigning the deal to someone else
+    if (me?.role === "agent") {
+      body.assignedAgent = me.username.toUpperCase();
+    }
+
     await update("Deal", id, body);
     const deal = await queryOne("SELECT * FROM Deal WHERE id = ?", [id]);
     return NextResponse.json(deal);
@@ -51,8 +76,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const existing = await queryOne("SELECT id FROM Deal WHERE id = ?", [id]);
+    const me = await getCurrentUser();
+    const existing = await queryOne<DealRow>("SELECT id, assignedAgent FROM Deal WHERE id = ?", [id]);
     if (!existing) return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
+    if (!canAccess(me, existing)) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
     await remove("Deal", id);
     return NextResponse.json({ message: "Negocio eliminado exitosamente" });

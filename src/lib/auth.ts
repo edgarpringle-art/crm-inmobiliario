@@ -86,6 +86,18 @@ export async function verifySession(cookie: string): Promise<SessionUser | null>
 export const COOKIE_SESSION = "crm_session";
 export const COOKIE_USER = "crm_user"; // non-httpOnly, for client-side UI
 
+/**
+ * Server-only helper to read the current user from request cookies.
+ * Use only in API route handlers (Node.js runtime).
+ */
+export async function getCurrentUser(): Promise<SessionUser | null> {
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  const session = cookieStore.get(COOKIE_SESSION)?.value;
+  if (!session) return null;
+  return await verifySession(session);
+}
+
 export const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",

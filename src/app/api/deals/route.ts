@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, insert } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status") || "";
+    const me = await getCurrentUser();
 
     let sql = `
       SELECT d.*,
@@ -17,6 +19,12 @@ export async function GET(request: NextRequest) {
       WHERE 1=1
     `;
     const args: unknown[] = [];
+
+    // Visibility: agents only see their own deals
+    if (me?.role === "agent") {
+      sql += " AND LOWER(d.assignedAgent) = ?";
+      args.push(me.username.toLowerCase());
+    }
 
     if (search) {
       sql += " AND (d.notes LIKE ? OR cl.firstName LIKE ? OR cl.lastName LIKE ? OR p.title LIKE ? OR p.address LIKE ?)";
@@ -50,6 +58,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     if (!body.dealType) {
       return NextResponse.json({ error: "dealType es obligatorio" }, { status: 400 });
+    }
+
+    // Agents always create deals assigned to themselves
+    const me = await getCurrentUser();
+    if (me?.role === "agent") {
+      body.assignedAgent = me.username.toUpperCase();
     }
 
     const id = await insert("Deal", body);
