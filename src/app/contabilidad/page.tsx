@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import {
-  AGENTS, MONTHS, EXPENSE_CATEGORIES, CURRENCIES,
+  MONTHS, EXPENSE_CATEGORIES, CURRENCIES,
   formatCurrency, formatDate, getLabel,
 } from "@/lib/constants";
 import {
@@ -16,11 +16,21 @@ interface CommissionPayment {
   id: string; label: string; amount: number; date: string | null; paid: boolean;
 }
 
+interface AgentRow {
+  id: string; code: string; fullName: string; role: string;
+  initials: string | null; color: string | null;
+}
+
 interface Deal {
   id: string; dealType: string; status: string;
   agreedPrice: number | null; currency: string;
   commissionAmount: number | null; commissionPaid: boolean;
   commissionPayments: string | null; assignedAgent: string | null;
+  internalAgentId: string | null;
+  companyShare: number | null;
+  internalAgentShare: number | null;
+  externalAgentName: string | null;
+  externalAgentShare: number | null;
   closingDate: string | null; commissionDate: string | null;
   contractStartDate: string | null; createdAt: string;
   client: { firstName: string; lastName: string } | null;
@@ -67,7 +77,6 @@ function getCommissionsByMonth(deals: Deal[], month: number, year: number) {
       }
     }
     if (payments.length === 0 && deal.commissionPaid && deal.commissionAmount) {
-      // Payment date priority: commissionDate → closingDate → contractStartDate
       const paymentDateStr = deal.commissionDate || deal.closingDate || deal.contractStartDate;
       if (paymentDateStr) {
         const d = parseLocalDate(paymentDateStr);
@@ -80,11 +89,43 @@ function getCommissionsByMonth(deals: Deal[], month: number, year: number) {
   return results;
 }
 
+/**
+ * Computes how much of a deal's commission belongs to a given agent.
+ * Uses new split fields if present; falls back to legacy logic otherwise.
+ */
+function getAgentShareFromDeal(deal: Deal, agent: AgentRow): number {
+  const hasSplits =
+    deal.companyShare != null ||
+    deal.internalAgentShare != null ||
+    deal.externalAgentShare != null;
+
+  if (hasSplits) {
+    let share = 0;
+    if (deal.internalAgentId === agent.id && deal.internalAgentShare != null) {
+      share += deal.internalAgentShare;
+    }
+    // Broker (Edgar) also receives the company share
+    if (agent.role === "broker" && deal.companyShare != null) {
+      share += deal.companyShare;
+    }
+    return share;
+  }
+
+  // Legacy
+  const code = (deal.assignedAgent || "").toLowerCase();
+  if (code === agent.code.toLowerCase()) return deal.commissionAmount || 0;
+  if (code === "ambos" && (agent.code === "edgar" || agent.code === "ana")) {
+    return (deal.commissionAmount || 0) * 0.5;
+  }
+  return 0;
+}
+
 const inputClass = "w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 
 export default function ContabilidadPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [gastos, setGastos] = useState<Gasto[]>([]);
+  const [agents, setAgents] = useState<AgentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -121,51 +162,70 @@ export default function ContabilidadPage() {
     Promise.all([
       fetch("/api/deals").then((r) => r.json()).catch(() => []),
       fetch("/api/gastos").then((r) => r.json()).then((g) => Array.isArray(g) ? g : []).catch(() => []),
-    ]).then(([d, g]) => { setDeals(Array.isArray(d) ? d : []); setGastos(g); }).finally(() => setLoading(false));
+      fetch("/api/agents?active=1").then((r) => r.json()).catch(() => []),
+    ]).then(([d, g, a]) => {
+      setDeals(Array.isArray(d) ? d : []);
+      setGastos(g);
+      setAgents(Array.isArray(a) ? a : []);
+    }).finally(() => setLoading(false));
   }, []);
 
-  // Agent summaries (AMBOS splits 50/50)
-  const individualAgents = AGENTS.filter((a) => a.value !== "AMBOS");
-  const ambosDeals = deals.filter((d) => d.assignedAgent === "AMBOS");
+  // Show broker + admin agents in the breakdown (skip pure agents like Valentina who manage themselves)
+  // ...actually show ALL active agents for completeness
+  const individualAgents = agents;
 
-  // Total gastos per agent (direct + 50% AMBOS/empresa)
-  function totalGastosForAgent(agentValue: string) {
+  // Total gastos per agent (direct match by code, AMBOS/null = 50/50 between broker + admin)
+  const splitAgents = agents.filter((a) => a.role === "broker" || a.role === "admin");
+  function totalGastosForAgent(agent: AgentRow) {
     let total = 0;
     for (const g of gastos) {
-      if (g.assignedAgent === agentValue) total += g.amount;
-      else if (!g.assignedAgent || g.assignedAgent === "AMBOS") total += g.amount * 0.5;
+      const ag = (g.assignedAgent || "").toLowerCase();
+      if (ag === agent.code.toLowerCase()) total += g.amount;
+      else if ((!g.assignedAgent || ag === "ambos") && splitAgents.some((s) => s.id === agent.id)) {
+        total += g.amount / Math.max(splitAgents.length, 1);
+      }
     }
     return total;
   }
   const totalGastosCompany = gastos.reduce((s, g) => s + g.amount, 0);
 
   const agentSummaries: AgentSummary[] = individualAgents.map((agent) => {
-    const ownDeals = deals.filter((d) => d.assignedAgent === agent.value);
-    const relevantDeals = [...ownDeals, ...ambosDeals];
     let totalCommissions = 0, collectedCommissions = 0, pendingCommissions = 0;
-    for (const deal of relevantDeals) {
-      const split = deal.assignedAgent === "AMBOS" ? 0.5 : 1;
-      const commission = (deal.commissionAmount || 0) * split;
-      totalCommissions += commission;
+    let totalDeals = 0, closedDeals = 0;
+    const myDeals: Deal[] = [];
+
+    for (const deal of deals) {
+      const share = getAgentShareFromDeal(deal, agent);
+      if (share === 0) continue;
+      myDeals.push(deal);
+      totalDeals++;
+      if (deal.status === "CERRADO") closedDeals++;
+      totalCommissions += share;
+
+      // Apply collected/pending proportionally
+      const commTotal = deal.commissionAmount || 0;
+      const ratio = commTotal > 0 ? share / commTotal : 1;
       const payments = parsePayments(deal.commissionPayments);
       if (payments.length > 0) {
         for (const p of payments) {
-          if (p.paid) collectedCommissions += p.amount * split;
-          else pendingCommissions += p.amount * split;
+          if (p.paid) collectedCommissions += p.amount * ratio;
+          else pendingCommissions += p.amount * ratio;
         }
       } else {
-        if (deal.commissionPaid) collectedCommissions += commission;
-        else pendingCommissions += commission;
+        if (deal.commissionPaid) collectedCommissions += share;
+        else pendingCommissions += share;
       }
     }
-    const totalExpenses = totalGastosForAgent(agent.value);
+    const totalExpenses = totalGastosForAgent(agent);
     return {
-      agent: agent.value, label: agent.label, initials: agent.initials, color: agent.color,
-      totalDeals: ownDeals.length + ambosDeals.length,
-      closedDeals: relevantDeals.filter((d) => d.status === "CERRADO").length,
+      agent: agent.code.toUpperCase(),
+      label: agent.fullName,
+      initials: agent.initials || agent.fullName.charAt(0),
+      color: agent.color || "from-slate-500 to-slate-600",
+      totalDeals, closedDeals,
       totalCommissions, collectedCommissions, pendingCommissions,
       totalExpenses, netIncome: collectedCommissions - totalExpenses,
-      deals: relevantDeals,
+      deals: myDeals,
     };
   });
 
@@ -180,13 +240,15 @@ export default function ContabilidadPage() {
 
   const unassignedDeals = deals.filter((d) => !d.assignedAgent);
 
-  // Monthly commissions (AMBOS split 50/50)
+  // Monthly commissions — legacy "AMBOS" splits across broker+admin agents
   const rawMonthly = getCommissionsByMonth(deals, selectedMonth, selectedYear);
   const monthlyPayments: typeof rawMonthly = [];
   for (const p of rawMonthly) {
-    if (p.agent === "AMBOS") {
-      monthlyPayments.push({ ...p, agent: "EDGAR", amount: p.amount * 0.5 });
-      monthlyPayments.push({ ...p, agent: "ANA_LORENA", amount: p.amount * 0.5 });
+    if ((p.agent || "").toUpperCase() === "AMBOS" && splitAgents.length > 0) {
+      const portion = p.amount / splitAgents.length;
+      for (const a of splitAgents) {
+        monthlyPayments.push({ ...p, agent: a.code.toUpperCase(), amount: portion });
+      }
     } else {
       monthlyPayments.push(p);
     }
@@ -201,27 +263,34 @@ export default function ContabilidadPage() {
   const monthlyGastosTotal = monthlyGastos.reduce((s, g) => s + g.amount, 0);
   const monthlyNet = monthlyCommissionsTotal - monthlyGastosTotal;
 
-  function gastosForAgent(agentValue: string) {
+  function gastosForAgent(agent: AgentRow) {
     let total = 0;
     const items: { description: string; amount: number; category: string; shared: boolean }[] = [];
+    const isSplit = splitAgents.some((s) => s.id === agent.id);
     for (const g of monthlyGastos) {
-      if (g.assignedAgent === agentValue) {
+      const ag = (g.assignedAgent || "").toLowerCase();
+      if (ag === agent.code.toLowerCase()) {
         total += g.amount;
         items.push({ description: g.description, amount: g.amount, category: g.category, shared: false });
-      } else if (!g.assignedAgent || g.assignedAgent === "AMBOS") {
-        total += g.amount * 0.5;
-        items.push({ description: g.description, amount: g.amount * 0.5, category: g.category, shared: true });
+      } else if ((!g.assignedAgent || ag === "ambos") && isSplit) {
+        const portion = g.amount / Math.max(splitAgents.length, 1);
+        total += portion;
+        items.push({ description: g.description, amount: portion, category: g.category, shared: true });
       }
     }
     return { total, items };
   }
 
   const monthlyByAgent = individualAgents.map((agent) => {
-    const payments = monthlyPayments.filter((p) => p.agent === agent.value);
+    const codeUpper = agent.code.toUpperCase();
+    const payments = monthlyPayments.filter((p) => (p.agent || "").toUpperCase() === codeUpper);
     const commissions = payments.reduce((s, p) => s + p.amount, 0);
-    const { total: expenses, items: expenseItems } = gastosForAgent(agent.value);
+    const { total: expenses, items: expenseItems } = gastosForAgent(agent);
     return {
-      ...agent,
+      value: codeUpper,
+      label: agent.fullName,
+      initials: agent.initials || agent.fullName.charAt(0),
+      color: agent.color || "from-slate-500 to-slate-600",
       payments,
       total: commissions,
       commissions,
@@ -238,14 +307,8 @@ export default function ContabilidadPage() {
   });
   const chartData = chartMonths.map(({ month, year, label }) => {
     const raw = getCommissionsByMonth(deals, month, year);
-    const expanded: typeof raw = [];
-    for (const p of raw) {
-      if (p.agent === "AMBOS") {
-        expanded.push({ ...p, agent: "EDGAR", amount: p.amount * 0.5 });
-        expanded.push({ ...p, agent: "ANA_LORENA", amount: p.amount * 0.5 });
-      } else { expanded.push(p); }
-    }
-    const commissions = expanded.reduce((s, p) => s + p.amount, 0);
+    // Sum total commissions for the month (no need to split by agent for chart total)
+    const commissions = raw.reduce((s, p) => s + p.amount, 0);
     const expenses = gastos.filter((g) => {
       const d = new Date(g.date);
       return d.getMonth() + 1 === month && d.getFullYear() === year;
@@ -254,7 +317,14 @@ export default function ContabilidadPage() {
   });
   const chartMax = Math.max(...chartData.map((d) => Math.max(d.commissions, d.expenses)), 1);
 
-  const displayDeals = agentFilter === "ALL" ? deals : deals.filter((d) => d.assignedAgent === agentFilter);
+  const displayDeals = agentFilter === "ALL" ? deals : deals.filter((d) => (d.assignedAgent || "").toUpperCase() === agentFilter);
+
+  function agentLabel(agentCode: string | null | undefined): string {
+    if (!agentCode) return "Empresa";
+    if (agentCode.toUpperCase() === "AMBOS") return "Ambos";
+    const a = agents.find((x) => x.code.toLowerCase() === agentCode.toLowerCase());
+    return a ? a.fullName : agentCode;
+  }
 
   async function handleAddGasto(e: React.FormEvent) {
     e.preventDefault();
@@ -548,7 +618,8 @@ export default function ContabilidadPage() {
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Agente</label>
                 <select className={inputClass} value={gastoForm.assignedAgent} onChange={(e) => setGastoForm((p) => ({ ...p, assignedAgent: e.target.value }))}>
                   <option value="">Empresa</option>
-                  {AGENTS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
+                  {agents.map((a) => <option key={a.id} value={a.code.toUpperCase()}>{a.fullName}</option>)}
+                  <option value="AMBOS">Compartido</option>
                 </select>
               </div>
               <div>
@@ -586,7 +657,7 @@ export default function ContabilidadPage() {
                   <p className="font-semibold text-gray-900 text-sm">{g.description}</p>
                   <p className="text-xs text-gray-400">
                     {formatDate(g.date)} · {getLabel(EXPENSE_CATEGORIES, g.category)}
-                    {g.assignedAgent ? ` · ${getLabel(AGENTS, g.assignedAgent)}` : " · Empresa"}
+                    {g.assignedAgent ? ` · ${agentLabel(g.assignedAgent)}` : " · Empresa"}
                   </p>
                 </div>
                 <p className="text-sm font-bold text-red-600 flex-shrink-0">{formatCurrency(g.amount, g.currency)}</p>
@@ -611,9 +682,13 @@ export default function ContabilidadPage() {
           </h2>
           <div className="flex gap-2">
             <button onClick={() => setAgentFilter("ALL")} className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${agentFilter === "ALL" ? "bg-blue-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>Todos</button>
-            {AGENTS.map((a) => (
-              <button key={a.value} onClick={() => setAgentFilter(a.value)} className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${agentFilter === a.value ? "bg-blue-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>{a.initials}</button>
-            ))}
+            {agents.map((a) => {
+              const v = a.code.toUpperCase();
+              const initials = a.initials || a.fullName.charAt(0);
+              return (
+                <button key={a.id} onClick={() => setAgentFilter(v)} className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${agentFilter === v ? "bg-blue-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>{initials}</button>
+              );
+            })}
           </div>
         </div>
         {displayDeals.length === 0 ? (
@@ -635,7 +710,7 @@ export default function ContabilidadPage() {
                     <p className="font-semibold text-gray-900 text-sm truncate">{deal.property?.title || "Sin propiedad"}</p>
                     <p className="text-xs text-gray-400">
                       {deal.client ? `${deal.client.firstName} ${deal.client.lastName}` : "Sin cliente"}
-                      {deal.assignedAgent ? ` · ${getLabel(AGENTS, deal.assignedAgent)}` : ""}
+                      {deal.assignedAgent ? ` · ${agentLabel(deal.assignedAgent)}` : ""}
                     </p>
                   </div>
                   <div className="hidden sm:flex items-center gap-2">
@@ -646,8 +721,8 @@ export default function ContabilidadPage() {
                     </div>
                   </div>
                   <StatusBadge
-                    label={deal.assignedAgent ? getLabel(AGENTS, deal.assignedAgent) : "Sin asignar"}
-                    colorClass={deal.assignedAgent === "EDGAR" ? "bg-blue-100 text-blue-700" : deal.assignedAgent === "ANA_LORENA" ? "bg-purple-100 text-purple-700" : deal.assignedAgent === "AMBOS" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-500"}
+                    label={deal.assignedAgent ? agentLabel(deal.assignedAgent) : "Sin asignar"}
+                    colorClass={(deal.assignedAgent || "").toUpperCase() === "EDGAR" ? "bg-blue-100 text-blue-700" : (deal.assignedAgent || "").toUpperCase() === "ANA" || (deal.assignedAgent || "").toUpperCase() === "ANA_LORENA" ? "bg-purple-100 text-purple-700" : (deal.assignedAgent || "").toUpperCase() === "AMBOS" ? "bg-indigo-100 text-indigo-700" : deal.assignedAgent ? "bg-pink-100 text-pink-700" : "bg-gray-100 text-gray-500"}
                   />
                 </div>
               );

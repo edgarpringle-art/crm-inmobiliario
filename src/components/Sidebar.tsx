@@ -38,6 +38,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/negocios", label: "Negocios", icon: HiBriefcase, description: "Ventas y alquileres", visibleFor: ["broker", "admin", "agent"] },
   { href: "/tareas", label: "Tareas", icon: HiClipboardCheck, description: "Seguimientos y recordatorios", visibleFor: ["broker", "admin", "agent"] },
   { href: "/contabilidad", label: "Contabilidad", icon: HiCurrencyDollar, description: "Empresa: comisiones y gastos", visibleFor: ["broker", "admin"] },
+  { href: "/mis-comisiones", label: "Mis Comisiones", icon: HiCurrencyDollar, description: "Tus números personales", visibleFor: ["agent"] },
   { href: "/agentes", label: "Agentes", icon: HiUserGroup, description: "Gestión de usuarios", visibleFor: ["broker"] },
   { href: "/grupos", label: "Grupos WA", icon: HiChat, description: "Feed de grupos WhatsApp", visibleFor: ["broker", "admin", "agent"] },
   { href: "/matches", label: "Matches", icon: HiSparkles, description: "Coincidencias automáticas", visibleFor: ["broker", "admin", "agent"] },
