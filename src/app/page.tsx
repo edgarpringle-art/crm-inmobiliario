@@ -30,6 +30,7 @@ interface DashboardData {
   totalDeals: number;
   closedDeals: number;
   totalCommissions: number;
+  isAgent?: boolean;
   recentDeals: Array<{
     id: string;
     dealType: string;
@@ -59,6 +60,16 @@ function getTodayFormatted(): string {
   });
 }
 
+function getCurrentUserFromCookie(): { displayName: string; firstName: string; role: string } | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.split("; ").find((c) => c.startsWith("crm_user="));
+  if (!match) return null;
+  const parts = decodeURIComponent(match.split("=")[1]).split(":");
+  if (parts.length < 3) return null;
+  const displayName = parts.slice(2).join(":");
+  return { displayName, firstName: displayName.split(" ")[0], role: parts[1] };
+}
+
 function getDaysRemaining(endDate: string): number {
   const end = new Date(endDate);
   const now = new Date();
@@ -73,55 +84,59 @@ function getDaysRemainingColor(days: number): string {
   return "text-blue-600 bg-blue-50 border-blue-200";
 }
 
-const statCards = [
-  {
-    key: "clients" as const,
-    title: "Total Clientes",
-    icon: HiUsers,
-    gradient: "stat-blue",
-    iconColor: "text-blue-600",
-    getValue: (d: DashboardData) => d.totalClients,
-    getSub: (d: DashboardData) => `${d.activeClients} activos`,
-    href: "/clientes",
-  },
-  {
-    key: "properties" as const,
-    title: "Total Propiedades",
-    icon: HiOfficeBuilding,
-    gradient: "stat-purple",
-    iconColor: "text-purple-600",
-    getValue: (d: DashboardData) => d.totalProperties,
-    getSub: (d: DashboardData) => `${d.availableProperties} disponibles`,
-    href: "/propiedades",
-  },
-  {
-    key: "deals" as const,
-    title: "Negocios Cerrados",
-    icon: HiBriefcase,
-    gradient: "stat-orange",
-    iconColor: "text-orange-600",
-    getValue: (d: DashboardData) => d.closedDeals,
-    getSub: (d: DashboardData) => `de ${d.totalDeals} total`,
-    href: "/negocios",
-  },
-  {
-    key: "commissions" as const,
-    title: "Comisiones Totales",
-    icon: HiCurrencyDollar,
-    gradient: "stat-green",
-    iconColor: "text-emerald-600",
-    getValue: (d: DashboardData) => formatCurrency(d.totalCommissions),
-    getSub: () => "acumulado",
-    href: "/negocios",
-  },
-];
+function buildStatCards(isAgent: boolean) {
+  return [
+    {
+      key: "clients" as const,
+      title: "Total Clientes",
+      icon: HiUsers,
+      gradient: "stat-blue",
+      iconColor: "text-blue-600",
+      getValue: (d: DashboardData) => d.totalClients,
+      getSub: (d: DashboardData) => `${d.activeClients} activos`,
+      href: "/clientes",
+    },
+    {
+      key: "properties" as const,
+      title: "Total Propiedades",
+      icon: HiOfficeBuilding,
+      gradient: "stat-purple",
+      iconColor: "text-purple-600",
+      getValue: (d: DashboardData) => d.totalProperties,
+      getSub: (d: DashboardData) => `${d.availableProperties} disponibles`,
+      href: "/propiedades",
+    },
+    {
+      key: "deals" as const,
+      title: isAgent ? "Mis Negocios Cerrados" : "Negocios Cerrados",
+      icon: HiBriefcase,
+      gradient: "stat-orange",
+      iconColor: "text-orange-600",
+      getValue: (d: DashboardData) => d.closedDeals,
+      getSub: (d: DashboardData) => `de ${d.totalDeals} total`,
+      href: "/negocios",
+    },
+    {
+      key: "commissions" as const,
+      title: isAgent ? "Mis Comisiones" : "Comisiones Totales",
+      icon: HiCurrencyDollar,
+      gradient: "stat-green",
+      iconColor: "text-emerald-600",
+      getValue: (d: DashboardData) => formatCurrency(d.totalCommissions),
+      getSub: () => isAgent ? "mi parte" : "acumulado",
+      href: isAgent ? "/mis-comisiones" : "/negocios",
+    },
+  ];
+}
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [me, setMe] = useState<{ displayName: string; firstName: string; role: string } | null>(null);
 
   useEffect(() => {
+    setMe(getCurrentUserFromCookie());
     async function fetchDashboard() {
       try {
         const res = await fetch("/api/dashboard");
@@ -174,7 +189,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Bienvenido <span className="gradient-text">Edgar</span>
+            Bienvenido <span className="gradient-text">{me?.firstName || ""}</span>
           </h1>
           <p className="text-sm text-gray-500 mt-1 capitalize">{getTodayFormatted()}</p>
         </div>
@@ -193,7 +208,7 @@ export default function DashboardPage() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-        {statCards.map((card, index) => {
+        {buildStatCards(!!data.isAgent).map((card, index) => {
           const Icon = card.icon;
           return (
             <Link
@@ -245,7 +260,7 @@ export default function DashboardPage() {
         {/* Negocios Recientes */}
         <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100/80">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold text-gray-900">Negocios Recientes</h2>
+            <h2 className="text-lg font-bold text-gray-900">{data.isAgent ? "Mis Negocios Recientes" : "Negocios Recientes"}</h2>
             <Link href="/negocios" className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
               Ver todos
             </Link>

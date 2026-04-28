@@ -53,7 +53,8 @@
       "Bash(git commit -m 'Add authentication: login page, session cookies, role-based access *)",
       "Bash(git commit -m 'Give Ana Lorena admin role \\(full access including contabilidad\\) *)",
       "Bash(git commit -m 'Phase 1: Multi-agent foundation *)",
-      "Bash(git commit -m 'Phase 2: Manual commission splits per deal *)"
+      "Bash(git commit -m 'Phase 2: Manual commission splits per deal *)",
+      "Bash(git commit -m 'Dashboard: filter for agents + dynamic greeting *)"
     ]
   }
 }

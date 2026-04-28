@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import { query, queryOne } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
   try {
+    const me = await getCurrentUser();
+    const isAgent = me?.role === "agent";
+    const agentCode = me?.username.toLowerCase() || "";
+
+    // Filter deals by agent for visibility
+    const dealFilter = isAgent ? " AND LOWER(d.assignedAgent) = ?" : "";
+    const dealFilterBare = isAgent ? " AND LOWER(assignedAgent) = ?" : "";
+    const filterArgs: unknown[] = isAgent ? [agentCode] : [];
+
     const now = new Date().toISOString();
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 60);
@@ -13,9 +23,16 @@ export async function GET() {
       queryOne("SELECT COUNT(*) as count FROM Client WHERE status = 'ACTIVO'"),
       queryOne("SELECT COUNT(*) as count FROM Property"),
       queryOne("SELECT COUNT(*) as count FROM Property WHERE status = 'DISPONIBLE'"),
-      queryOne("SELECT COUNT(*) as count FROM Deal"),
-      queryOne("SELECT COUNT(*) as count FROM Deal WHERE status = 'CERRADO'"),
-      queryOne("SELECT COALESCE(SUM(commissionAmount), 0) as total FROM Deal WHERE status = 'CERRADO'"),
+      queryOne(`SELECT COUNT(*) as count FROM Deal WHERE 1=1${dealFilterBare}`, filterArgs),
+      queryOne(`SELECT COUNT(*) as count FROM Deal WHERE status = 'CERRADO'${dealFilterBare}`, filterArgs),
+      // For agents: sum their internalAgentShare (or commissionAmount fallback) instead of full commission
+      isAgent
+        ? queryOne(
+            `SELECT COALESCE(SUM(COALESCE(internalAgentShare, commissionAmount, 0)), 0) as total
+             FROM Deal WHERE status = 'CERRADO' AND LOWER(assignedAgent) = ?`,
+            [agentCode]
+          )
+        : queryOne("SELECT COALESCE(SUM(commissionAmount), 0) as total FROM Deal WHERE status = 'CERRADO'"),
     ]);
 
     const recentDeals = await query(`
@@ -25,8 +42,9 @@ export async function GET() {
       FROM Deal d
       LEFT JOIN Client cl ON d.clientId = cl.id
       LEFT JOIN Property p ON d.propertyId = p.id
+      WHERE 1=1${dealFilter}
       ORDER BY d.createdAt DESC LIMIT 5
-    `);
+    `, filterArgs);
 
     const expiringContracts = await query(`
       SELECT d.*,
@@ -35,9 +53,9 @@ export async function GET() {
       FROM Deal d
       LEFT JOIN Client cl ON d.clientId = cl.id
       LEFT JOIN Property p ON d.propertyId = p.id
-      WHERE d.dealType = 'ALQUILER' AND d.contractEndDate >= ? AND d.contractEndDate <= ?
+      WHERE d.dealType = 'ALQUILER' AND d.contractEndDate >= ? AND d.contractEndDate <= ?${dealFilter}
       ORDER BY d.contractEndDate ASC
-    `, [now, thirtyDaysStr]);
+    `, [now, thirtyDaysStr, ...filterArgs]);
 
     const asNum = (row: Record<string, unknown> | null, field: string) => Number((row as Record<string, unknown>)?.[field] ?? 0);
 
@@ -49,6 +67,7 @@ export async function GET() {
       totalDeals: asNum(totalDealsRow, "count"),
       closedDeals: asNum(closedDealsRow, "count"),
       totalCommissions: asNum(commissionsRow, "total"),
+      isAgent,
       recentDeals: recentDeals.map((d: Record<string, unknown>) => ({
         ...d,
         client: d.clientFirstName ? { firstName: d.clientFirstName, lastName: d.clientLastName } : null,
