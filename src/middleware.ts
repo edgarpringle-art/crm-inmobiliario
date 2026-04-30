@@ -11,6 +11,10 @@ const ADMIN_PREFIXES = ["/contabilidad", "/api/gastos"];
 // Routes only accessible by broker (Edgar)
 const BROKER_PREFIXES = ["/agentes", "/api/agents"];
 
+// Routes the EP Realty bot needs to read for syncing into mis_listados.
+// These can be accessed via Bearer ${BOT_SYNC_TOKEN} without a browser session.
+const BOT_SYNC_PREFIXES = ["/api/properties", "/api/clients", "/api/deals"];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -19,6 +23,20 @@ export async function middleware(request: NextRequest) {
     const res = NextResponse.next();
     res.headers.set("x-pathname", pathname);
     return res;
+  }
+
+  // Bot sync bypass: Bearer token for read-only sync endpoints
+  if (
+    request.method === "GET" &&
+    BOT_SYNC_PREFIXES.some((p) => pathname.startsWith(p))
+  ) {
+    const auth = request.headers.get("authorization") || "";
+    const expected = process.env.BOT_SYNC_TOKEN;
+    if (expected && auth === `Bearer ${expected}`) {
+      const res = NextResponse.next();
+      res.headers.set("x-pathname", pathname);
+      return res;
+    }
   }
 
   // Check session cookie
