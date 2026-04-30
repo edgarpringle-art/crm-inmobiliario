@@ -8,6 +8,7 @@ import { HiCheckCircle, HiClock, HiExclamation, HiPlus, HiTrash, HiX, HiCalendar
 const AGENT_EMAILS: Record<string, string> = {
   EDGAR: "edgarpringle@gmail.com",
   ANA_LORENA: "alchanis@gmail.com",
+  VALENTINA: "valentina.velasquez777@gmail.com",
 };
 
 function buildCalendarUrl(task: Task): string {

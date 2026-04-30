@@ -76,6 +76,7 @@ export const SEARCH_TYPES = [
 export const AGENTS = [
   { value: "EDGAR", label: "Edgar Pringle", initials: "EP", color: "from-blue-500 to-blue-600" },
   { value: "ANA_LORENA", label: "Ana Lorena Chanis", initials: "AC", color: "from-purple-500 to-purple-600" },
+  { value: "VALENTINA", label: "Valentina Velásquez", initials: "VV", color: "from-pink-500 to-rose-500" },
   { value: "AMBOS", label: "Ambos", initials: "EP/AC", color: "from-indigo-500 to-pink-500" },
 ];
 
