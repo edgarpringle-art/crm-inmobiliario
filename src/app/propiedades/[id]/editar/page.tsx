@@ -8,6 +8,7 @@ import FormField from "@/components/FormField";
 import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "@/lib/constants";
 import { getProvinces, getDistricts, getSectors } from "@/lib/locations";
 import { HiPlus, HiTrash } from "react-icons/hi";
+import PhotoUploader from "@/components/PhotoUploader";
 
 interface PortalLink { name: string; url: string; }
 const PORTAL_NAMES = ["Encuentra24", "Corotos", "SuperCasas", "Lamudi", "Inmobiliaria.com.do", "Otro"];
@@ -36,6 +37,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
   const [provinces, setProvinces] = useState<string[]>([]);
   const [districts, setDistricts] = useState<string[]>([]);
   const [sectors, setSectors] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [portalLinks, setPortalLinks] = useState<PortalLink[]>([]);
   const [newPortal, setNewPortal] = useState({ name: "Encuentra24", url: "" });
   const [form, setForm] = useState({
@@ -75,6 +77,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         driveLink: data.driveLink || "", description: data.description || "", notes: data.notes || "",
       });
       if (data.portalLinks) { try { setPortalLinks(JSON.parse(data.portalLinks)); } catch { /* ignore */ } }
+      if (data.photos) { try { setPhotos(JSON.parse(data.photos)); } catch { /* ignore */ } }
       setProvinces(getProvinces());
       setLoading(false);
     });
@@ -115,6 +118,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         state: form.state || null, referencePoint: form.referencePoint || null,
         driveLink: form.driveLink || null, description: form.description || null, notes: form.notes || null,
         portalLinks: portalLinks.length > 0 ? JSON.stringify(portalLinks) : null,
+        photos: photos.length > 0 ? JSON.stringify(photos) : null,
       };
       const res = await fetch(`/api/properties/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error("Error");
@@ -238,6 +242,11 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
             <input className={inputClass} placeholder="URL del listing" value={newPortal.url} onChange={(e) => setNewPortal((p) => ({ ...p, url: e.target.value }))} />
             <button type="button" onClick={() => { if (newPortal.url) { setPortalLinks((prev) => [...prev, { ...newPortal }]); setNewPortal((p) => ({ ...p, url: "" })); } }} className="bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 flex-shrink-0"><HiPlus className="w-5 h-5" /></button>
           </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Fotos</h2>
+          <PhotoUploader photos={photos} onChange={setPhotos} />
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6">

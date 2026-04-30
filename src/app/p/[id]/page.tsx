@@ -15,6 +15,7 @@ interface Property {
   hasAC: number; hasBalcony: number; hasGarden: number;
   description: string | null; notes: string | null;
   ownerName: string | null;
+  photos: string | null;
 }
 
 const amenityLabels: Record<string, string> = {
@@ -44,6 +45,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const p = rows[0];
   const loc = [p.sector, p.city].filter(Boolean).join(", ");
   const price = p.salePrice ? formatCurrency(p.salePrice, p.currency) : p.rentPrice ? `${formatCurrency(p.rentPrice, p.currency)}/mes` : "";
+  let firstPhoto: string | undefined;
+  if (p.photos) { try { const arr = JSON.parse(p.photos); firstPhoto = arr[0]; } catch { /* ignore */ } }
   return {
     title: `${p.title} — E. Pringle Real Estate`,
     description: `${typeLabel[p.propertyType] || "Propiedad"} en ${opLabel[p.operationType] || ""} · ${loc} · ${price}`,
@@ -51,6 +54,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title: p.title,
       description: `${loc} · ${price}`,
       siteName: "E. Pringle Real Estate",
+      images: firstPhoto ? [{ url: firstPhoto }] : undefined,
     },
   };
 }
@@ -63,6 +67,8 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
 
   const activeAmenities = Object.entries(amenityLabels).filter(([k]) => (p as unknown as Record<string, unknown>)[k]);
   const loc = [p.sector, p.city, p.state].filter(Boolean).join(", ");
+  let photos: string[] = [];
+  if (p.photos) { try { photos = JSON.parse(p.photos); } catch { /* ignore */ } }
   const fullAddress = [p.address, loc].filter(Boolean).join(" · ");
 
   const waText = encodeURIComponent(
@@ -97,6 +103,39 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
         {/* Hero */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          {/* Photo gallery */}
+          {photos.length > 0 ? (
+            <div className={`relative ${photos.length === 1 ? "" : "grid grid-cols-2 grid-rows-2"} max-h-72 sm:max-h-96 overflow-hidden`}>
+              {photos.length === 1 ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photos[0]} alt={p.title} className="w-full h-72 sm:h-96 object-cover" />
+              ) : (
+                <>
+                  {/* Main photo - spans full left column */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={photos[0]} alt={`${p.title} 1`} className="row-span-2 w-full h-full object-cover" />
+                  {/* Second photo */}
+                  {photos[1] && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photos[1]} alt={`${p.title} 2`} className="w-full h-full object-cover" />
+                  )}
+                  {/* Third photo with overlay if more */}
+                  {photos[2] && (
+                    <div className="relative w-full h-full">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={photos[2]} alt={`${p.title} 3`} className="w-full h-full object-cover" />
+                      {photos.length > 3 && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-white font-bold text-xl">+{photos.length - 3}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          ) : null}
+
           {/* Type banner */}
           <div className={`px-5 py-3 flex items-center gap-3 ${
             p.operationType === "VENTA" ? "bg-blue-600" :

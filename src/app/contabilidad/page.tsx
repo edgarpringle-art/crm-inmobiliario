@@ -64,24 +64,46 @@ function parseLocalDate(s: string): Date {
   return new Date(s);
 }
 
-function getCommissionsByMonth(deals: Deal[], month: number, year: number) {
+function getCommissionsByMonth(deals: Deal[], month: number, year: number, brokerCode: string) {
   const results: { agent: string; amount: number; label: string; dealTitle: string }[] = [];
   for (const deal of deals) {
+    const hasSplits = deal.companyShare != null || deal.internalAgentShare != null;
     const payments = parsePayments(deal.commissionPayments);
+    const dealTitle = deal.property?.title || "Sin propiedad";
+
+    const pushSplit = (agentCode: string, amount: number, label: string) => {
+      results.push({ agent: agentCode, amount, label, dealTitle });
+    };
+
     for (const p of payments) {
       if (p.paid && p.date) {
         const d = parseLocalDate(p.date);
         if (d.getMonth() + 1 === month && d.getFullYear() === year) {
-          results.push({ agent: deal.assignedAgent || "SIN_ASIGNAR", amount: p.amount, label: p.label, dealTitle: deal.property?.title || "Sin propiedad" });
+          if (hasSplits && deal.commissionAmount && deal.commissionAmount > 0) {
+            const commTotal = deal.commissionAmount;
+            if (deal.companyShare != null) {
+              pushSplit(brokerCode, p.amount * (deal.companyShare / commTotal), p.label);
+            }
+            if (deal.internalAgentShare != null && deal.assignedAgent) {
+              pushSplit(deal.assignedAgent, p.amount * (deal.internalAgentShare / commTotal), p.label);
+            }
+          } else {
+            pushSplit(deal.assignedAgent || "SIN_ASIGNAR", p.amount, p.label);
+          }
         }
       }
     }
-    if (payments.length === 0 && deal.commissionPaid && deal.commissionAmount) {
+    if (payments.length === 0 && deal.commissionPaid) {
       const paymentDateStr = deal.commissionDate || deal.closingDate || deal.contractStartDate;
       if (paymentDateStr) {
         const d = parseLocalDate(paymentDateStr);
         if (d.getMonth() + 1 === month && d.getFullYear() === year) {
-          results.push({ agent: deal.assignedAgent || "SIN_ASIGNAR", amount: deal.commissionAmount, label: "Pago completo", dealTitle: deal.property?.title || "Sin propiedad" });
+          if (hasSplits) {
+            if (deal.companyShare != null) pushSplit(brokerCode, deal.companyShare, "Empresa");
+            if (deal.internalAgentShare != null && deal.assignedAgent) pushSplit(deal.assignedAgent, deal.internalAgentShare, "Agente CRM");
+          } else if (deal.commissionAmount) {
+            pushSplit(deal.assignedAgent || "SIN_ASIGNAR", deal.commissionAmount, "Pago completo");
+          }
         }
       }
     }
@@ -101,20 +123,29 @@ function getAgentShareFromDeal(deal: Deal, agent: AgentRow): number {
 
   if (hasSplits) {
     let share = 0;
-    if (deal.internalAgentId === agent.id && deal.internalAgentShare != null) {
+
+    // Match internal agent by ID (preferred) OR by assignedAgent code (fallback for old records)
+    const isInternalAgent =
+      (deal.internalAgentId != null && deal.internalAgentId === agent.id) ||
+      (deal.internalAgentId == null && deal.assignedAgent != null &&
+        deal.assignedAgent.toLowerCase() === agent.code.toLowerCase());
+
+    if (isInternalAgent && deal.internalAgentShare != null) {
       share += deal.internalAgentShare;
     }
-    // Broker (Edgar) also receives the company share
+
+    // Broker receives the company share
     if (agent.role === "broker" && deal.companyShare != null) {
       share += deal.companyShare;
     }
+
     return share;
   }
 
-  // Legacy
+  // Legacy (no split fields set)
   const code = (deal.assignedAgent || "").toLowerCase();
   if (code === agent.code.toLowerCase()) return deal.commissionAmount || 0;
-  if (code === "ambos" && (agent.code === "edgar" || agent.code === "ana")) {
+  if (code === "ambos" && (agent.role === "broker" || agent.role === "admin")) {
     return (deal.commissionAmount || 0) * 0.5;
   }
   return 0;
@@ -240,8 +271,12 @@ export default function ContabilidadPage() {
 
   const unassignedDeals = deals.filter((d) => !d.assignedAgent);
 
+  // Broker's code for split attribution
+  const brokerAgent = agents.find((a) => a.role === "broker");
+  const brokerCode = (brokerAgent?.code || "EDGAR").toUpperCase();
+
   // Monthly commissions — legacy "AMBOS" splits across broker+admin agents
-  const rawMonthly = getCommissionsByMonth(deals, selectedMonth, selectedYear);
+  const rawMonthly = getCommissionsByMonth(deals, selectedMonth, selectedYear, brokerCode);
   const monthlyPayments: typeof rawMonthly = [];
   for (const p of rawMonthly) {
     if ((p.agent || "").toUpperCase() === "AMBOS" && splitAgents.length > 0) {
@@ -306,7 +341,7 @@ export default function ContabilidadPage() {
     return { month: d.getMonth() + 1, year: d.getFullYear(), label: getLabel(MONTHS, d.getMonth() + 1) as string };
   });
   const chartData = chartMonths.map(({ month, year, label }) => {
-    const raw = getCommissionsByMonth(deals, month, year);
+    const raw = getCommissionsByMonth(deals, month, year, brokerCode);
     // Sum total commissions for the month (no need to split by agent for chart total)
     const commissions = raw.reduce((s, p) => s + p.amount, 0);
     const expenses = gastos.filter((g) => {

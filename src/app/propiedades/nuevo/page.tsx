@@ -8,6 +8,7 @@ import FormField from "@/components/FormField";
 import LocationSelect from "@/components/LocationSelect";
 import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "@/lib/constants";
 import { getProvinces, getDistricts, getSectors } from "@/lib/locations";
+import PhotoUploader from "@/components/PhotoUploader";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 const checkboxClass = "w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500";
@@ -34,6 +35,7 @@ export default function NuevaPropiedadPage() {
   const [provinces, setProvinces] = useState<string[]>([]);
   const [districts, setDistricts] = useState<string[]>([]);
   const [sectors, setSectors] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [form, setForm] = useState({
     title: "", propertyType: "APARTAMENTO", operationType: "VENTA", status: "DISPONIBLE",
     address: "", sector: "", city: "", state: "", country: "Panamá", referencePoint: "",
@@ -77,6 +79,7 @@ export default function NuevaPropiedadPage() {
     try {
       const body = {
         ...form,
+        photos: photos.length > 0 ? JSON.stringify(photos) : null,
         salePrice: form.salePrice ? parseFloat(form.salePrice) : null,
         rentPrice: form.rentPrice ? parseFloat(form.rentPrice) : null,
         maintenanceFee: form.maintenanceFee ? parseFloat(form.maintenanceFee) : null,
@@ -207,6 +210,11 @@ export default function NuevaPropiedadPage() {
             <FormField label="Nombre del Propietario (si no es cliente)"><input className={inputClass} value={form.ownerName} onChange={(e) => update("ownerName", e.target.value)} /></FormField>
             <FormField label="Teléfono del Propietario"><input className={inputClass} value={form.ownerPhone} onChange={(e) => update("ownerPhone", e.target.value)} /></FormField>
           </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Fotos</h2>
+          <PhotoUploader photos={photos} onChange={setPhotos} />
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6">
