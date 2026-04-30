@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { query } from "@/lib/db";
 import { formatCurrency } from "@/lib/constants";
 import type { Metadata } from "next";
+import PhotoGallery from "./PhotoGallery";
 
 interface Property {
   id: string; title: string; propertyType: string; operationType: string; status: string;
@@ -104,37 +105,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
         {/* Hero */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           {/* Photo gallery */}
-          {photos.length > 0 ? (
-            <div className={`relative ${photos.length === 1 ? "" : "grid grid-cols-2 grid-rows-2"} max-h-72 sm:max-h-96 overflow-hidden`}>
-              {photos.length === 1 ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photos[0]} alt={p.title} className="w-full h-72 sm:h-96 object-cover" />
-              ) : (
-                <>
-                  {/* Main photo - spans full left column */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photos[0]} alt={`${p.title} 1`} className="row-span-2 w-full h-full object-cover" />
-                  {/* Second photo */}
-                  {photos[1] && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={photos[1]} alt={`${p.title} 2`} className="w-full h-full object-cover" />
-                  )}
-                  {/* Third photo with overlay if more */}
-                  {photos[2] && (
-                    <div className="relative w-full h-full">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={photos[2]} alt={`${p.title} 3`} className="w-full h-full object-cover" />
-                      {photos.length > 3 && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                          <span className="text-white font-bold text-xl">+{photos.length - 3}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          ) : null}
+          {photos.length > 0 && <PhotoGallery photos={photos} title={p.title} />}
 
           {/* Type banner */}
           <div className={`px-5 py-3 flex items-center gap-3 ${
