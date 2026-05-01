@@ -49,20 +49,9 @@ const PROPERTY_TYPES = [
 const QUICK_CATEGORIES = [
   { type: "APARTAMENTO", label: "Apartamentos", icon: "building" },
   { type: "CASA", label: "Casas", icon: "house" },
-  { type: "PENTHOUSE", label: "Penthouses", icon: "tower" },
   { type: "LOCAL", label: "Locales", icon: "store" },
   { type: "OFICINA", label: "Oficinas", icon: "briefcase" },
   { type: "TERRENO", label: "Terrenos", icon: "tree" },
-];
-
-// Featured zones
-const FEATURED_ZONES = [
-  { name: "Costa del Este", img: "https://images.unsplash.com/photo-1565953522043-baea26b83b7e?auto=format&fit=crop&w=600&q=70" },
-  { name: "Punta Pacífica", img: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=600&q=70" },
-  { name: "Casco Viejo", img: "https://images.unsplash.com/photo-1568871391551-7e2dd2f7e0cf?auto=format&fit=crop&w=600&q=70" },
-  { name: "Obarrio", img: "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=600&q=70" },
-  { name: "San Francisco", img: "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?auto=format&fit=crop&w=600&q=70" },
-  { name: "Coronado", img: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?auto=format&fit=crop&w=600&q=70" },
 ];
 
 const BROKER = {
@@ -228,11 +217,6 @@ export default function CatalogoPage() {
 
   const setCategoryAndScroll = (type: string) => {
     setTypeFilter(type);
-    setTimeout(propsScroll, 100);
-  };
-
-  const setZoneAndScroll = (z: string) => {
-    setZoneFilter(z);
     setTimeout(propsScroll, 100);
   };
 
@@ -418,7 +402,7 @@ export default function CatalogoPage() {
             </h2>
             <p className="text-stone-500 text-sm">Selecciona la categoría que buscas</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {QUICK_CATEGORIES.map((c) => {
               const I = Icon[c.icon as keyof typeof Icon];
               const count = properties.filter((p) => p.propertyType === c.type).length;
@@ -505,37 +489,6 @@ export default function CatalogoPage() {
               {filtered.map((p) => <PropertyCard key={p.id} p={p} />)}
             </div>
           )}
-        </div>
-      </section>
-
-      {/* ─── Featured zones ─── */}
-      <section className="py-14 sm:py-16 px-4 sm:px-6 bg-stone-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-[#0F766E] text-[10px] font-semibold uppercase tracking-[0.3em] mb-3">Ubicaciones</p>
-            <h2 className="text-2xl sm:text-3xl font-medium text-stone-900 mb-2"
-              style={{ fontFamily: "'Cinzel', serif" }}>
-              Zonas Destacadas
-            </h2>
-            <p className="text-stone-500 text-sm">Las áreas más buscadas en Panamá</p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {FEATURED_ZONES.map((z) => {
-              const count = properties.filter((p) => p.sector === z.name || p.city === z.name).length;
-              return (
-                <button key={z.name} onClick={() => setZoneAndScroll(z.name)}
-                  className="group relative h-44 rounded-lg overflow-hidden cursor-pointer border border-stone-200">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={z.img} alt={z.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 text-left">
-                    <p className="text-white text-base font-semibold mb-0.5" style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.03em" }}>{z.name}</p>
-                    <p className="text-white/70 text-[10px] tracking-[0.2em] uppercase">{count} propiedad{count !== 1 ? "es" : ""}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
         </div>
       </section>
 
