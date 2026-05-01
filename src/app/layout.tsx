@@ -32,7 +32,10 @@ export default async function RootLayout({
   const user = sessionCookie ? await verifySession(sessionCookie) : null;
 
   // Show app shell (sidebar + padded main) only for authenticated non-public routes
-  const isPublic = pathname.startsWith("/p/") || pathname.startsWith("/login");
+  const isPublic =
+    pathname.startsWith("/p/") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/catalogo");
   const showShell = !!user && !isPublic;
 
   return (
