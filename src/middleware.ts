@@ -17,6 +17,32 @@ const BOT_SYNC_PREFIXES = ["/api/properties", "/api/clients", "/api/deals"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = (request.headers.get("host") || "").toLowerCase();
+  const isPortalDomain = host === "panamainmo.com" || host === "www.panamainmo.com";
+
+  // Public portal domain: root → /catalogo
+  // Any other authenticated path → /catalogo too (public visitors shouldn't see login)
+  if (isPortalDomain) {
+    if (pathname === "/" || pathname === "") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/catalogo";
+      return NextResponse.redirect(url);
+    }
+    // Allow only public paths on the portal domain
+    const allowedOnPortal =
+      pathname.startsWith("/catalogo") ||
+      pathname.startsWith("/p/") ||
+      pathname.startsWith("/api/catalogo") ||
+      pathname.startsWith("/_next/") ||
+      pathname.startsWith("/logo") ||
+      pathname.startsWith("/favicon") ||
+      /\.(svg|png|jpg|jpeg|webp|ico|css|js)$/.test(pathname);
+    if (!allowedOnPortal) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/catalogo";
+      return NextResponse.redirect(url);
+    }
+  }
 
   // Always allow public routes
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
