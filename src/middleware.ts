@@ -13,7 +13,7 @@ const BROKER_PREFIXES = ["/agentes", "/api/agents"];
 
 // Routes the EP Realty bot needs to read for syncing into mis_listados.
 // These can be accessed via Bearer ${BOT_SYNC_TOKEN} without a browser session.
-const BOT_SYNC_PREFIXES = ["/api/properties", "/api/clients", "/api/deals"];
+const BOT_SYNC_PREFIXES = ["/api/properties", "/api/clients", "/api/deals", "/api/busquedas"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
