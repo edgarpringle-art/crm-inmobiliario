@@ -65,6 +65,26 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     await update("Deal", id, body);
+
+    // Auto-sync property availability with deal status
+    // CERRADO  → VENDIDA / ALQUILADA (off the catalog)
+    // CANCELADO → DISPONIBLE (back on the catalog)
+    const fullDeal = await queryOne<{ propertyId: string | null; dealType: string | null; status: string | null }>(
+      "SELECT propertyId, dealType, status FROM Deal WHERE id = ?", [id]
+    );
+    if (fullDeal?.propertyId) {
+      if (fullDeal.status === "CERRADO") {
+        const newPropertyStatus = fullDeal.dealType === "ALQUILER" ? "ALQUILADA" : "VENDIDA";
+        await update("Property", fullDeal.propertyId, { status: newPropertyStatus });
+      } else if (fullDeal.status === "CANCELADO") {
+        // Only revert if currently marked as VENDIDA/ALQUILADA — don't touch RESERVADA/NO_DISPONIBLE
+        const prop = await queryOne<{ status: string }>("SELECT status FROM Property WHERE id = ?", [fullDeal.propertyId]);
+        if (prop && (prop.status === "VENDIDA" || prop.status === "ALQUILADA")) {
+          await update("Property", fullDeal.propertyId, { status: "DISPONIBLE" });
+        }
+      }
+    }
+
     const deal = await queryOne("SELECT * FROM Deal WHERE id = ?", [id]);
     return NextResponse.json(deal);
   } catch (error) {

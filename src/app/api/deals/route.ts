@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query, insert } from "@/lib/db";
+import { query, insert, update } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
@@ -67,6 +67,13 @@ export async function POST(request: NextRequest) {
     }
 
     const id = await insert("Deal", body);
+
+    // If created already as CERRADO, mark property as VENDIDA / ALQUILADA
+    if (body.status === "CERRADO" && body.propertyId) {
+      const newPropertyStatus = body.dealType === "ALQUILER" ? "ALQUILADA" : "VENDIDA";
+      await update("Property", body.propertyId, { status: newPropertyStatus });
+    }
+
     const deal = await query("SELECT * FROM Deal WHERE id = ?", [id]);
     return NextResponse.json(deal[0], { status: 201 });
   } catch (error) {
