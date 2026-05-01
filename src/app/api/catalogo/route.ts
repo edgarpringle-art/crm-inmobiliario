@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const minPrice = searchParams.get("min") ? Number(searchParams.get("min")) : null;
     const maxPrice = searchParams.get("max") ? Number(searchParams.get("max")) : null;
     const bedrooms = searchParams.get("beds") ? Number(searchParams.get("beds")) : null;
+    const zone = searchParams.get("zone") || "";
 
     let sql = `
       SELECT id, title, propertyType, operationType, status,
@@ -45,6 +46,10 @@ export async function GET(request: NextRequest) {
     if (bedrooms != null) {
       sql += " AND bedrooms >= ?";
       args.push(bedrooms);
+    }
+    if (zone) {
+      sql += " AND (sector = ? OR city = ?)";
+      args.push(zone, zone);
     }
 
     sql += " ORDER BY createdAt DESC LIMIT 100";

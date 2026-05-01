@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Propiedades en Venta y Alquiler · E. Pringle Real Estate",
-  description: "Explora nuestro catálogo de propiedades disponibles en Panamá — apartamentos, casas, penthouses, locales y más.",
+  title: "Edgar Pringle Real Estate · Propiedades en Panamá",
+  description: "Asesoría inmobiliaria profesional en Panamá. Compra, venta y alquiler de apartamentos, casas, penthouses y locales. Licencia PN5016.",
   openGraph: {
-    title: "Catálogo de Propiedades · E. Pringle Real Estate",
-    description: "Propiedades en venta y alquiler en Panamá",
-    siteName: "E. Pringle Real Estate",
+    title: "Edgar Pringle Real Estate · Panamá",
+    description: "Propiedades en venta y alquiler en Panamá. Apartamentos, casas, penthouses.",
+    siteName: "Edgar Pringle Real Estate",
+    type: "website",
+  },
+  icons: {
+    icon: "/logo.svg",
   },
 };
 
