@@ -29,5 +29,23 @@ export async function register() {
 
     // Agent table (added in multi-agent phase)
     await safeAlter("ALTER TABLE Deal ADD COLUMN commissionDate TEXT");
+
+    // Ingreso table — for non-commission income (contracts, consulting, etc.)
+    await db.execute({
+      sql: `CREATE TABLE IF NOT EXISTS Ingreso (
+        id TEXT PRIMARY KEY,
+        description TEXT NOT NULL,
+        amount REAL NOT NULL,
+        currency TEXT DEFAULT 'USD',
+        category TEXT,
+        clientName TEXT,
+        assignedAgent TEXT,
+        date TEXT NOT NULL,
+        notes TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      )`,
+      args: [],
+    });
   }
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import {
-  MONTHS, EXPENSE_CATEGORIES, CURRENCIES,
+  MONTHS, EXPENSE_CATEGORIES, INCOME_CATEGORIES, CURRENCIES,
   formatCurrency, formatDate, getLabel,
 } from "@/lib/constants";
 import {
@@ -43,11 +43,17 @@ interface Gasto {
   createdAt: string;
 }
 
+interface Ingreso {
+  id: string; description: string; amount: number; currency: string;
+  category: string; clientName: string | null; assignedAgent: string | null;
+  date: string; notes: string | null; createdAt: string;
+}
+
 interface AgentSummary {
   agent: string; label: string; initials: string; color: string;
   totalDeals: number; closedDeals: number;
   totalCommissions: number; collectedCommissions: number; pendingCommissions: number;
-  totalExpenses: number; netIncome: number;
+  totalExpenses: number; totalExtraIncome: number; netIncome: number;
   deals: Deal[];
 }
 
@@ -156,6 +162,7 @@ const inputClass = "w-full px-3 py-2 text-sm border border-gray-200 rounded-xl f
 export default function ContabilidadPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [gastos, setGastos] = useState<Gasto[]>([]);
+  const [ingresos, setIngresos] = useState<Ingreso[]>([]);
   const [agents, setAgents] = useState<AgentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -168,6 +175,39 @@ export default function ContabilidadPage() {
     description: "", amount: "", currency: "USD",
     category: "OTRO", assignedAgent: "", date: new Date().toISOString().split("T")[0], notes: "",
   });
+  const [showIngresoForm, setShowIngresoForm] = useState(false);
+  const [savingIngreso, setSavingIngreso] = useState(false);
+  const [editingIngresoId, setEditingIngresoId] = useState<string | null>(null);
+  const [ingresoForm, setIngresoForm] = useState({
+    description: "", amount: "", currency: "USD",
+    category: "REDACCION_CONTRATO", clientName: "", assignedAgent: "",
+    date: new Date().toISOString().split("T")[0], notes: "",
+  });
+
+  function resetIngresoForm() {
+    setIngresoForm({
+      description: "", amount: "", currency: "USD",
+      category: "REDACCION_CONTRATO", clientName: "", assignedAgent: "",
+      date: new Date().toISOString().split("T")[0], notes: "",
+    });
+    setEditingIngresoId(null);
+  }
+
+  function startEditIngreso(i: Ingreso) {
+    setEditingIngresoId(i.id);
+    setIngresoForm({
+      description: i.description || "",
+      amount: String(i.amount ?? ""),
+      currency: i.currency || "USD",
+      category: i.category || "OTRO",
+      clientName: i.clientName || "",
+      assignedAgent: i.assignedAgent || "",
+      date: (i.date || "").slice(0, 10) || new Date().toISOString().split("T")[0],
+      notes: i.notes || "",
+    });
+    setShowIngresoForm(true);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   function resetGastoForm() {
     setGastoForm({ description: "", amount: "", currency: "USD", category: "OTRO", assignedAgent: "", date: new Date().toISOString().split("T")[0], notes: "" });
@@ -194,10 +234,12 @@ export default function ContabilidadPage() {
       fetch("/api/deals").then((r) => r.json()).catch(() => []),
       fetch("/api/gastos").then((r) => r.json()).then((g) => Array.isArray(g) ? g : []).catch(() => []),
       fetch("/api/agents?active=1").then((r) => r.json()).catch(() => []),
-    ]).then(([d, g, a]) => {
+      fetch("/api/ingresos").then((r) => r.json()).then((g) => Array.isArray(g) ? g : []).catch(() => []),
+    ]).then(([d, g, a, i]) => {
       setDeals(Array.isArray(d) ? d : []);
       setGastos(g);
       setAgents(Array.isArray(a) ? a : []);
+      setIngresos(i);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -219,6 +261,19 @@ export default function ContabilidadPage() {
     return total;
   }
   const totalGastosCompany = gastos.reduce((s, g) => s + g.amount, 0);
+
+  function totalIngresosForAgent(agent: AgentRow) {
+    let total = 0;
+    for (const i of ingresos) {
+      const ag = (i.assignedAgent || "").toLowerCase();
+      if (ag === agent.code.toLowerCase()) total += i.amount;
+      else if ((!i.assignedAgent || ag === "ambos") && splitAgents.some((s) => s.id === agent.id)) {
+        total += i.amount / Math.max(splitAgents.length, 1);
+      }
+    }
+    return total;
+  }
+  const totalIngresosCompany = ingresos.reduce((s, i) => s + i.amount, 0);
 
   const agentSummaries: AgentSummary[] = individualAgents.map((agent) => {
     let totalCommissions = 0, collectedCommissions = 0, pendingCommissions = 0;
@@ -248,6 +303,7 @@ export default function ContabilidadPage() {
       }
     }
     const totalExpenses = totalGastosForAgent(agent);
+    const totalExtraIncome = totalIngresosForAgent(agent);
     return {
       agent: agent.code.toUpperCase(),
       label: agent.fullName,
@@ -255,7 +311,8 @@ export default function ContabilidadPage() {
       color: agent.color || "from-slate-500 to-slate-600",
       totalDeals, closedDeals,
       totalCommissions, collectedCommissions, pendingCommissions,
-      totalExpenses, netIncome: collectedCommissions - totalExpenses,
+      totalExpenses, totalExtraIncome,
+      netIncome: collectedCommissions + totalExtraIncome - totalExpenses,
       deals: myDeals,
     };
   });
@@ -267,7 +324,7 @@ export default function ContabilidadPage() {
     collectedCommissions: acc.collectedCommissions + a.collectedCommissions,
     pendingCommissions: acc.pendingCommissions + a.pendingCommissions,
   }), { totalDeals: 0, closedDeals: 0, totalCommissions: 0, collectedCommissions: 0, pendingCommissions: 0 });
-  const companyNet = companyTotal.collectedCommissions - totalGastosCompany;
+  const companyNet = companyTotal.collectedCommissions + totalIngresosCompany - totalGastosCompany;
 
   const unassignedDeals = deals.filter((d) => !d.assignedAgent);
 
@@ -296,7 +353,14 @@ export default function ContabilidadPage() {
     return d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear;
   });
   const monthlyGastosTotal = monthlyGastos.reduce((s, g) => s + g.amount, 0);
-  const monthlyNet = monthlyCommissionsTotal - monthlyGastosTotal;
+
+  const monthlyIngresos = ingresos.filter((i) => {
+    const d = new Date(i.date);
+    return d.getMonth() + 1 === selectedMonth && d.getFullYear() === selectedYear;
+  });
+  const monthlyIngresosTotal = monthlyIngresos.reduce((s, i) => s + i.amount, 0);
+
+  const monthlyNet = monthlyCommissionsTotal + monthlyIngresosTotal - monthlyGastosTotal;
 
   function gastosForAgent(agent: AgentRow) {
     let total = 0;
@@ -316,22 +380,43 @@ export default function ContabilidadPage() {
     return { total, items };
   }
 
+  function ingresosForAgent(agent: AgentRow) {
+    let total = 0;
+    const items: { description: string; amount: number; category: string; clientName: string | null; shared: boolean }[] = [];
+    const isSplit = splitAgents.some((s) => s.id === agent.id);
+    for (const i of monthlyIngresos) {
+      const ag = (i.assignedAgent || "").toLowerCase();
+      if (ag === agent.code.toLowerCase()) {
+        total += i.amount;
+        items.push({ description: i.description, amount: i.amount, category: i.category, clientName: i.clientName, shared: false });
+      } else if ((!i.assignedAgent || ag === "ambos") && isSplit) {
+        const portion = i.amount / Math.max(splitAgents.length, 1);
+        total += portion;
+        items.push({ description: i.description, amount: portion, category: i.category, clientName: i.clientName, shared: true });
+      }
+    }
+    return { total, items };
+  }
+
   const monthlyByAgent = individualAgents.map((agent) => {
     const codeUpper = agent.code.toUpperCase();
     const payments = monthlyPayments.filter((p) => (p.agent || "").toUpperCase() === codeUpper);
     const commissions = payments.reduce((s, p) => s + p.amount, 0);
     const { total: expenses, items: expenseItems } = gastosForAgent(agent);
+    const { total: extraIncome, items: incomeItems } = ingresosForAgent(agent);
     return {
       value: codeUpper,
       label: agent.fullName,
       initials: agent.initials || agent.fullName.charAt(0),
       color: agent.color || "from-slate-500 to-slate-600",
       payments,
-      total: commissions,
+      total: commissions + extraIncome,
       commissions,
+      extraIncome,
       expenses,
-      net: commissions - expenses,
+      net: commissions + extraIncome - expenses,
       expenseItems,
+      incomeItems,
     };
   });
 
@@ -406,6 +491,52 @@ export default function ContabilidadPage() {
     if (res.ok) setGastos((prev) => prev.filter((g) => g.id !== id));
   }
 
+  async function handleAddIngreso(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingIngreso(true);
+    try {
+      const payload = {
+        ...ingresoForm,
+        amount: parseFloat(ingresoForm.amount),
+        clientName: ingresoForm.clientName || null,
+        assignedAgent: ingresoForm.assignedAgent || null,
+        date: ingresoForm.date,
+        notes: ingresoForm.notes || null,
+      };
+      if (editingIngresoId) {
+        const res = await fetch(`/api/ingresos/${editingIngresoId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setIngresos((prev) => prev.map((i) => (i.id === editingIngresoId ? { ...i, ...updated } : i)));
+          setShowIngresoForm(false);
+          resetIngresoForm();
+        }
+      } else {
+        const res = await fetch("/api/ingresos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const newIngreso = await res.json();
+          setIngresos((prev) => [newIngreso, ...prev]);
+          setShowIngresoForm(false);
+          resetIngresoForm();
+        }
+      }
+    } finally { setSavingIngreso(false); }
+  }
+
+  async function handleDeleteIngreso(id: string) {
+    if (!confirm("¿Eliminar este ingreso?")) return;
+    const res = await fetch(`/api/ingresos/${id}`, { method: "DELETE" });
+    if (res.ok) setIngresos((prev) => prev.filter((i) => i.id !== id));
+  }
+
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" /></div>;
 
   return (
@@ -424,10 +555,11 @@ export default function ContabilidadPage() {
           <div className="bg-purple-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-purple-600 uppercase">Total Comisiones</p><p className="text-xl font-bold text-purple-800 mt-1">{formatCurrency(companyTotal.totalCommissions)}</p></div>
           <div className="bg-amber-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-amber-600 uppercase">Pendiente Cobro</p><p className="text-xl font-bold text-amber-800 mt-1">{formatCurrency(companyTotal.pendingCommissions)}</p></div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100"><p className="text-xs font-semibold text-emerald-600 uppercase">Ingreso Bruto</p><p className="text-xl font-bold text-emerald-800 mt-1">{formatCurrency(companyTotal.collectedCommissions)}</p><p className="text-[10px] text-emerald-500 mt-0.5">Comisiones cobradas</p></div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100"><p className="text-xs font-semibold text-emerald-600 uppercase">Comisiones</p><p className="text-xl font-bold text-emerald-800 mt-1">{formatCurrency(companyTotal.collectedCommissions)}</p><p className="text-[10px] text-emerald-500 mt-0.5">Cobradas</p></div>
+          <div className="bg-teal-50 rounded-xl p-4 text-center border border-teal-100"><p className="text-xs font-semibold text-teal-600 uppercase">Ingresos Extra</p><p className="text-xl font-bold text-teal-800 mt-1">{formatCurrency(totalIngresosCompany)}</p><p className="text-[10px] text-teal-500 mt-0.5">Contratos, asesorías</p></div>
           <div className="bg-red-50 rounded-xl p-4 text-center border border-red-100"><p className="text-xs font-semibold text-red-600 uppercase">Gastos Totales</p><p className="text-xl font-bold text-red-800 mt-1">{formatCurrency(totalGastosCompany)}</p><p className="text-[10px] text-red-500 mt-0.5">Todos los gastos</p></div>
-          <div className={`rounded-xl p-4 text-center border ${companyNet >= 0 ? "bg-blue-50 border-blue-100" : "bg-orange-50 border-orange-100"}`}><p className={`text-xs font-semibold uppercase ${companyNet >= 0 ? "text-blue-600" : "text-orange-600"}`}>Ingreso Neto</p><p className={`text-xl font-bold mt-1 ${companyNet >= 0 ? "text-blue-800" : "text-orange-800"}`}>{formatCurrency(companyNet)}</p><p className={`text-[10px] mt-0.5 ${companyNet >= 0 ? "text-blue-500" : "text-orange-500"}`}>Bruto − Gastos</p></div>
+          <div className={`rounded-xl p-4 text-center border ${companyNet >= 0 ? "bg-blue-50 border-blue-100" : "bg-orange-50 border-orange-100"}`}><p className={`text-xs font-semibold uppercase ${companyNet >= 0 ? "text-blue-600" : "text-orange-600"}`}>Ingreso Neto</p><p className={`text-xl font-bold mt-1 ${companyNet >= 0 ? "text-blue-800" : "text-orange-800"}`}>{formatCurrency(companyNet)}</p><p className={`text-[10px] mt-0.5 ${companyNet >= 0 ? "text-blue-500" : "text-orange-500"}`}>Total − Gastos</p></div>
         </div>
       </div>
 
@@ -458,8 +590,9 @@ export default function ContabilidadPage() {
               <div className="bg-green-50 rounded-xl p-3 text-center"><p className="text-[10px] font-semibold text-green-600 uppercase">Cobrado</p><p className="text-sm font-bold text-green-700 mt-0.5">{formatCurrency(agent.collectedCommissions)}</p></div>
               <div className="bg-amber-50 rounded-xl p-3 text-center"><p className="text-[10px] font-semibold text-amber-600 uppercase">Pendiente</p><p className="text-sm font-bold text-amber-700 mt-0.5">{formatCurrency(agent.pendingCommissions)}</p></div>
             </div>
-            <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
-              <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100"><p className="text-[10px] font-semibold text-emerald-600 uppercase">Bruto</p><p className="text-sm font-bold text-emerald-700 mt-0.5">{formatCurrency(agent.collectedCommissions)}</p></div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-gray-100">
+              <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100"><p className="text-[10px] font-semibold text-emerald-600 uppercase">Comis.</p><p className="text-sm font-bold text-emerald-700 mt-0.5">{formatCurrency(agent.collectedCommissions)}</p></div>
+              <div className="bg-teal-50 rounded-xl p-3 text-center border border-teal-100"><p className="text-[10px] font-semibold text-teal-600 uppercase">Extra</p><p className="text-sm font-bold text-teal-700 mt-0.5">{formatCurrency(agent.totalExtraIncome)}</p></div>
               <div className="bg-red-50 rounded-xl p-3 text-center border border-red-100"><p className="text-[10px] font-semibold text-red-600 uppercase">Gastos</p><p className="text-sm font-bold text-red-700 mt-0.5">{formatCurrency(agent.totalExpenses)}</p></div>
               <div className={`rounded-xl p-3 text-center border ${agent.netIncome >= 0 ? "bg-blue-50 border-blue-100" : "bg-orange-50 border-orange-100"}`}><p className={`text-[10px] font-semibold uppercase ${agent.netIncome >= 0 ? "text-blue-600" : "text-orange-600"}`}>Neto</p><p className={`text-sm font-bold mt-0.5 ${agent.netIncome >= 0 ? "text-blue-700" : "text-orange-700"}`}>{formatCurrency(agent.netIncome)}</p></div>
             </div>
@@ -528,14 +661,18 @@ export default function ContabilidadPage() {
           Resumen de {getLabel(MONTHS, selectedMonth)} {selectedYear}
         </h2>
 
-        {monthlyCommissionsTotal === 0 && monthlyGastosTotal === 0 ? (
+        {monthlyCommissionsTotal === 0 && monthlyGastosTotal === 0 && monthlyIngresosTotal === 0 ? (
           <p className="text-sm text-gray-400 text-center py-4">No hay movimientos en este periodo</p>
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-4 mb-5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
               <div className="bg-green-50 rounded-xl p-4 text-center border border-green-100">
                 <p className="text-xs font-semibold text-green-600 uppercase">Comisiones</p>
                 <p className="text-xl font-bold text-green-700 mt-1">{formatCurrency(monthlyCommissionsTotal)}</p>
+              </div>
+              <div className="bg-teal-50 rounded-xl p-4 text-center border border-teal-100">
+                <p className="text-xs font-semibold text-teal-600 uppercase">Ingresos Extra</p>
+                <p className="text-xl font-bold text-teal-700 mt-1">{formatCurrency(monthlyIngresosTotal)}</p>
               </div>
               <div className="bg-red-50 rounded-xl p-4 text-center border border-red-100">
                 <p className="text-xs font-semibold text-red-600 uppercase">Gastos</p>
@@ -560,10 +697,14 @@ export default function ContabilidadPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="grid grid-cols-4 gap-2 mb-3">
                     <div className="bg-white rounded-lg p-2 text-center border border-green-100">
-                      <p className="text-[10px] font-semibold text-green-600 uppercase">Bruto</p>
+                      <p className="text-[10px] font-semibold text-green-600 uppercase">Comis.</p>
                       <p className="text-sm font-bold text-green-700 mt-0.5">{formatCurrency(agent.commissions)}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-2 text-center border border-teal-100">
+                      <p className="text-[10px] font-semibold text-teal-600 uppercase">Extra</p>
+                      <p className="text-sm font-bold text-teal-700 mt-0.5">{formatCurrency(agent.extraIncome)}</p>
                     </div>
                     <div className="bg-white rounded-lg p-2 text-center border border-red-100">
                       <p className="text-[10px] font-semibold text-red-600 uppercase">Gastos</p>
@@ -589,6 +730,23 @@ export default function ContabilidadPage() {
                     </div>
                   )}
 
+                  {agent.incomeItems.length > 0 && (
+                    <div className="mb-2">
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1">Ingresos extra</p>
+                      <div className="space-y-1">
+                        {agent.incomeItems.map((it, i) => (
+                          <div key={i} className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 truncate pr-2">
+                              {it.description}{it.clientName ? ` · ${it.clientName}` : ""}
+                              {it.shared && <span className="ml-1 text-[10px] text-gray-400">(50%)</span>}
+                            </span>
+                            <span className="font-semibold text-teal-700 flex-shrink-0">+{formatCurrency(it.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {agent.expenseItems.length > 0 && (
                     <div>
                       <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1">Gastos</p>
@@ -606,13 +764,113 @@ export default function ContabilidadPage() {
                     </div>
                   )}
 
-                  {agent.payments.length === 0 && agent.expenseItems.length === 0 && (
+                  {agent.payments.length === 0 && agent.expenseItems.length === 0 && agent.incomeItems.length === 0 && (
                     <p className="text-xs text-gray-400">Sin movimientos este mes</p>
                   )}
                 </div>
               ))}
             </div>
           </>
+        )}
+      </div>
+
+      {/* Ingresos Extra */}
+      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 mb-6">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Ingresos Extra</h2>
+            <p className="text-xs text-gray-400">Redacción de contratos, asesorías, comisiones por referidos, etc.</p>
+          </div>
+          <button onClick={() => { if (showIngresoForm) { resetIngresoForm(); } setShowIngresoForm(!showIngresoForm); }} className="flex items-center gap-2 bg-teal-600 text-white hover:bg-teal-700 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+            {showIngresoForm ? <HiX className="w-4 h-4" /> : <HiPlus className="w-4 h-4" />}
+            {showIngresoForm ? "Cancelar" : "Agregar Ingreso"}
+          </button>
+        </div>
+
+        {showIngresoForm && (
+          <form onSubmit={handleAddIngreso} className="bg-teal-50 rounded-xl p-4 mb-5 border border-teal-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+              <div className="sm:col-span-2 md:col-span-1">
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Descripción *</label>
+                <input required className={inputClass} value={ingresoForm.description} onChange={(e) => setIngresoForm((p) => ({ ...p, description: e.target.value }))} placeholder="Ej: Redacción de contrato" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Monto *</label>
+                <input required type="number" step="0.01" className={inputClass} value={ingresoForm.amount} onChange={(e) => setIngresoForm((p) => ({ ...p, amount: e.target.value }))} placeholder="0.00" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Moneda</label>
+                <select className={inputClass} value={ingresoForm.currency} onChange={(e) => setIngresoForm((p) => ({ ...p, currency: e.target.value }))}>
+                  {CURRENCIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Categoría</label>
+                <select className={inputClass} value={ingresoForm.category} onChange={(e) => setIngresoForm((p) => ({ ...p, category: e.target.value }))}>
+                  {INCOME_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Cliente</label>
+                <input className={inputClass} value={ingresoForm.clientName} onChange={(e) => setIngresoForm((p) => ({ ...p, clientName: e.target.value }))} placeholder="Ej: Mario Rangel" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Agente</label>
+                <select className={inputClass} value={ingresoForm.assignedAgent} onChange={(e) => setIngresoForm((p) => ({ ...p, assignedAgent: e.target.value }))}>
+                  <option value="">Empresa</option>
+                  {agents.map((a) => <option key={a.id} value={a.code.toUpperCase()}>{a.fullName}</option>)}
+                  <option value="AMBOS">Compartido</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Fecha</label>
+                <input type="date" className={inputClass} value={ingresoForm.date} onChange={(e) => setIngresoForm((p) => ({ ...p, date: e.target.value }))} />
+              </div>
+              <div className="sm:col-span-2 md:col-span-3">
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Notas</label>
+                <input className={inputClass} value={ingresoForm.notes} onChange={(e) => setIngresoForm((p) => ({ ...p, notes: e.target.value }))} placeholder="Opcional..." />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" disabled={savingIngreso} className="bg-teal-600 text-white hover:bg-teal-700 px-5 py-2 rounded-xl text-sm font-medium disabled:opacity-50">
+                {savingIngreso ? "Guardando..." : editingIngresoId ? "Actualizar Ingreso" : "Guardar Ingreso"}
+              </button>
+              {editingIngresoId && (
+                <button type="button" onClick={() => { resetIngresoForm(); setShowIngresoForm(false); }} className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-5 py-2 rounded-xl text-sm font-medium">
+                  Cancelar
+                </button>
+              )}
+            </div>
+          </form>
+        )}
+
+        {ingresos.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">No hay ingresos extra registrados</p>
+        ) : (
+          <div className="space-y-2">
+            {ingresos.map((i) => (
+              <div key={i.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center flex-shrink-0">
+                  <HiCurrencyDollar className="w-5 h-5 text-teal-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm">{i.description}</p>
+                  <p className="text-xs text-gray-400">
+                    {formatDate(i.date)} · {getLabel(INCOME_CATEGORIES, i.category)}
+                    {i.clientName ? ` · ${i.clientName}` : ""}
+                    {i.assignedAgent ? ` · ${agentLabel(i.assignedAgent)}` : " · Empresa"}
+                  </p>
+                </div>
+                <p className="text-sm font-bold text-teal-700 flex-shrink-0">+{formatCurrency(i.amount, i.currency)}</p>
+                <button onClick={() => startEditIngreso(i)} className="text-gray-300 hover:text-blue-500 transition-colors flex-shrink-0" title="Editar">
+                  <HiPencil className="w-4 h-4" />
+                </button>
+                <button onClick={() => handleDeleteIngreso(i.id)} className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0" title="Eliminar">
+                  <HiTrash className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

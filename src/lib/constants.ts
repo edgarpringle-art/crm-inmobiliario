@@ -80,6 +80,15 @@ export const AGENTS = [
   { value: "AMBOS", label: "Ambos", initials: "EP/AC", color: "from-indigo-500 to-pink-500" },
 ];
 
+export const INCOME_CATEGORIES = [
+  { value: "REDACCION_CONTRATO", label: "Redacción de Contrato" },
+  { value: "ASESORIA", label: "Asesoría / Consultoría" },
+  { value: "COMISION_REFERIDO", label: "Comisión por Referido" },
+  { value: "AVALUO", label: "Avalúo" },
+  { value: "ADMINISTRACION", label: "Administración" },
+  { value: "OTRO", label: "Otro" },
+];
+
 export const EXPENSE_CATEGORIES = [
   { value: "COMMUNITY_MANAGER", label: "Community Manager" },
   { value: "NOTARIA", label: "Notaría" },
