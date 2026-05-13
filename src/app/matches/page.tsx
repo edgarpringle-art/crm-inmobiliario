@@ -40,8 +40,8 @@ interface Match {
 
 interface MatchGroup {
   key: string;
-  miOferta: boolean;     // my property side
-  miBusqueda: boolean;   // my client búsqueda side
+  miOferta: boolean;
+  miBusqueda: boolean;
   myEntity: Entidad;
   matches: Match[];
   bestScore: number;
@@ -67,7 +67,6 @@ function groupMatches(matches: Match[]): MatchGroup[] {
       key = `bus_${m.busqueda.id}`;
       myEntity = m.busqueda;
     } else {
-      // Match between two group entities — shouldn't happen in normal feed but handle gracefully
       key = `external_${m.id}`;
       myEntity = m.oferta;
     }
@@ -75,13 +74,8 @@ function groupMatches(matches: Match[]): MatchGroup[] {
     let g = groups.get(key);
     if (!g) {
       g = {
-        key,
-        miOferta,
-        miBusqueda,
-        myEntity,
-        matches: [],
-        bestScore: 0,
-        latestDate: m.created_at,
+        key, miOferta, miBusqueda, myEntity,
+        matches: [], bestScore: 0, latestDate: m.created_at,
       };
       groups.set(key, g);
     }
@@ -93,11 +87,12 @@ function groupMatches(matches: Match[]): MatchGroup[] {
   return Array.from(groups.values()).sort((a, b) => b.bestScore - a.bestScore);
 }
 
-function scoreColor(score: number): string {
-  if (score >= 90) return "text-emerald-300 border-emerald-600 bg-emerald-800/40";
-  if (score >= 80) return "text-green-300 border-green-600 bg-green-800/40";
-  if (score >= 70) return "text-blue-300 border-blue-600 bg-blue-800/40";
-  return "text-slate-300 border-slate-600 bg-slate-800/40";
+// High-contrast score badge — solid backgrounds, dark text
+function scoreClass(score: number): string {
+  if (score >= 90) return "bg-emerald-100 text-emerald-800 border-emerald-300";
+  if (score >= 80) return "bg-green-100 text-green-800 border-green-300";
+  if (score >= 70) return "bg-blue-100 text-blue-800 border-blue-300";
+  return "bg-gray-100 text-gray-700 border-gray-300";
 }
 
 export default function MatchesPage() {
@@ -129,7 +124,6 @@ export default function MatchesPage() {
     return grouped.filter((g) => {
       const myFields = [g.myEntity.tipo, g.myEntity.zona, g.myEntity.contacto_nombre, g.myEntity.grupo_nombre];
       if (myFields.some((c) => (c || "").toLowerCase().includes(q))) return true;
-      // also search within individual matches
       return g.matches.some((m) => {
         const fields = [
           m.oferta.tipo, m.oferta.zona, m.oferta.contacto_nombre, m.oferta.grupo_nombre,
@@ -159,13 +153,13 @@ export default function MatchesPage() {
       />
 
       <div className="flex flex-wrap gap-3 mb-6 items-center">
-        <div className="flex rounded-xl overflow-hidden border border-slate-700">
+        <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white">
           {([1, 7, 15, 30] as Dias[]).map((d) => (
             <button
               key={d}
               onClick={() => setDias(d)}
-              className={`px-3 py-2 text-sm font-semibold transition-colors ${
-                dias === d ? "bg-purple-600 text-white" : "bg-slate-800 text-slate-400 hover:text-white"
+              className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                dias === d ? "bg-purple-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"
               }`}
             >
               {d === 1 ? "Hoy" : d === 7 ? "7 días" : d === 15 ? "15 días" : "30 días"}
@@ -178,34 +172,36 @@ export default function MatchesPage() {
           placeholder="Buscar zona, tipo, contacto..."
           value={buscar}
           onChange={(e) => setBuscar(e.target.value)}
-          className="flex-1 min-w-[200px] px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+          className="flex-1 min-w-[200px] px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
         />
 
         <div className="flex gap-2">
-          <button onClick={expandAll} className="text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 px-3 py-2 rounded-lg transition-colors">
+          <button onClick={expandAll} className="text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors">
             Expandir todo
           </button>
-          <button onClick={collapseAll} className="text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 px-3 py-2 rounded-lg transition-colors">
+          <button onClick={collapseAll} className="text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors">
             Colapsar
           </button>
         </div>
       </div>
 
-      {loading && <div className="text-center py-16 text-slate-400">Cargando matches...</div>}
+      {loading && <div className="text-center py-16 text-gray-500">Cargando matches...</div>}
       {error && (
-        <div className="bg-red-900/30 border border-red-700 rounded-xl p-4 text-red-400 text-sm mb-4">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm mb-4 font-medium">
           ⚠️ {error}
         </div>
       )}
 
       {!loading && !error && (
         <>
-          <p className="text-xs text-slate-500 mb-3">
+          <p className="text-xs text-gray-500 mb-3 font-medium">
             {filtered.length} grupo{filtered.length !== 1 ? "s" : ""} · {filtered.reduce((s, g) => s + g.matches.length, 0)} match{filtered.reduce((s, g) => s + g.matches.length, 0) !== 1 ? "es" : ""}
           </p>
           <div className="space-y-3">
             {filtered.length === 0 && (
-              <div className="text-center py-16 text-slate-400 text-sm">Sin matches en este periodo.</div>
+              <div className="text-center py-16 text-gray-400 text-sm bg-white rounded-xl border border-gray-100">
+                Sin matches en este periodo.
+              </div>
             )}
             {filtered.map((g) => (
               <MatchGroupCard
@@ -222,56 +218,66 @@ export default function MatchesPage() {
   );
 }
 
-// ── Group card with accordion ──────────────────────────────────────────────────
 function MatchGroupCard({ group, isExpanded, onToggle }: { group: MatchGroup; isExpanded: boolean; onToggle: () => void }) {
   const isOferta = group.miOferta;
   const e = group.myEntity;
   const count = group.matches.length;
 
-  // Header tone matches "my" side
-  const headerBg = isOferta ? "bg-green-900/20 border-green-700" : "bg-blue-900/20 border-blue-700";
+  // Side colors — high contrast for light theme
   const sideLabel = isOferta ? "MI OFERTA" : "MI CLIENTE";
-  const sideColor = isOferta ? "text-green-300" : "text-blue-300";
+  const sideAccent = isOferta ? "bg-emerald-500" : "bg-blue-500";
+  const sideTextOnWhite = isOferta ? "text-emerald-700" : "text-blue-700";
+  const sideBgSoft = isOferta ? "bg-emerald-50" : "bg-blue-50";
 
   return (
-    <div className={`rounded-xl border ${headerBg} overflow-hidden`}>
-      {/* Header (always visible) */}
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full p-4 flex items-center gap-3 text-left hover:bg-white/5 transition-colors cursor-pointer"
+        className="w-full p-4 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors cursor-pointer"
       >
+        {/* Color stripe on left */}
+        <div className={`w-1 self-stretch rounded-full ${sideAccent} flex-shrink-0`} />
+
         {/* Chevron */}
         <svg
-          className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}
-          fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}
+          className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
 
-        {/* Best score badge */}
-        <div className={`px-3 py-1 rounded-full border text-sm font-bold flex-shrink-0 ${scoreColor(group.bestScore)}`}>
+        {/* Best score */}
+        <div className={`px-3 py-1 rounded-lg border text-sm font-bold flex-shrink-0 ${scoreClass(group.bestScore)}`}>
           {group.bestScore.toFixed(0)}%
         </div>
 
         {/* My entity info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${sideColor}`}>⭐ {sideLabel}</span>
-            <span className="text-[10px] text-slate-500">·</span>
-            <span className="text-[10px] text-slate-400">{e.modalidad || ""}</span>
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${sideBgSoft} ${sideTextOnWhite}`}>
+              ⭐ {sideLabel}
+            </span>
+            {e.modalidad && (
+              <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
+                {e.modalidad}
+              </span>
+            )}
           </div>
-          <p className="text-white text-sm font-semibold truncate">
-            {(e.tipo || "—")} · {e.zona || "Sin zona"}
+          <p className="text-gray-900 text-sm font-bold truncate">
+            {(e.tipo || "—").toUpperCase()} · {e.zona || "Sin zona"}
           </p>
-          <p className="text-xs text-slate-400 truncate">
-            {isOferta ? (e.precio_texto || "Sin precio") : (e.presupuesto_texto || "Sin presupuesto")}
-            {e.contacto_nombre ? ` · ${e.contacto_nombre}` : ""}
+          <p className="text-xs text-gray-500 truncate">
+            <span className="font-semibold text-gray-700">
+              {isOferta ? (e.precio_texto || "Sin precio") : (e.presupuesto_texto || "Sin presupuesto")}
+            </span>
+            {e.contacto_nombre ? <> · {e.contacto_nombre}</> : null}
           </p>
         </div>
 
         {/* Count badge */}
-        <div className="flex-shrink-0 flex items-center gap-2">
-          <div className="bg-purple-600/30 border border-purple-500/50 text-purple-200 px-3 py-1.5 rounded-lg text-xs font-bold">
+        <div className="flex-shrink-0">
+          <div className="bg-purple-100 border border-purple-300 text-purple-800 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap">
             {count} match{count !== 1 ? "es" : ""}
           </div>
         </div>
@@ -279,10 +285,10 @@ function MatchGroupCard({ group, isExpanded, onToggle }: { group: MatchGroup; is
 
       {/* Body (accordion) */}
       {isExpanded && (
-        <div className="border-t border-slate-700/50 bg-slate-900/40">
-          {/* CRM link for my entity */}
+        <div className="border-t border-gray-200 bg-gray-50">
+          {/* CRM link */}
           {e.crm_id && (
-            <div className="px-4 py-3 border-b border-slate-700/30 flex items-center gap-2">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
               <a
                 href={isOferta && e.crm_tabla === "properties" ? `/propiedades/${e.crm_id}` :
                        !isOferta && (e.crm_tabla === "busquedas" || e.crm_tabla === "clients") ?
@@ -291,7 +297,7 @@ function MatchGroupCard({ group, isExpanded, onToggle }: { group: MatchGroup; is
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                  isOferta ? "bg-green-700/40 hover:bg-green-700/60 text-green-200" : "bg-blue-700/40 hover:bg-blue-700/60 text-blue-200"
+                  isOferta ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
                 }`}
               >
                 Ver ficha en CRM →
@@ -299,8 +305,8 @@ function MatchGroupCard({ group, isExpanded, onToggle }: { group: MatchGroup; is
             </div>
           )}
 
-          {/* Individual match list */}
-          <div className="divide-y divide-slate-700/30">
+          {/* Individual matches */}
+          <div className="divide-y divide-gray-200">
             {group.matches
               .slice()
               .sort((a, b) => b.score - a.score)
@@ -314,23 +320,24 @@ function MatchGroupCard({ group, isExpanded, onToggle }: { group: MatchGroup; is
   );
 }
 
-// ── Single match row inside expanded accordion ────────────────────────────────
 function IndividualMatch({ match, myIsOferta }: { match: Match; myIsOferta: boolean }) {
   const [showOriginal, setShowOriginal] = useState(false);
-  // The "other" side — the WhatsApp group entity we matched against
   const other = myIsOferta ? match.busqueda : match.oferta;
   const otherKind = myIsOferta ? "Búsqueda de grupo" : "Oferta de grupo";
-  const otherColor = myIsOferta ? "text-blue-300" : "text-green-300";
+  const otherIconBg = myIsOferta ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700";
+  const otherPriceColor = myIsOferta ? "text-blue-700" : "text-emerald-700";
 
   return (
-    <div className="p-4 hover:bg-white/5 transition-colors">
+    <div className="p-4 hover:bg-white transition-colors">
       <div className="flex items-start gap-3 mb-3">
-        <div className={`px-2.5 py-0.5 rounded-full border text-xs font-bold flex-shrink-0 ${scoreColor(match.score)}`}>
+        <div className={`px-2.5 py-0.5 rounded-lg border text-xs font-bold flex-shrink-0 ${scoreClass(match.score)}`}>
           {match.score.toFixed(0)}%
         </div>
         <div className="flex-1">
-          <p className={`text-[10px] font-bold uppercase tracking-wider ${otherColor}`}>{otherKind}</p>
-          <p className="text-xs text-slate-500">
+          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${otherIconBg}`}>
+            {otherKind}
+          </span>
+          <p className="text-[11px] text-gray-500 mt-1">
             {new Date(match.created_at).toLocaleString("es-PA", { dateStyle: "short", timeStyle: "short" })}
           </p>
         </div>
@@ -338,39 +345,43 @@ function IndividualMatch({ match, myIsOferta }: { match: Match; myIsOferta: bool
 
       <div className="grid sm:grid-cols-2 gap-3 mb-3">
         {/* Other side details */}
-        <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-3">
-          <p className="text-white text-sm font-semibold">
+        <div className="bg-white border border-gray-200 rounded-lg p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Detalles</p>
+          <p className="text-gray-900 text-sm font-bold">
             {other.tipo || "—"} · {other.zona || "—"}
           </p>
-          <p className={`font-bold text-sm mt-0.5 ${otherColor}`}>
+          <p className={`font-bold text-base mt-1 ${otherPriceColor}`}>
             {myIsOferta ? (other.presupuesto_texto || "—") : (other.precio_texto || "—")}
           </p>
-          <p className="text-slate-300 text-xs mt-1">{other.modalidad || ""}</p>
-          {other.habitaciones != null && <p className="text-slate-400 text-xs">{other.habitaciones} hab</p>}
-          {other.habitaciones_min != null && <p className="text-slate-400 text-xs">mín {other.habitaciones_min} hab</p>}
-          {other.m2 != null && <p className="text-slate-400 text-xs">{other.m2} m²</p>}
+          <p className="text-gray-600 text-xs mt-1 capitalize">{other.modalidad || ""}</p>
+          <div className="flex flex-wrap gap-3 mt-1 text-[11px] text-gray-500">
+            {other.habitaciones != null && <span>{other.habitaciones} hab</span>}
+            {other.habitaciones_min != null && <span>mín {other.habitaciones_min} hab</span>}
+            {other.m2 != null && <span>{other.m2} m²</span>}
+          </div>
         </div>
 
         {/* Contact */}
-        <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-3">
+        <div className="bg-white border border-gray-200 rounded-lg p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Contacto</p>
           {other.contacto_nombre && (
-            <p className="text-white text-sm font-semibold">{other.contacto_nombre}</p>
+            <p className="text-gray-900 text-sm font-bold">{other.contacto_nombre}</p>
           )}
           {other.contacto_tel && (
             <a
               href={`https://wa.me/${other.contacto_tel.replace(/\D/g, "")}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-1 text-sm bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-lg transition-colors font-semibold"
+              className="inline-flex items-center gap-1.5 mt-2 text-sm bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg transition-colors font-semibold"
             >
               📲 {other.contacto_tel}
             </a>
           )}
           {other.grupo_nombre && (
-            <p className="text-slate-400 text-[11px] mt-2 truncate">📌 {other.grupo_nombre}</p>
+            <p className="text-gray-500 text-[11px] mt-2 truncate">📌 {other.grupo_nombre}</p>
           )}
           {!other.contacto_nombre && !other.contacto_tel && (
-            <p className="text-xs text-slate-500">Sin datos de contacto</p>
+            <p className="text-xs text-gray-400 italic">Sin datos de contacto</p>
           )}
         </div>
       </div>
@@ -378,32 +389,32 @@ function IndividualMatch({ match, myIsOferta }: { match: Match; myIsOferta: bool
       {/* Criterios */}
       <div className="flex flex-wrap gap-1.5 mb-2">
         {match.criterios_ok.map((c, i) => (
-          <span key={i} className="text-[10px] px-2 py-0.5 bg-green-900/40 text-green-300 rounded border border-green-700">
+          <span key={i} className="text-[11px] font-medium px-2 py-0.5 bg-green-100 text-green-800 rounded border border-green-300">
             ✓ {c}
           </span>
         ))}
         {match.criterios_no.map((c, i) => (
-          <span key={i} className="text-[10px] px-2 py-0.5 bg-red-900/40 text-red-300 rounded border border-red-700">
+          <span key={i} className="text-[11px] font-medium px-2 py-0.5 bg-red-100 text-red-800 rounded border border-red-300">
             ✗ {c}
           </span>
         ))}
       </div>
 
-      {/* Original message toggle */}
-      {(other.msg_original || (myIsOferta ? match.oferta.msg_original : match.busqueda.msg_original)) && (
-        <button
-          onClick={() => setShowOriginal(!showOriginal)}
-          className="text-[11px] text-slate-500 hover:text-slate-300 underline mt-1"
-        >
-          {showOriginal ? "Ocultar mensaje original" : "Ver mensaje original"}
-        </button>
-      )}
-
-      {showOriginal && other.msg_original && (
-        <div className="mt-2 p-3 bg-slate-900 border border-slate-700 rounded-lg">
-          <p className="text-[10px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">Mensaje original</p>
-          <p className="text-xs text-slate-200 whitespace-pre-wrap">{other.msg_original}</p>
-        </div>
+      {other.msg_original && (
+        <>
+          <button
+            onClick={() => setShowOriginal(!showOriginal)}
+            className="text-[11px] font-medium text-gray-600 hover:text-gray-900 underline mt-1"
+          >
+            {showOriginal ? "Ocultar mensaje original" : "Ver mensaje original"}
+          </button>
+          {showOriginal && (
+            <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-[10px] text-amber-700 mb-1 font-bold uppercase tracking-wider">Mensaje original (WhatsApp)</p>
+              <p className="text-xs text-gray-800 whitespace-pre-wrap leading-relaxed">{other.msg_original}</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
