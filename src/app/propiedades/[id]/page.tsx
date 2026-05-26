@@ -47,6 +47,7 @@ function buildWhatsappSummary(p: PropertyDetail): string {
   const op = p.operationType === "VENTA" ? "Venta" : p.operationType === "ALQUILER" ? "Alquiler" : "Venta / Alquiler";
   const lines: string[] = [];
 
+  // Title
   lines.push(`${emoji} ${op} – ${p.title}`);
 
   const loc = [p.sector, p.city].filter(Boolean).join(", ");
@@ -54,6 +55,7 @@ function buildWhatsappSummary(p: PropertyDetail): string {
 
   lines.push("");
 
+  // Price + general area only (omit landArea, omit maintenance fee)
   const priceParts: string[] = [];
   if (p.operationType !== "ALQUILER" && p.salePrice != null) {
     priceParts.push(formatCurrency(p.salePrice, p.currency));
@@ -61,27 +63,23 @@ function buildWhatsappSummary(p: PropertyDetail): string {
   if (p.operationType !== "VENTA" && p.rentPrice != null) {
     priceParts.push(`${formatCurrency(p.rentPrice, p.currency)}/mes`);
   }
-  const areaParts: string[] = [];
-  if (p.area != null) areaParts.push(`${p.area} m²`);
-  if (p.landArea != null) areaParts.push(`${p.landArea} m² terreno`);
-
-  const moneyLine = [priceParts.join(" / "), areaParts.join(" | ")].filter(Boolean).join(" | ");
-  if (moneyLine) lines.push(`💰 ${moneyLine}`);
+  if (p.area != null) priceParts.push(`${p.area} m²`);
+  if (priceParts.length) lines.push(`💰 ${priceParts.join(" | ")}`);
 
   lines.push("");
 
+  // Specs: bedrooms, bathrooms, parking
   const specs: string[] = [];
   if (p.bedrooms != null) specs.push(`${p.bedrooms} rec`);
   if (p.bathrooms != null) specs.push(`${p.bathrooms} baños`);
   if (p.parkingSpots != null) specs.push(`${p.parkingSpots} parking`);
   if (specs.length) lines.push(`✔️ ${specs.join(" | ")}`);
 
-  const amenities = Object.entries(amenityLabels)
-    .filter(([key]) => p[key as keyof PropertyDetail] === true)
-    .map(([, label]) => label);
-  if (amenities.length) lines.push(`✔️ ${amenities.join(" · ")}`);
-
-  if (p.maintenanceFee != null) lines.push(`✔️ Mantenimiento: ${formatCurrency(p.maintenanceFee, p.currency)}/mes`);
+  // Only "Amueblado" and "Línea Blanca" (omit other amenities)
+  const relevantAmenities: string[] = [];
+  if (p.hasFurniture) relevantAmenities.push("Amueblado");
+  if (p.hasAppliances) relevantAmenities.push("Línea Blanca");
+  if (relevantAmenities.length) lines.push(`✔️ ${relevantAmenities.join(" · ")}`);
 
   // Extra notes from the "Resumen para WhatsApp" notes field (manual extras)
   if (p.notes && p.notes.trim()) {
