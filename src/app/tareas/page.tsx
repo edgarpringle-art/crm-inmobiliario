@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import { AGENTS, formatDate, getLabel } from "@/lib/constants";
-import { HiCheckCircle, HiClock, HiExclamation, HiPlus, HiTrash, HiX, HiCalendar } from "react-icons/hi";
+import { HiCheckCircle, HiClock, HiExclamation, HiPlus, HiTrash, HiX, HiCalendar, HiPencil } from "react-icons/hi";
 
 const AGENT_EMAILS: Record<string, string> = {
   EDGAR: "edgarpringle@gmail.com",
@@ -11,12 +11,17 @@ const AGENT_EMAILS: Record<string, string> = {
   VALENTINA: "valentina.velasquez777@gmail.com",
 };
 
+// Multi-agent support: assignedAgent is stored as "EDGAR,ANA_LORENA" (CSV)
+function parseAgents(assignedAgent: string | null): string[] {
+  if (!assignedAgent) return [];
+  return assignedAgent.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
 function buildCalendarUrl(task: Task): string {
   const dateStr = task.dueDate ? task.dueDate.replace(/-/g, "") : "";
 
   let dates = "";
   if (task.dueDate && task.dueTime) {
-    // Timed event: 1 hour duration in local time (Panamá = UTC-5)
     const [h, m] = task.dueTime.split(":").map(Number);
     const start = new Date(`${task.dueDate}T${task.dueTime}:00-05:00`);
     const end = new Date(start.getTime() + 60 * 60 * 1000);
@@ -24,15 +29,17 @@ function buildCalendarUrl(task: Task): string {
     dates = `${fmt(start)}/${fmt(end)}`;
     void h; void m;
   } else if (task.dueDate) {
-    // All-day event
     const nextDay = new Date(new Date(task.dueDate).getTime() + 86400000).toISOString().split("T")[0].replace(/-/g, "");
     dates = `${dateStr}/${nextDay}`;
   }
 
+  const assignedAgents = parseAgents(task.assignedAgent);
+  const agentNames = assignedAgents.map((a) => getLabel(AGENTS, a)).join(", ");
+
   const details = [
     task.description || "",
     task.client ? `Cliente: ${task.client.firstName} ${task.client.lastName}` : "",
-    task.assignedAgent ? `Responsable: ${getLabel(AGENTS, task.assignedAgent)}` : "",
+    agentNames ? `Responsables: ${agentNames}` : "",
   ].filter(Boolean).join("\n");
 
   const params = new URLSearchParams({
@@ -43,8 +50,11 @@ function buildCalendarUrl(task: Task): string {
     ctz: "America/Panama",
   });
 
-  const email = task.assignedAgent ? AGENT_EMAILS[task.assignedAgent] : null;
-  if (email) params.append("add", email);
+  // Add ALL assigned agents as guests
+  for (const agent of assignedAgents) {
+    const email = AGENT_EMAILS[agent];
+    if (email) params.append("add", email);
+  }
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
@@ -57,7 +67,7 @@ interface Task {
   dueTime: string | null;
   priority: string;
   completed: boolean | number;
-  assignedAgent: string | null;
+  assignedAgent: string | null;  // CSV: "EDGAR,VALENTINA"
   clientId: string | null;
   dealId: string | null;
   createdAt: string;
@@ -71,12 +81,17 @@ const PRIORITIES = [
   { value: "BAJA", label: "Baja", color: "bg-gray-100 text-gray-600" },
 ];
 
+const AGENT_CHIP_COLORS: Record<string, string> = {
+  EDGAR: "bg-blue-100 text-blue-700 border-blue-200",
+  ANA_LORENA: "bg-purple-100 text-purple-700 border-purple-200",
+  VALENTINA: "bg-pink-100 text-pink-700 border-pink-200",
+};
+
 const inputClass = "w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 
 function getDueDateStatus(dueDate: string | null, completed: boolean | number) {
   if (completed) return null;
   if (!dueDate) return null;
-  // Parse YYYY-MM-DD as local date (avoid UTC shift)
   const [y, m, d] = dueDate.split("-").map(Number);
   const due = new Date(y, m - 1, d);
   const today = new Date();
@@ -88,6 +103,11 @@ function getDueDateStatus(dueDate: string | null, completed: boolean | number) {
   return { label: `${days}d`, class: "text-gray-400", icon: null };
 }
 
+const EMPTY_FORM = {
+  title: "", description: "", dueDate: "", dueTime: "",
+  priority: "MEDIA", assignedAgents: [] as string[], clientId: "",
+};
+
 export default function TareasPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,9 +115,8 @@ export default function TareasPage() {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<"pending" | "completed" | "all">("pending");
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    title: "", description: "", dueDate: "", dueTime: "", priority: "MEDIA", assignedAgent: "", clientId: "",
-  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({ ...EMPTY_FORM });
 
   useEffect(() => {
     Promise.all([
@@ -109,19 +128,85 @@ export default function TareasPage() {
     }).finally(() => setLoading(false));
   }, []);
 
-  async function handleAdd(e: React.FormEvent) {
+  function resetForm() {
+    setForm({ ...EMPTY_FORM });
+    setEditingId(null);
+  }
+
+  function openCreateForm() {
+    resetForm();
+    setShowForm(true);
+  }
+
+  function openEditForm(task: Task) {
+    setEditingId(task.id);
+    setForm({
+      title: task.title || "",
+      description: task.description || "",
+      dueDate: task.dueDate || "",
+      dueTime: task.dueTime || "",
+      priority: task.priority || "MEDIA",
+      assignedAgents: parseAgents(task.assignedAgent),
+      clientId: task.clientId || "",
+    });
+    setShowForm(true);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function toggleAgent(agentCode: string) {
+    setForm((p) => ({
+      ...p,
+      assignedAgents: p.assignedAgents.includes(agentCode)
+        ? p.assignedAgents.filter((a) => a !== agentCode)
+        : [...p.assignedAgents, agentCode],
+    }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch("/api/tasks", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, dueDate: form.dueDate || null, dueTime: form.dueTime || null, assignedAgent: form.assignedAgent || null, clientId: form.clientId || null, description: form.description || null }),
-      });
-      if (res.ok) {
-        const newTask = await res.json();
-        setTasks((prev) => [{ ...newTask, client: clients.find((c) => c.id === form.clientId) ? { firstName: clients.find((c) => c.id === form.clientId)!.firstName, lastName: clients.find((c) => c.id === form.clientId)!.lastName } : null, deal: null }, ...prev]);
-        setShowForm(false);
-        setForm({ title: "", description: "", dueDate: "", dueTime: "", priority: "MEDIA", assignedAgent: "", clientId: "" });
+      const payload = {
+        title: form.title,
+        description: form.description || null,
+        dueDate: form.dueDate || null,
+        dueTime: form.dueTime || null,
+        priority: form.priority,
+        assignedAgent: form.assignedAgents.length ? form.assignedAgents.join(",") : null,
+        clientId: form.clientId || null,
+      };
+
+      if (editingId) {
+        const res = await fetch(`/api/tasks/${editingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          const clientObj = clients.find((c) => c.id === form.clientId);
+          setTasks((prev) => prev.map((t) => t.id === editingId
+            ? { ...t, ...updated, client: clientObj ? { firstName: clientObj.firstName, lastName: clientObj.lastName } : null }
+            : t));
+          setShowForm(false);
+          resetForm();
+        }
+      } else {
+        const res = await fetch("/api/tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const newTask = await res.json();
+          const clientObj = clients.find((c) => c.id === form.clientId);
+          setTasks((prev) => [
+            { ...newTask, client: clientObj ? { firstName: clientObj.firstName, lastName: clientObj.lastName } : null, deal: null },
+            ...prev,
+          ]);
+          setShowForm(false);
+          resetForm();
+        }
       }
     } finally { setSaving(false); }
   }
@@ -136,6 +221,7 @@ export default function TareasPage() {
   }
 
   async function deleteTask(id: string) {
+    if (!confirm("¿Eliminar esta tarea?")) return;
     const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
     if (res.ok) setTasks((prev) => prev.filter((t) => t.id !== id));
   }
@@ -158,19 +244,24 @@ export default function TareasPage() {
 
   if (loading) return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" /></div>;
 
+  const selectableAgents = AGENTS.filter((a) => a.value !== "AMBOS");
+
   return (
     <div>
       <PageHeader title="Tareas y Seguimientos" subtitle={`${pendingCount} pendientes${overdueCount > 0 ? ` · ${overdueCount} vencidas` : ""}`}>
-        <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 px-5 py-2.5 rounded-xl font-medium transition-all">
+        <button
+          onClick={() => { if (showForm) { resetForm(); setShowForm(false); } else { openCreateForm(); } }}
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 px-5 py-2.5 rounded-xl font-medium transition-all"
+        >
           {showForm ? <HiX className="w-4 h-4" /> : <HiPlus className="w-4 h-4" />}
           {showForm ? "Cancelar" : "Nueva Tarea"}
         </button>
       </PageHeader>
 
       {showForm && (
-        <form onSubmit={handleAdd} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-          <h2 className="font-bold text-gray-900 mb-4">Nueva Tarea</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+          <h2 className="font-bold text-gray-900 mb-4">{editingId ? "Editar Tarea" : "Nueva Tarea"}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
             <div className="sm:col-span-2 md:col-span-3">
               <label className="text-xs font-semibold text-gray-500 mb-1 block">Título *</label>
               <input required className={inputClass} value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder="Ej: Llamar al cliente para seguimiento..." />
@@ -190,14 +281,7 @@ export default function TareasPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500 mb-1 block">Agente</label>
-              <select className={inputClass} value={form.assignedAgent} onChange={(e) => setForm((p) => ({ ...p, assignedAgent: e.target.value }))}>
-                <option value="">Sin asignar</option>
-                {AGENTS.filter((a) => a.value !== "AMBOS").map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-500 mb-1 block">Cliente</label>
+              <label className="text-xs font-semibold text-gray-500 mb-1 block">Cliente vinculado</label>
               <select className={inputClass} value={form.clientId} onChange={(e) => setForm((p) => ({ ...p, clientId: e.target.value }))}>
                 <option value="">Sin vincular</option>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}
@@ -208,11 +292,48 @@ export default function TareasPage() {
               <input className={inputClass} value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} placeholder="Detalles adicionales..." />
             </div>
           </div>
+
+          {/* Multi-agent selector */}
+          <div className="mb-4">
+            <label className="text-xs font-semibold text-gray-500 mb-2 block">
+              Asignar a (puedes seleccionar varios)
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {selectableAgents.map((a) => {
+                const selected = form.assignedAgents.includes(a.value);
+                const color = AGENT_CHIP_COLORS[a.value] || "bg-gray-100 text-gray-700 border-gray-200";
+                return (
+                  <button
+                    type="button"
+                    key={a.value}
+                    onClick={() => toggleAgent(a.value)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all ${
+                      selected
+                        ? `${color} border-current`
+                        : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
+                    }`}
+                  >
+                    {selected && <span className="mr-1">✓</span>}
+                    {a.label}
+                  </button>
+                );
+              })}
+              {form.assignedAgents.length === 0 && (
+                <span className="text-xs text-gray-400 italic self-center">Sin asignar</span>
+              )}
+            </div>
+          </div>
+
           <div className="flex items-center gap-3 flex-wrap">
             <button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700 px-5 py-2 rounded-xl text-sm font-medium disabled:opacity-50">
-              {saving ? "Guardando..." : "Crear Tarea"}
+              {saving ? "Guardando..." : editingId ? "Actualizar Tarea" : "Crear Tarea"}
             </button>
-            {form.dueDate && form.assignedAgent && (
+            {editingId && (
+              <button type="button" onClick={() => { resetForm(); setShowForm(false); }} className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-5 py-2 rounded-xl text-sm font-medium">
+                Cancelar
+              </button>
+            )}
+            {form.dueDate && form.assignedAgents.length > 0 && (
               <p className="text-xs text-gray-400 flex items-center gap-1">
                 <HiCalendar className="w-3.5 h-3.5 text-blue-400" />
                 Se mostrará opción de agregar al calendario al guardar
@@ -242,6 +363,8 @@ export default function TareasPage() {
           {filteredTasks.map((task) => {
             const dueDateStatus = getDueDateStatus(task.dueDate, task.completed);
             const priorityInfo = PRIORITIES.find((p) => p.value === task.priority);
+            const taskAgents = parseAgents(task.assignedAgent);
+            const hasCalendarAgents = taskAgents.some((a) => AGENT_EMAILS[a]);
             return (
               <div key={task.id} className={`flex items-start gap-4 bg-white rounded-2xl border p-4 transition-all ${task.completed ? "opacity-60 border-gray-100" : "border-gray-100 hover:border-blue-100 hover:shadow-sm"}`}>
                 <button onClick={() => toggleComplete(task)} className={`mt-0.5 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${task.completed ? "bg-green-500 border-green-500" : "border-gray-300 hover:border-green-400"}`}>
@@ -251,7 +374,14 @@ export default function TareasPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className={`font-semibold text-sm ${task.completed ? "line-through text-gray-400" : "text-gray-900"}`}>{task.title}</p>
                     {priorityInfo && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${priorityInfo.color}`}>{priorityInfo.label}</span>}
-                    {task.assignedAgent && <span className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{getLabel(AGENTS, task.assignedAgent)}</span>}
+                    {taskAgents.map((ag) => {
+                      const color = AGENT_CHIP_COLORS[ag] || "bg-indigo-50 text-indigo-600";
+                      return (
+                        <span key={ag} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${color}`}>
+                          {getLabel(AGENTS, ag)}
+                        </span>
+                      );
+                    })}
                   </div>
                   {task.description && <p className="text-xs text-gray-500 mt-0.5">{task.description}</p>}
                   <div className="flex items-center gap-3 mt-1.5 flex-wrap">
@@ -268,18 +398,21 @@ export default function TareasPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {task.dueDate && task.assignedAgent && AGENT_EMAILS[task.assignedAgent] && !task.completed && (
+                  {task.dueDate && hasCalendarAgents && !task.completed && (
                     <a
                       href={buildCalendarUrl(task)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title={`Agregar al calendario de ${getLabel(AGENTS, task.assignedAgent)}`}
+                      title={`Agregar al calendario de ${taskAgents.map((a) => getLabel(AGENTS, a)).join(", ")}`}
                       className="text-blue-400 hover:text-blue-600 transition-colors"
                     >
                       <HiCalendar className="w-4 h-4" />
                     </a>
                   )}
-                  <button onClick={() => deleteTask(task.id)} className="text-gray-300 hover:text-red-500 transition-colors">
+                  <button onClick={() => openEditForm(task)} className="text-gray-300 hover:text-blue-500 transition-colors" title="Editar">
+                    <HiPencil className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => deleteTask(task.id)} className="text-gray-300 hover:text-red-500 transition-colors" title="Eliminar">
                     <HiTrash className="w-4 h-4" />
                   </button>
                 </div>
