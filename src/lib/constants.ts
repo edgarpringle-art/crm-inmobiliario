@@ -26,6 +26,7 @@ export const CLIENT_STATUSES = [
 export const PROPERTY_TYPES = [
   { value: "APARTAMENTO", label: "Apartamento" },
   { value: "CASA", label: "Casa" },
+  { value: "PROYECTO", label: "Proyecto" },
   { value: "LOCAL", label: "Local Comercial" },
   { value: "OFICINA", label: "Oficina" },
   { value: "TERRENO", label: "Terreno" },

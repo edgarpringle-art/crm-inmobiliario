@@ -30,13 +30,14 @@ interface Property {
 
 const typeLabel: Record<string, string> = {
   APARTAMENTO: "Apartamento", PENTHOUSE: "Penthouse", CASA: "Casa", VILLA: "Villa",
-  LOCAL: "Local", OFICINA: "Oficina", TERRENO: "Terreno", NAVE: "Nave", OTRO: "Otro",
+  PROYECTO: "Proyecto", LOCAL: "Local", OFICINA: "Oficina", TERRENO: "Terreno", NAVE: "Nave", OTRO: "Otro",
 };
 
 const PROPERTY_TYPES = [
   { value: "", label: "Todos los tipos" },
   { value: "APARTAMENTO", label: "Apartamento" },
   { value: "CASA", label: "Casa" },
+  { value: "PROYECTO", label: "Proyecto" },
   { value: "PENTHOUSE", label: "Penthouse" },
   { value: "VILLA", label: "Villa" },
   { value: "LOCAL", label: "Local Comercial" },
@@ -49,6 +50,7 @@ const PROPERTY_TYPES = [
 const QUICK_CATEGORIES = [
   { type: "APARTAMENTO", label: "Apartamentos", icon: "building" },
   { type: "CASA", label: "Casas", icon: "house" },
+  { type: "PROYECTO", label: "Proyectos", icon: "tower" },
   { type: "LOCAL", label: "Locales", icon: "store" },
   { type: "OFICINA", label: "Oficinas", icon: "briefcase" },
   { type: "TERRENO", label: "Terrenos", icon: "tree" },
@@ -402,7 +404,7 @@ export default function CatalogoPage() {
             </h2>
             <p className="text-stone-500 text-sm">Selecciona la categoría que buscas</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {QUICK_CATEGORIES.map((c) => {
               const I = Icon[c.icon as keyof typeof Icon];
               const count = properties.filter((p) => p.propertyType === c.type).length;

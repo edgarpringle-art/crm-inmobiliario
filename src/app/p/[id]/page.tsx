@@ -28,7 +28,7 @@ const amenityLabels: Record<string, string> = {
 
 const typeLabel: Record<string, string> = {
   APARTAMENTO: "Apartamento", PENTHOUSE: "Penthouse", CASA: "Casa", VILLA: "Villa",
-  LOCAL: "Local Comercial", OFICINA: "Oficina", TERRENO: "Terreno", NAVE: "Nave Industrial", OTRO: "Propiedad",
+  PROYECTO: "Proyecto", LOCAL: "Local Comercial", OFICINA: "Oficina", TERRENO: "Terreno", NAVE: "Nave Industrial", OTRO: "Propiedad",
 };
 
 const opLabel: Record<string, string> = {

@@ -39,7 +39,7 @@ const amenityLabels: Record<string, string> = {
 
 const propertyTypeEmoji: Record<string, string> = {
   APARTAMENTO: "🏢", PENTHOUSE: "🏙️", CASA: "🏠", VILLA: "🏡",
-  LOCAL: "🏬", OFICINA: "🏢", TERRENO: "🌳", NAVE: "🏭", OTRO: "🏘️",
+  PROYECTO: "🏗️", LOCAL: "🏬", OFICINA: "🏢", TERRENO: "🌳", NAVE: "🏭", OTRO: "🏘️",
 };
 
 function buildWhatsappSummary(p: PropertyDetail): string {
