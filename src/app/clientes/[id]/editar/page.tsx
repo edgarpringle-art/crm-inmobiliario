@@ -11,6 +11,8 @@ import {
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 
+const SEARCH_CLIENT_TYPES = ["COMPRADOR", "ARRENDATARIO", "INVERSOR"];
+
 export default function EditarClientePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const router = useRouter();
@@ -21,8 +23,10 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
     clientType: "COMPRADOR", source: "", status: "PROSPECTO",
     searchType: "", searchZone: "", searchPropertyType: "", budgetMin: "", budgetMax: "",
     bedrooms: "", bathrooms: "", searchNotes: "",
-    address: "", city: "", notes: "", driveLink: "",
+    address: "", city: "", notes: "",
   });
+
+  const needsSearch = SEARCH_CLIENT_TYPES.includes(form.clientType);
 
   useEffect(() => {
     fetch(`/api/clients/${id}`)
@@ -48,7 +52,6 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
           address: data.address || "",
           city: data.city || "",
           notes: data.notes || "",
-          driveLink: data.driveLink || "",
         });
         setLoading(false);
       });
@@ -66,24 +69,33 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
     }
     setSaving(true);
     try {
-      const body = {
-        ...form,
+      const searchPayload = needsSearch ? {
+        searchType: form.searchType || null,
+        searchZone: form.searchZone || null,
+        searchPropertyType: form.searchPropertyType || null,
         budgetMin: form.budgetMin ? parseFloat(form.budgetMin) : null,
         budgetMax: form.budgetMax ? parseFloat(form.budgetMax) : null,
         bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
         bathrooms: form.bathrooms ? parseInt(form.bathrooms) : null,
-        source: form.source || null,
-        searchType: form.searchType || null,
-        searchPropertyType: form.searchPropertyType || null,
+        searchNotes: form.searchNotes || null,
+      } : {
+        searchType: null, searchZone: null, searchPropertyType: null,
+        budgetMin: null, budgetMax: null, bedrooms: null, bathrooms: null, searchNotes: null,
+      };
+
+      const body = {
+        firstName: form.firstName,
+        lastName: form.lastName,
         email: form.email || null,
         phone: form.phone || null,
         phone2: form.phone2 || null,
-        searchZone: form.searchZone || null,
-        searchNotes: form.searchNotes || null,
+        clientType: form.clientType,
+        source: form.source || null,
+        status: form.status,
         address: form.address || null,
         city: form.city || null,
         notes: form.notes || null,
-        driveLink: form.driveLink || null,
+        ...searchPayload,
       };
       const res = await fetch(`/api/clients/${id}`, {
         method: "PUT",
@@ -131,7 +143,7 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
                 {CLIENT_SOURCES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </FormField>
-            <FormField label="Estado">
+            <FormField label="Etapa del Embudo">
               <select className={inputClass} value={form.status} onChange={(e) => update("status", e.target.value)}>
                 {CLIENT_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
@@ -139,38 +151,44 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Búsqueda del Cliente</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField label="Tipo de Búsqueda">
-              <select className={inputClass} value={form.searchType} onChange={(e) => update("searchType", e.target.value)}>
-                <option value="">Seleccionar...</option>
-                {SEARCH_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </FormField>
-            <FormField label="Zona de Interés"><input className={inputClass} value={form.searchZone} onChange={(e) => update("searchZone", e.target.value)} /></FormField>
-            <FormField label="Tipo de Propiedad">
-              <select className={inputClass} value={form.searchPropertyType} onChange={(e) => update("searchPropertyType", e.target.value)}>
-                <option value="">Seleccionar...</option>
-                {PROPERTY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </FormField>
-            <FormField label="Presupuesto Mínimo"><input type="number" className={inputClass} value={form.budgetMin} onChange={(e) => update("budgetMin", e.target.value)} /></FormField>
-            <FormField label="Presupuesto Máximo"><input type="number" className={inputClass} value={form.budgetMax} onChange={(e) => update("budgetMax", e.target.value)} /></FormField>
-            <FormField label="Habitaciones"><input type="number" className={inputClass} value={form.bedrooms} onChange={(e) => update("bedrooms", e.target.value)} /></FormField>
-            <FormField label="Baños"><input type="number" className={inputClass} value={form.bathrooms} onChange={(e) => update("bathrooms", e.target.value)} /></FormField>
+        {needsSearch && (
+          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-400">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Qué está buscando</h2>
+              <span className="text-xs text-gray-400 bg-blue-50 text-blue-600 px-2 py-1 rounded-lg font-medium">
+                Cliente busca propiedad
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField label="Tipo de Búsqueda">
+                <select className={inputClass} value={form.searchType} onChange={(e) => update("searchType", e.target.value)}>
+                  <option value="">Seleccionar...</option>
+                  {SEARCH_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </FormField>
+              <FormField label="Zona de Interés"><input className={inputClass} value={form.searchZone} onChange={(e) => update("searchZone", e.target.value)} /></FormField>
+              <FormField label="Tipo de Propiedad">
+                <select className={inputClass} value={form.searchPropertyType} onChange={(e) => update("searchPropertyType", e.target.value)}>
+                  <option value="">Seleccionar...</option>
+                  {PROPERTY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </FormField>
+              <FormField label="Presupuesto Mínimo"><input type="number" className={inputClass} value={form.budgetMin} onChange={(e) => update("budgetMin", e.target.value)} /></FormField>
+              <FormField label="Presupuesto Máximo"><input type="number" className={inputClass} value={form.budgetMax} onChange={(e) => update("budgetMax", e.target.value)} /></FormField>
+              <FormField label="Habitaciones"><input type="number" className={inputClass} value={form.bedrooms} onChange={(e) => update("bedrooms", e.target.value)} /></FormField>
+              <FormField label="Baños"><input type="number" className={inputClass} value={form.bathrooms} onChange={(e) => update("bathrooms", e.target.value)} /></FormField>
+            </div>
+            <div className="mt-4">
+              <FormField label="Notas de Búsqueda"><textarea className={inputClass} rows={3} value={form.searchNotes} onChange={(e) => update("searchNotes", e.target.value)} /></FormField>
+            </div>
           </div>
-          <div className="mt-4">
-            <FormField label="Notas de Búsqueda"><textarea className={inputClass} rows={3} value={form.searchNotes} onChange={(e) => update("searchNotes", e.target.value)} /></FormField>
-          </div>
-        </div>
+        )}
 
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Información Adicional</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Dirección"><input className={inputClass} value={form.address} onChange={(e) => update("address", e.target.value)} /></FormField>
             <FormField label="Ciudad"><input className={inputClass} value={form.city} onChange={(e) => update("city", e.target.value)} /></FormField>
-            <FormField label="Link Google Drive"><input className={inputClass} value={form.driveLink} onChange={(e) => update("driveLink", e.target.value)} /></FormField>
           </div>
           <div className="mt-4">
             <FormField label="Notas"><textarea className={inputClass} rows={3} value={form.notes} onChange={(e) => update("notes", e.target.value)} /></FormField>

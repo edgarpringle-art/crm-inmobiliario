@@ -15,7 +15,6 @@ import {
   HiClipboardCheck,
   HiChat,
   HiSparkles,
-  HiSearch,
   HiLogout,
   HiUserGroup,
   HiGlobe,
@@ -33,8 +32,7 @@ interface NavItem {
 
 const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Dashboard", icon: HiHome, description: "Resumen general", visibleFor: ["broker", "admin", "agent"] },
-  { href: "/clientes", label: "Clientes", icon: HiUsers, description: "Gestionar clientes", visibleFor: ["broker", "admin", "agent"] },
-  { href: "/busquedas", label: "Búsquedas", icon: HiSearch, description: "Clientes buscando propiedades", visibleFor: ["broker", "admin", "agent"] },
+  { href: "/clientes", label: "Clientes", icon: HiUsers, description: "Embudo de clientes", visibleFor: ["broker", "admin", "agent"] },
   { href: "/propiedades", label: "Propiedades", icon: HiOfficeBuilding, description: "Inventario de propiedades", visibleFor: ["broker", "admin", "agent"] },
   { href: "/negocios", label: "Negocios", icon: HiBriefcase, description: "Ventas y alquileres", visibleFor: ["broker", "admin", "agent"] },
   { href: "/tareas", label: "Tareas", icon: HiClipboardCheck, description: "Seguimientos y recordatorios", visibleFor: ["broker", "admin", "agent"] },

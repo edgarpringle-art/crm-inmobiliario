@@ -16,10 +16,11 @@ export const CLIENT_SOURCES = [
 ];
 
 export const CLIENT_STATUSES = [
-  { value: "ACTIVO", label: "Activo", color: "bg-green-100 text-green-800" },
-  { value: "PROSPECTO", label: "Prospecto", color: "bg-blue-100 text-blue-800" },
-  { value: "INACTIVO", label: "Inactivo", color: "bg-gray-100 text-gray-800" },
+  { value: "PROSPECTO", label: "Cliente Nuevo", color: "bg-blue-100 text-blue-800" },
+  { value: "ACTIVO", label: "Activo", color: "bg-emerald-100 text-emerald-800" },
+  { value: "EN_PROCESO", label: "En Proceso", color: "bg-amber-100 text-amber-800" },
   { value: "CERRADO", label: "Cerrado", color: "bg-purple-100 text-purple-800" },
+  { value: "INACTIVO", label: "Perdido", color: "bg-red-100 text-red-800" },
 ];
 
 export const PROPERTY_TYPES = [
