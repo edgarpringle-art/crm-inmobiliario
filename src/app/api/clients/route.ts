@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, insert } from "@/lib/db";
+import { syncBusquedaFromClient } from "@/lib/syncBusqueda";
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,7 +42,11 @@ export async function POST(request: NextRequest) {
     }
 
     const id = await insert("Client", body);
-    const client = await query("SELECT * FROM Client WHERE id = ?", [id]);
+    const client = await query<Record<string, unknown>>("SELECT * FROM Client WHERE id = ?", [id]);
+
+    // Mirror search criteria into Busqueda table so the EP Realty bot picks it up
+    await syncBusquedaFromClient(client[0] as unknown as Parameters<typeof syncBusquedaFromClient>[0]);
+
     return NextResponse.json(client[0], { status: 201 });
   } catch (error) {
     console.error("Error creating client:", error);

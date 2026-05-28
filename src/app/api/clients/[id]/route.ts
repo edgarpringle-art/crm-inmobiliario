@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne, update, remove } from "@/lib/db";
+import { syncBusquedaFromClient } from "@/lib/syncBusqueda";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -36,7 +37,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     const body = await request.json();
     await update("Client", id, body);
-    const client = await queryOne("SELECT * FROM Client WHERE id = ?", [id]);
+    const client = await queryOne<Record<string, unknown>>("SELECT * FROM Client WHERE id = ?", [id]);
+
+    // Mirror search criteria into Busqueda table so the EP Realty bot picks it up
+    if (client) {
+      await syncBusquedaFromClient(client as unknown as Parameters<typeof syncBusquedaFromClient>[0]);
+    }
+
     return NextResponse.json(client);
   } catch (error) {
     console.error("Error updating client:", error);
