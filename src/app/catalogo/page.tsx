@@ -59,7 +59,7 @@ const QUICK_CATEGORIES = [
 const BROKER = {
   phone: "50763183113",
   phoneDisplay: "+507 6318-3113",
-  email: "epringlerealtor@gmail.com",
+  email: "edgar@panamainmo.com",
   instagram: "epringle.realestate",
   instagramUrl: "https://www.instagram.com/epringle.realestate",
   license: "PN5016",
