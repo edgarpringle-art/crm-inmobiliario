@@ -2,24 +2,63 @@
 
 import { useEffect, useState, useMemo } from "react";
 import PageHeader from "@/components/PageHeader";
-import { AGENTS, formatDate, getLabel } from "@/lib/constants";
+import { formatDate } from "@/lib/constants";
 import {
   HiCheckCircle, HiClock, HiExclamation, HiPlus, HiTrash, HiX, HiCalendar, HiPencil,
   HiFire, HiSearch, HiChevronDown, HiChevronUp, HiSparkles, HiUser,
 } from "react-icons/hi";
 
-const AGENT_EMAILS: Record<string, string> = {
-  EDGAR: "edgarpringle@gmail.com",
-  ANA_LORENA: "alchanis@gmail.com",
-  VALENTINA: "valentina.velasquez777@gmail.com",
+// Agent fetched from /api/agents — replaces hardcoded AGENTS constant
+interface AgentRow {
+  id: string;
+  code: string;       // stored lowercase in DB
+  fullName: string;
+  email: string | null;
+  initials: string | null;
+  color: string | null; // e.g. "from-blue-500 to-blue-600"
+  role: string;
+  active: number;
+}
+
+// Safelist of chip colors so Tailwind JIT generates them
+const CHIP_COLORS: Record<string, string> = {
+  blue:    "bg-blue-100 text-blue-700 border-blue-200",
+  purple:  "bg-purple-100 text-purple-700 border-purple-200",
+  pink:    "bg-pink-100 text-pink-700 border-pink-200",
+  emerald: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  green:   "bg-green-100 text-green-700 border-green-200",
+  orange:  "bg-orange-100 text-orange-700 border-orange-200",
+  rose:    "bg-rose-100 text-rose-700 border-rose-200",
+  amber:   "bg-amber-100 text-amber-700 border-amber-200",
+  cyan:    "bg-cyan-100 text-cyan-700 border-cyan-200",
+  indigo:  "bg-indigo-100 text-indigo-700 border-indigo-200",
+  teal:    "bg-teal-100 text-teal-700 border-teal-200",
+  slate:   "bg-slate-100 text-slate-700 border-slate-200",
+  red:     "bg-red-100 text-red-700 border-red-200",
 };
+
+function agentChipColor(agent: AgentRow | undefined): string {
+  if (!agent?.color) return CHIP_COLORS.slate;
+  const match = agent.color.match(/from-(\w+)-\d+/);
+  const base = match ? match[1] : "slate";
+  return CHIP_COLORS[base] || CHIP_COLORS.slate;
+}
+
+function agentByCode(agents: AgentRow[], code: string): AgentRow | undefined {
+  const c = code.toLowerCase();
+  return agents.find((a) => a.code.toLowerCase() === c);
+}
+
+function agentLabel(agents: AgentRow[], code: string): string {
+  return agentByCode(agents, code)?.fullName || code;
+}
 
 function parseAgents(assignedAgent: string | null): string[] {
   if (!assignedAgent) return [];
   return assignedAgent.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
-function buildCalendarUrl(task: Task): string {
+function buildCalendarUrl(task: Task, agents: AgentRow[]): string {
   const dateStr = task.dueDate ? task.dueDate.replace(/-/g, "") : "";
 
   let dates = "";
@@ -36,7 +75,7 @@ function buildCalendarUrl(task: Task): string {
   }
 
   const assignedAgents = parseAgents(task.assignedAgent);
-  const agentNames = assignedAgents.map((a) => getLabel(AGENTS, a)).join(", ");
+  const agentNames = assignedAgents.map((c) => agentLabel(agents, c)).join(", ");
 
   const details = [
     task.description || "",
@@ -52,12 +91,16 @@ function buildCalendarUrl(task: Task): string {
     ctz: "America/Panama",
   });
 
-  for (const agent of assignedAgents) {
-    const email = AGENT_EMAILS[agent];
-    if (email) params.append("add", email);
+  for (const code of assignedAgents) {
+    const ag = agentByCode(agents, code);
+    if (ag?.email) params.append("add", ag.email);
   }
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function taskHasCalendarAgent(task: Task, agents: AgentRow[]): boolean {
+  return parseAgents(task.assignedAgent).some((c) => !!agentByCode(agents, c)?.email);
 }
 
 interface Task {
@@ -81,12 +124,6 @@ const PRIORITIES = [
   { value: "MEDIA", label: "Media", color: "bg-amber-100 text-amber-700 border-amber-200", stripe: "bg-amber-400", dot: "bg-amber-400" },
   { value: "BAJA", label: "Baja", color: "bg-gray-100 text-gray-600 border-gray-200", stripe: "bg-gray-300", dot: "bg-gray-300" },
 ];
-
-const AGENT_CHIP_COLORS: Record<string, string> = {
-  EDGAR: "bg-blue-100 text-blue-700 border-blue-200",
-  ANA_LORENA: "bg-purple-100 text-purple-700 border-purple-200",
-  VALENTINA: "bg-pink-100 text-pink-700 border-pink-200",
-};
 
 const inputClass = "w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 
@@ -148,6 +185,7 @@ export default function TareasPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<{ id: string; firstName: string; lastName: string }[]>([]);
+  const [agents, setAgents] = useState<AgentRow[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -161,9 +199,11 @@ export default function TareasPage() {
     Promise.all([
       fetch("/api/tasks").then((r) => r.json()).catch(() => []),
       fetch("/api/clients").then((r) => r.json()).catch(() => []),
-    ]).then(([t, c]) => {
+      fetch("/api/agents?active=1").then((r) => r.json()).catch(() => []),
+    ]).then(([t, c, a]) => {
       setTasks(Array.isArray(t) ? t : []);
       setClients(Array.isArray(c) ? c : []);
+      setAgents(Array.isArray(a) ? a : []);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -350,7 +390,8 @@ export default function TareasPage() {
     );
   }
 
-  const selectableAgents = AGENTS.filter((a) => a.value !== "AMBOS");
+  // All active agents (broker/admin/agent), excluding any synthetic "AMBOS" entries
+  const selectableAgents = agents.filter((a) => a.code.toUpperCase() !== "AMBOS");
 
   return (
     <div>
@@ -417,17 +458,18 @@ export default function TareasPage() {
             <label className="text-xs font-semibold text-gray-500 mb-2 block">Asignar a (puedes seleccionar varios)</label>
             <div className="flex flex-wrap gap-2">
               {selectableAgents.map((a) => {
-                const selected = form.assignedAgents.includes(a.value);
-                const color = AGENT_CHIP_COLORS[a.value] || "bg-gray-100 text-gray-700 border-gray-200";
+                const code = a.code.toUpperCase();
+                const selected = form.assignedAgents.includes(code);
+                const color = agentChipColor(a);
                 return (
                   <button
-                    type="button" key={a.value}
-                    onClick={() => toggleAgent(a.value)}
+                    type="button" key={a.id}
+                    onClick={() => toggleAgent(code)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all ${
                       selected ? `${color} border-current` : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
                     }`}
                   >
-                    {selected && <span className="mr-1">✓</span>}{a.label}
+                    {selected && <span className="mr-1">✓</span>}{a.fullName}
                   </button>
                 );
               })}
@@ -491,17 +533,19 @@ export default function TareasPage() {
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-gray-400 font-semibold uppercase tracking-wider">Agente:</span>
             {selectableAgents.map((a) => {
-              const selected = agentFilter.includes(a.value);
-              const color = AGENT_CHIP_COLORS[a.value] || "bg-gray-100 text-gray-700 border-gray-200";
+              const code = a.code.toUpperCase();
+              const selected = agentFilter.includes(code);
+              const color = agentChipColor(a);
               return (
                 <button
-                  key={a.value}
-                  onClick={() => setAgentFilter((prev) => selected ? prev.filter((x) => x !== a.value) : [...prev, a.value])}
+                  key={a.id}
+                  title={a.fullName}
+                  onClick={() => setAgentFilter((prev) => selected ? prev.filter((x) => x !== code) : [...prev, code])}
                   className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition-all ${
                     selected ? color : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
                   }`}
                 >
-                  {a.initials || a.label.charAt(0)}
+                  {a.initials || a.fullName.charAt(0)}
                 </button>
               );
             })}
@@ -546,7 +590,7 @@ export default function TareasPage() {
                 <div className="space-y-2">
                   {items.map((task) => (
                     <TaskCard
-                      key={task.id} task={task} bucket={bk}
+                      key={task.id} task={task} bucket={bk} agents={agents}
                       onToggle={() => toggleComplete(task)}
                       onSnooze={(days) => snooze(task, days)}
                       onEdit={() => openEditForm(task)}
@@ -578,7 +622,7 @@ export default function TareasPage() {
                 <div className="space-y-2">
                   {completed.map((task) => (
                     <TaskCard
-                      key={task.id} task={task} bucket="sinfecha"
+                      key={task.id} task={task} bucket="sinfecha" agents={agents}
                       onToggle={() => toggleComplete(task)}
                       onSnooze={(days) => snooze(task, days)}
                       onEdit={() => openEditForm(task)}
@@ -617,10 +661,11 @@ function StatCard({
 
 // ── Task Card ──
 function TaskCard({
-  task, bucket, onToggle, onSnooze, onEdit, onDelete,
+  task, bucket, agents, onToggle, onSnooze, onEdit, onDelete,
 }: {
   task: Task;
   bucket: Bucket;
+  agents: AgentRow[];
   onToggle: () => void;
   onSnooze: (days: number) => void;
   onEdit: () => void;
@@ -628,7 +673,7 @@ function TaskCard({
 }) {
   const priorityInfo = PRIORITIES.find((p) => p.value === task.priority);
   const taskAgents = parseAgents(task.assignedAgent);
-  const hasCalendarAgents = taskAgents.some((a) => AGENT_EMAILS[a]);
+  const hasCalendarAgents = taskHasCalendarAgent(task, agents);
   const dueRel = task.dueDate ? daysFromToday(task.dueDate) : null;
 
   let datePill: { label: string; class: string } | null = null;
@@ -682,10 +727,12 @@ function TaskCard({
           )}
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             {taskAgents.map((ag) => {
-              const color = AGENT_CHIP_COLORS[ag] || "bg-indigo-50 text-indigo-600 border-indigo-100";
+              const agent = agentByCode(agents, ag);
+              const color = agentChipColor(agent);
+              const name = agent?.fullName || ag;
               return (
                 <span key={ag} className={`text-[10px] font-semibold border px-2 py-0.5 rounded-full flex items-center gap-1 ${color}`}>
-                  <HiUser className="w-2.5 h-2.5" /> {getLabel(AGENTS, ag)}
+                  <HiUser className="w-2.5 h-2.5" /> {name}
                 </span>
               );
             })}
@@ -721,7 +768,7 @@ function TaskCard({
           )}
           {!task.completed && task.dueDate && hasCalendarAgents && (
             <a
-              href={buildCalendarUrl(task)} target="_blank" rel="noopener noreferrer"
+              href={buildCalendarUrl(task, agents)} target="_blank" rel="noopener noreferrer"
               title={`Agregar al calendario`}
               className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             >
