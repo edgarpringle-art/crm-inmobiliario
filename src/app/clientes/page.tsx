@@ -7,7 +7,7 @@ import PageHeader from "@/components/PageHeader";
 import SearchBar from "@/components/SearchBar";
 import EmptyState from "@/components/EmptyState";
 import { CLIENT_TYPES, CLIENT_STATUSES, getLabel } from "@/lib/constants";
-import { HiUsers, HiPhone, HiMail, HiFilter, HiX, HiDotsVertical } from "react-icons/hi";
+import { HiUsers, HiPhone, HiMail, HiFilter, HiX, HiDotsVertical, HiRefresh } from "react-icons/hi";
 
 interface Client {
   id: string;
@@ -137,16 +137,47 @@ export default function ClientesPage() {
     setDragOverColumn(null);
   }
 
+  const [syncing, setSyncing] = useState(false);
+  async function syncWithBot() {
+    if (syncing) return;
+    setSyncing(true);
+    const t = toast.loading("Sincronizando búsquedas con el bot...");
+    try {
+      const res = await fetch("/api/clients/sync-all", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Error");
+      toast.success(
+        `Sincronizado: ${data.processed} clientes · ${data.activeBusquedas} búsquedas activas, ${data.inactiveBusquedas} inactivas`,
+        { id: t, duration: 6000 }
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al sincronizar", { id: t });
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   return (
     <div>
       <PageHeader title="Clientes" subtitle={`${filteredClients.length} en el embudo`}>
-        <Link
-          href="/clientes/nuevo"
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm shadow-blue-200"
-        >
-          <HiUsers className="w-4 h-4" />
-          Nuevo Cliente
-        </Link>
+        <div className="flex gap-2">
+          <button
+            onClick={syncWithBot}
+            disabled={syncing}
+            title="Genera/actualiza una búsqueda para cada cliente, basándose en los criterios y la etapa del embudo. El bot recoge esto en su próximo sync."
+            className="flex items-center gap-2 bg-white border border-gray-200 hover:border-gray-400 text-gray-600 hover:text-gray-900 px-4 py-2.5 rounded-xl font-medium text-sm transition-all disabled:opacity-50"
+          >
+            <HiRefresh className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">{syncing ? "Sincronizando..." : "Sincronizar con bot"}</span>
+          </button>
+          <Link
+            href="/clientes/nuevo"
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm shadow-blue-200"
+          >
+            <HiUsers className="w-4 h-4" />
+            Nuevo Cliente
+          </Link>
+        </div>
       </PageHeader>
 
       {/* Search and filters */}

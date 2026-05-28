@@ -23,6 +23,7 @@ interface ClientLike {
   phone?: string | null;
   phone2?: string | null;
   clientType?: string | null;
+  status?: string | null;
   searchType?: string | null;
   searchZone?: string | null;
   searchPropertyType?: string | null;
@@ -31,6 +32,9 @@ interface ClientLike {
   bedrooms?: number | null;
   searchNotes?: string | null;
 }
+
+// Funnel stages where we keep matching with WhatsApp groups
+const ACTIVE_STATUSES = ["PROSPECTO", "ACTIVO", "EN_PROCESO"];
 
 function modalidadFromClient(client: ClientLike): string {
   const st = (client.searchType || "").toUpperCase();
@@ -61,9 +65,15 @@ export async function syncBusquedaFromClient(client: ClientLike): Promise<void> 
   if (!client?.id) return;
 
   const isSearchType = client.clientType ? SEARCH_CLIENT_TYPES.includes(client.clientType) : false;
+  const isActiveStage = client.status ? ACTIVE_STATUSES.includes(client.status) : true;
 
-  if (!isSearchType) {
-    // Client is now a Vendedor / Propietario / etc — deactivate linked búsqueda
+  // Deactivate the búsqueda when:
+  //  - Client type isn't search-type (Vendedor/Propietario), OR
+  //  - Client is in a non-active funnel stage (Perdido/Cerrado)
+  // This makes the bot stop matching them with WhatsApp groups
+  // (and on next sync the bot will remove their entries from mis_listados
+  // and clean up orphan matches).
+  if (!isSearchType || !isActiveStage) {
     try {
       await query("UPDATE Busqueda SET status = 'INACTIVO' WHERE clientId = ?", [client.id]);
     } catch { /* table or column may be missing in some environments — ignore */ }
