@@ -72,7 +72,6 @@ export default function NuevoClientePage() {
         searchZone: form.searchZones[0] || null, // legacy fallback
         budgetMin: form.budgetMin ? parseFloat(form.budgetMin) : null,
         budgetMax: form.budgetMax ? parseFloat(form.budgetMax) : null,
-        currency: "USD",
         bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
         bedroomsMax: form.bedroomsMax ? parseInt(form.bedroomsMax) : null,
         bathrooms: form.bathrooms ? parseInt(form.bathrooms) : null,
