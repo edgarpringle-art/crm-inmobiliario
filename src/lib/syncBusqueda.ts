@@ -25,11 +25,27 @@ interface ClientLike {
   clientType?: string | null;
   status?: string | null;
   searchType?: string | null;
-  searchZone?: string | null;
+  searchZone?: string | null;          // legacy single-zone string
+  searchZones?: string | null;         // new: JSON array of zones
   searchPropertyType?: string | null;
   budgetMin?: number | null;
   budgetMax?: number | null;
-  bedrooms?: number | null;
+  currency?: string | null;
+  bedrooms?: number | null;            // min bedrooms
+  bedroomsMax?: number | null;
+  bathrooms?: number | null;           // min bathrooms
+  bathroomsMax?: number | null;
+  amoblado?: string | null;
+  hasPool?: number | boolean | null;
+  hasGym?: number | boolean | null;
+  hasElevator?: number | boolean | null;
+  hasSecurity?: number | boolean | null;
+  hasGenerator?: number | boolean | null;
+  hasFurniture?: number | boolean | null;
+  hasAppliances?: number | boolean | null;
+  hasAC?: number | boolean | null;
+  hasBalcony?: number | boolean | null;
+  hasGarden?: number | boolean | null;
   searchNotes?: string | null;
 }
 
@@ -45,16 +61,35 @@ function modalidadFromClient(client: ClientLike): string {
   return "COMPRA";
 }
 
+function parseZonesField(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  try {
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((z) => typeof z === "string" && z.trim()) : [];
+  } catch { return []; }
+}
+
+function clientZones(client: ClientLike): string[] {
+  const fromMulti = parseZonesField(client.searchZones);
+  if (fromMulti.length) return fromMulti;
+  return client.searchZone?.trim() ? [client.searchZone.trim()] : [];
+}
+
 function hasSearchData(client: ClientLike): boolean {
   return !!(
-    (client.searchZone && client.searchZone.trim()) ||
+    clientZones(client).length ||
     client.searchPropertyType ||
     client.budgetMin != null ||
     client.budgetMax != null ||
     client.bedrooms != null ||
+    client.bedroomsMax != null ||
     (client.searchType && client.searchType.trim()) ||
     (client.searchNotes && client.searchNotes.trim())
   );
+}
+
+function asBool(v: number | boolean | null | undefined): number {
+  return v ? 1 : 0;
 }
 
 /**
@@ -86,6 +121,7 @@ export async function syncBusquedaFromClient(client: ClientLike): Promise<void> 
   }
 
   const fullName = `${client.firstName || ""} ${client.lastName || ""}`.trim() || "Cliente";
+  const zones = clientZones(client);
 
   const fields = {
     clientId: client.id,
@@ -97,9 +133,23 @@ export async function syncBusquedaFromClient(client: ClientLike): Promise<void> 
     tipoPropiedad: client.searchPropertyType || null,
     presupuestoMin: client.budgetMin ?? null,
     presupuestoMax: client.budgetMax ?? null,
-    currency: "USD",
+    currency: client.currency || "USD",
     habitacionesMin: client.bedrooms ?? null,
-    zonas: client.searchZone ? JSON.stringify([client.searchZone]) : null,
+    habitacionesMax: client.bedroomsMax ?? null,
+    banosMin: client.bathrooms ?? null,
+    banosMax: client.bathroomsMax ?? null,
+    zonas: zones.length ? JSON.stringify(zones) : null,
+    amoblado: client.amoblado || "INDIFERENTE",
+    hasPool:      asBool(client.hasPool),
+    hasGym:       asBool(client.hasGym),
+    hasElevator:  asBool(client.hasElevator),
+    hasSecurity:  asBool(client.hasSecurity),
+    hasGenerator: asBool(client.hasGenerator),
+    hasFurniture: asBool(client.hasFurniture),
+    hasAppliances:asBool(client.hasAppliances),
+    hasAC:        asBool(client.hasAC),
+    hasBalcony:   asBool(client.hasBalcony),
+    hasGarden:    asBool(client.hasGarden),
     requisitos: client.searchNotes || null,
     status: "ACTIVO",
     assignedAgent: "EDGAR",

@@ -30,6 +30,27 @@ export async function register() {
     // Agent table (added in multi-agent phase)
     await safeAlter("ALTER TABLE Deal ADD COLUMN commissionDate TEXT");
 
+    // Busqueda — extra range columns mirroring Client (filled by syncBusqueda)
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN habitacionesMax INTEGER");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN banosMin INTEGER");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN banosMax INTEGER");
+
+    // Client — richer search criteria so the form replaces the old /busquedas page
+    await safeAlter("ALTER TABLE Client ADD COLUMN searchZones TEXT");
+    await safeAlter("ALTER TABLE Client ADD COLUMN bedroomsMax INTEGER");
+    await safeAlter("ALTER TABLE Client ADD COLUMN bathroomsMax INTEGER");
+    await safeAlter("ALTER TABLE Client ADD COLUMN amoblado TEXT");
+    await safeAlter("ALTER TABLE Client ADD COLUMN hasPool INTEGER");
+    await safeAlter("ALTER TABLE Client ADD COLUMN hasGym INTEGER");
+    await safeAlter("ALTER TABLE Client ADD COLUMN hasElevator INTEGER");
+    await safeAlter("ALTER TABLE Client ADD COLUMN hasSecurity INTEGER");
+    await safeAlter("ALTER TABLE Client ADD COLUMN hasGenerator INTEGER");
+    await safeAlter("ALTER TABLE Client ADD COLUMN hasFurniture INTEGER");
+    await safeAlter("ALTER TABLE Client ADD COLUMN hasAppliances INTEGER");
+    await safeAlter("ALTER TABLE Client ADD COLUMN hasAC INTEGER");
+    await safeAlter("ALTER TABLE Client ADD COLUMN hasBalcony INTEGER");
+    await safeAlter("ALTER TABLE Client ADD COLUMN hasGarden INTEGER");
+
     // Ingreso table — for non-commission income (contracts, consulting, etc.)
     await db.execute({
       sql: `CREATE TABLE IF NOT EXISTS Ingreso (
