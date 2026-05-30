@@ -7,7 +7,7 @@ import PageHeader from "@/components/PageHeader";
 import FormField from "@/components/FormField";
 import ZoneSelector from "@/components/ZoneSelector";
 import {
-  CLIENT_TYPES, CLIENT_SOURCES, CLIENT_STATUSES, PROPERTY_TYPES, SEARCH_TYPES, CURRENCIES,
+  CLIENT_TYPES, CLIENT_SOURCES, CLIENT_STATUSES, PROPERTY_TYPES, SEARCH_TYPES,
 } from "@/lib/constants";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
@@ -47,7 +47,7 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
     clientType: "COMPRADOR", source: "", status: "PROSPECTO",
     searchType: "", searchPropertyType: "",
     searchZones: [] as string[],
-    budgetMin: "", budgetMax: "", currency: "USD",
+    budgetMin: "", budgetMax: "",
     bedrooms: "", bedroomsMax: "",
     bathrooms: "", bathroomsMax: "",
     amoblado: "INDIFERENTE",
@@ -82,7 +82,6 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
           searchZones: zones,
           budgetMin: data.budgetMin?.toString() || "",
           budgetMax: data.budgetMax?.toString() || "",
-          currency: data.currency || "USD",
           bedrooms: data.bedrooms?.toString() || "",
           bedroomsMax: data.bedroomsMax?.toString() || "",
           bathrooms: data.bathrooms?.toString() || "",
@@ -120,7 +119,7 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
         searchZone: form.searchZones[0] || null,
         budgetMin: form.budgetMin ? parseFloat(form.budgetMin) : null,
         budgetMax: form.budgetMax ? parseFloat(form.budgetMax) : null,
-        currency: form.currency || "USD",
+        currency: "USD",
         bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
         bedroomsMax: form.bedroomsMax ? parseInt(form.bedroomsMax) : null,
         bathrooms: form.bathrooms ? parseInt(form.bathrooms) : null,
@@ -254,8 +253,8 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
             </div>
 
             <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Rango de precio</label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Rango de precio (USD)</label>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Mínimo</label>
                   <input type="number" placeholder="0" className={inputClass} value={form.budgetMin} onChange={(e) => update("budgetMin", e.target.value)} />
@@ -263,12 +262,6 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
                 <div>
                   <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Máximo</label>
                   <input type="number" placeholder="0" className={inputClass} value={form.budgetMax} onChange={(e) => update("budgetMax", e.target.value)} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Moneda</label>
-                  <select className={inputClass} value={form.currency} onChange={(e) => update("currency", e.target.value)}>
-                    {CURRENCIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                  </select>
                 </div>
               </div>
             </div>
