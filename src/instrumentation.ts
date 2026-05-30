@@ -35,6 +35,21 @@ export async function register() {
     await safeAlter("ALTER TABLE Busqueda ADD COLUMN banosMin INTEGER");
     await safeAlter("ALTER TABLE Busqueda ADD COLUMN banosMax INTEGER");
 
+    // Busqueda — amenity + extra criteria columns mirrored from Client by syncBusqueda
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN currency TEXT");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN telefono2 TEXT");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN amoblado TEXT");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN hasPool INTEGER");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN hasGym INTEGER");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN hasElevator INTEGER");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN hasSecurity INTEGER");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN hasGenerator INTEGER");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN hasFurniture INTEGER");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN hasAppliances INTEGER");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN hasAC INTEGER");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN hasBalcony INTEGER");
+    await safeAlter("ALTER TABLE Busqueda ADD COLUMN hasGarden INTEGER");
+
     // Client — richer search criteria so the form replaces the old /busquedas page
     await safeAlter("ALTER TABLE Client ADD COLUMN searchZones TEXT");
     await safeAlter("ALTER TABLE Client ADD COLUMN currency TEXT");
