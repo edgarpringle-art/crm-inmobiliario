@@ -47,7 +47,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json(client);
   } catch (error) {
     console.error("Error updating client:", error);
-    return NextResponse.json({ error: "Error al actualizar el cliente" }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: "Error al actualizar el cliente", details: msg }, { status: 500 });
   }
 }
 

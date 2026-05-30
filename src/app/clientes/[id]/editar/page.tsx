@@ -168,11 +168,14 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error("Error");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.details || data?.error || "Error al actualizar");
+      }
       toast.success("Cliente actualizado");
       router.push(`/clientes/${id}`);
-    } catch {
-      toast.error("Error al actualizar");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al actualizar", { duration: 6000 });
     } finally {
       setSaving(false);
     }

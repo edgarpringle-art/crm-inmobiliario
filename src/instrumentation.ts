@@ -37,6 +37,7 @@ export async function register() {
 
     // Client — richer search criteria so the form replaces the old /busquedas page
     await safeAlter("ALTER TABLE Client ADD COLUMN searchZones TEXT");
+    await safeAlter("ALTER TABLE Client ADD COLUMN currency TEXT");
     await safeAlter("ALTER TABLE Client ADD COLUMN bedroomsMax INTEGER");
     await safeAlter("ALTER TABLE Client ADD COLUMN bathroomsMax INTEGER");
     await safeAlter("ALTER TABLE Client ADD COLUMN amoblado TEXT");

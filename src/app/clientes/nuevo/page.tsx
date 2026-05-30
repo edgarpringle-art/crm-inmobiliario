@@ -121,11 +121,14 @@ export default function NuevoClientePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error("Error al crear cliente");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.details || data?.error || "Error al crear cliente");
+      }
       toast.success("Cliente creado exitosamente");
       router.push("/clientes");
-    } catch {
-      toast.error("Error al crear el cliente");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al crear el cliente", { duration: 6000 });
     } finally {
       setSaving(false);
     }
