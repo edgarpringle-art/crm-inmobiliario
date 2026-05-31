@@ -7,7 +7,10 @@ import PageHeader from "@/components/PageHeader";
 import SearchBar from "@/components/SearchBar";
 import EmptyState from "@/components/EmptyState";
 import { CLIENT_TYPES, CLIENT_STATUSES, getLabel } from "@/lib/constants";
-import { HiUsers, HiPhone, HiMail, HiFilter, HiX, HiDotsVertical, HiRefresh } from "react-icons/hi";
+import { HiUsers, HiPhone, HiMail, HiFilter, HiX, HiDotsVertical, HiRefresh, HiSearch, HiHome, HiInformationCircle } from "react-icons/hi";
+
+// Owner-side client types (offer properties, don't search → matched via Property table, not Busqueda)
+const OWNER_TYPES = ["PROPIETARIO", "VENDEDOR"];
 
 interface Client {
   id: string;
@@ -53,6 +56,7 @@ export default function ClientesPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [view, setView] = useState<"BUSCADORES" | "PROPIETARIOS">("BUSCADORES");
   const [typeFilter, setTypeFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
@@ -81,10 +85,31 @@ export default function ClientesPage() {
     return () => window.removeEventListener("click", close);
   }, [openMenuId]);
 
+  // Counts per view for the tab badges
+  const ownerCount = useMemo(() => clients.filter((c) => OWNER_TYPES.includes(c.clientType)).length, [clients]);
+  const searcherCount = clients.length - ownerCount;
+
+  // Types available in the current view (for the filter chips)
+  const visibleTypes = useMemo(
+    () => CLIENT_TYPES.filter((t) =>
+      view === "PROPIETARIOS" ? OWNER_TYPES.includes(t.value) : !OWNER_TYPES.includes(t.value)
+    ),
+    [view]
+  );
+
   const filteredClients = useMemo(() => clients.filter((c) => {
+    const isOwner = OWNER_TYPES.includes(c.clientType);
+    // Buscadores view = everything that isn't an owner type (covers nulls too)
+    if (view === "PROPIETARIOS" ? !isOwner : isOwner) return false;
     if (typeFilter && c.clientType !== typeFilter) return false;
     return true;
-  }), [clients, typeFilter]);
+  }), [clients, typeFilter, view]);
+
+  function switchView(next: "BUSCADORES" | "PROPIETARIOS") {
+    if (next === view) return;
+    setView(next);
+    setTypeFilter(""); // a stale type filter from the other view would hide everything
+  }
 
   const grouped = useMemo(() => {
     const map: Record<string, Client[]> = {};
@@ -180,6 +205,45 @@ export default function ClientesPage() {
         </div>
       </PageHeader>
 
+      {/* View tabs: Buscadores vs Propietarios */}
+      <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit mb-4">
+        <button
+          onClick={() => switchView("BUSCADORES")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            view === "BUSCADORES" ? "bg-white text-blue-700 shadow-sm" : "text-gray-500 hover:text-gray-800"
+          }`}
+        >
+          <HiSearch className="w-4 h-4" />
+          Buscadores
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${view === "BUSCADORES" ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-500"}`}>
+            {searcherCount}
+          </span>
+        </button>
+        <button
+          onClick={() => switchView("PROPIETARIOS")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            view === "PROPIETARIOS" ? "bg-white text-purple-700 shadow-sm" : "text-gray-500 hover:text-gray-800"
+          }`}
+        >
+          <HiHome className="w-4 h-4" />
+          Propietarios
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${view === "PROPIETARIOS" ? "bg-purple-100 text-purple-700" : "bg-gray-200 text-gray-500"}`}>
+            {ownerCount}
+          </span>
+        </button>
+      </div>
+
+      {view === "PROPIETARIOS" && (
+        <div className="flex items-start gap-2.5 bg-purple-50 border border-purple-200 text-purple-800 rounded-xl px-4 py-3 mb-4 text-sm">
+          <HiInformationCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          <p>
+            Los propietarios no buscan, <strong>ofrecen</strong>. Su match con los grupos va por sus{" "}
+            <Link href="/propiedades" className="underline font-semibold">propiedades</Link>, no por esta etapa.
+            El embudo aquí es solo para tu organización.
+          </p>
+        </div>
+      )}
+
       {/* Search and filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="flex-1">
@@ -222,7 +286,7 @@ export default function ClientesPage() {
             >
               Todos
             </button>
-            {CLIENT_TYPES.map((t) => (
+            {visibleTypes.map((t) => (
               <button
                 key={t.value}
                 onClick={() => setTypeFilter(t.value)}
