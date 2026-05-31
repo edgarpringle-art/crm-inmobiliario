@@ -98,7 +98,7 @@ export default function EditarBusquedaPage() {
         });
         setLoading(false);
       })
-      .catch(() => { toast.error("Error al cargar"); router.push("/busquedas"); });
+      .catch(() => { toast.error("Error al cargar"); router.push("/matches"); });
   }, [id]); // eslint-disable-line
 
   function update(field: string, value: unknown) {
@@ -141,7 +141,7 @@ export default function EditarBusquedaPage() {
       });
       if (!res.ok) throw new Error("Error");
       toast.success("Búsqueda actualizada");
-      router.push("/busquedas");
+      router.push("/matches");
     } catch {
       toast.error("Error al actualizar");
     } finally {
@@ -276,7 +276,7 @@ export default function EditarBusquedaPage() {
           <button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50">
             {saving ? "Guardando..." : "Guardar Cambios"}
           </button>
-          <button type="button" onClick={() => router.push("/busquedas")} className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-6 py-2 rounded-lg font-medium transition-colors">
+          <button type="button" onClick={() => router.push("/matches")} className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-6 py-2 rounded-lg font-medium transition-colors">
             Cancelar
           </button>
         </div>

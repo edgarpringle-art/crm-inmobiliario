@@ -35,6 +35,14 @@ export async function GET() {
         : queryOne("SELECT COALESCE(SUM(commissionAmount), 0) as total FROM Deal WHERE status = 'CERRADO'"),
     ]);
 
+    // Deal counts per status across ALL deals (not just the recent 5) for the pipeline visual
+    const dealStatusRows = await query<{ status: string; count: number }>(
+      `SELECT status, COUNT(*) as count FROM Deal WHERE 1=1${dealFilterBare} GROUP BY status`,
+      filterArgs
+    );
+    const dealsByStatus: Record<string, number> = {};
+    for (const r of dealStatusRows) dealsByStatus[String(r.status)] = Number(r.count);
+
     const recentDeals = await query(`
       SELECT d.*,
         cl.firstName as clientFirstName, cl.lastName as clientLastName,
@@ -67,6 +75,7 @@ export async function GET() {
       totalDeals: asNum(totalDealsRow, "count"),
       closedDeals: asNum(closedDealsRow, "count"),
       totalCommissions: asNum(commissionsRow, "total"),
+      dealsByStatus,
       isAgent,
       recentDeals: recentDeals.map((d: Record<string, unknown>) => ({
         ...d,

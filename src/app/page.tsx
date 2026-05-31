@@ -30,6 +30,7 @@ interface DashboardData {
   totalDeals: number;
   closedDeals: number;
   totalCommissions: number;
+  dealsByStatus: Record<string, number>;
   isAgent?: boolean;
   recentDeals: Array<{
     id: string;
@@ -242,7 +243,7 @@ export default function DashboardPage() {
         <h2 className="text-lg font-bold text-gray-900 mb-4">Pipeline de Negocios</h2>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {DEAL_STATUSES.map((status) => {
-            const count = data.recentDeals.filter((d) => d.status === status.value).length;
+            const count = data.dealsByStatus?.[status.value] ?? 0;
             return (
               <div key={status.value} className="text-center p-4 rounded-xl bg-gray-50 border border-gray-100">
                 <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full mb-2 ${status.color}`}>
