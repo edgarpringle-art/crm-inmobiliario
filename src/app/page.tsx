@@ -24,7 +24,8 @@ import {
 
 interface DashboardData {
   totalClients: number;
-  activeClients: number;
+  ownerClients: number;
+  searcherClients: number;
   totalProperties: number;
   availableProperties: number;
   totalDeals: number;
@@ -53,7 +54,7 @@ interface DashboardData {
 }
 
 function getTodayFormatted(): string {
-  return new Date().toLocaleDateString("es-DO", {
+  return new Date().toLocaleDateString("es-PA", {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -72,10 +73,12 @@ function getCurrentUserFromCookie(): { displayName: string; firstName: string; r
 }
 
 function getDaysRemaining(endDate: string): number {
-  const end = new Date(endDate);
+  const [y, m, d] = endDate.slice(0, 10).split("-").map(Number);
+  const end = new Date(y, m - 1, d);
   const now = new Date();
-  const diffMs = end.getTime() - now.getTime();
-  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffMs = end.getTime() - today.getTime();
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
 }
 
 function getDaysRemainingColor(days: number): string {
@@ -94,7 +97,7 @@ function buildStatCards(isAgent: boolean) {
       gradient: "stat-blue",
       iconColor: "text-blue-600",
       getValue: (d: DashboardData) => d.totalClients,
-      getSub: (d: DashboardData) => `${d.activeClients} activos`,
+      getSub: (d: DashboardData) => `${d.searcherClients} buscadores · ${d.ownerClients} propietarios`,
       href: "/clientes",
     },
     {

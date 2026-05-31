@@ -18,9 +18,9 @@ export async function GET() {
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 60);
     const thirtyDaysStr = thirtyDaysFromNow.toISOString();
 
-    const [totalClientsRow, activeClientsRow, totalPropertiesRow, availablePropertiesRow, totalDealsRow, closedDealsRow, commissionsRow] = await Promise.all([
+    const [totalClientsRow, ownerClientsRow, totalPropertiesRow, availablePropertiesRow, totalDealsRow, closedDealsRow, commissionsRow] = await Promise.all([
       queryOne("SELECT COUNT(*) as count FROM Client"),
-      queryOne("SELECT COUNT(*) as count FROM Client WHERE status = 'ACTIVO'"),
+      queryOne("SELECT COUNT(*) as count FROM Client WHERE clientType IN ('PROPIETARIO','VENDEDOR')"),
       queryOne("SELECT COUNT(*) as count FROM Property"),
       queryOne("SELECT COUNT(*) as count FROM Property WHERE status = 'DISPONIBLE'"),
       queryOne(`SELECT COUNT(*) as count FROM Deal WHERE 1=1${dealFilterBare}`, filterArgs),
@@ -67,9 +67,14 @@ export async function GET() {
 
     const asNum = (row: Record<string, unknown> | null, field: string) => Number((row as Record<string, unknown>)?.[field] ?? 0);
 
+    const totalClients = asNum(totalClientsRow, "count");
+    const ownerClients = asNum(ownerClientsRow, "count");
+    const searcherClients = Math.max(0, totalClients - ownerClients);
+
     return NextResponse.json({
-      totalClients: asNum(totalClientsRow, "count"),
-      activeClients: asNum(activeClientsRow, "count"),
+      totalClients,
+      ownerClients,
+      searcherClients,
       totalProperties: asNum(totalPropertiesRow, "count"),
       availableProperties: asNum(availablePropertiesRow, "count"),
       totalDeals: asNum(totalDealsRow, "count"),
