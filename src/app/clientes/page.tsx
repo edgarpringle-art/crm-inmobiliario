@@ -57,6 +57,7 @@ export default function ClientesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"BUSCADORES" | "PROPIETARIOS">("BUSCADORES");
+  const [showHelp, setShowHelp] = useState(false);
   const [typeFilter, setTypeFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
@@ -206,32 +207,45 @@ export default function ClientesPage() {
       </PageHeader>
 
       {/* View tabs: Buscadores vs Propietarios */}
-      <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit mb-4">
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit">
+          <button
+            onClick={() => switchView("BUSCADORES")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              view === "BUSCADORES" ? "bg-white text-blue-700 shadow-sm" : "text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            <HiSearch className="w-4 h-4" />
+            Buscadores
+            <span className={`text-xs px-1.5 py-0.5 rounded-full ${view === "BUSCADORES" ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-500"}`}>
+              {searcherCount}
+            </span>
+          </button>
+          <button
+            onClick={() => switchView("PROPIETARIOS")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              view === "PROPIETARIOS" ? "bg-white text-purple-700 shadow-sm" : "text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            <HiHome className="w-4 h-4" />
+            Propietarios
+            <span className={`text-xs px-1.5 py-0.5 rounded-full ${view === "PROPIETARIOS" ? "bg-purple-100 text-purple-700" : "bg-gray-200 text-gray-500"}`}>
+              {ownerCount}
+            </span>
+          </button>
+        </div>
         <button
-          onClick={() => switchView("BUSCADORES")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-            view === "BUSCADORES" ? "bg-white text-blue-700 shadow-sm" : "text-gray-500 hover:text-gray-800"
+          onClick={() => setShowHelp((v) => !v)}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
+            showHelp ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white border-gray-200 text-gray-500 hover:text-gray-800"
           }`}
         >
-          <HiSearch className="w-4 h-4" />
-          Buscadores
-          <span className={`text-xs px-1.5 py-0.5 rounded-full ${view === "BUSCADORES" ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-500"}`}>
-            {searcherCount}
-          </span>
-        </button>
-        <button
-          onClick={() => switchView("PROPIETARIOS")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-            view === "PROPIETARIOS" ? "bg-white text-purple-700 shadow-sm" : "text-gray-500 hover:text-gray-800"
-          }`}
-        >
-          <HiHome className="w-4 h-4" />
-          Propietarios
-          <span className={`text-xs px-1.5 py-0.5 rounded-full ${view === "PROPIETARIOS" ? "bg-purple-100 text-purple-700" : "bg-gray-200 text-gray-500"}`}>
-            {ownerCount}
-          </span>
+          <HiInformationCircle className="w-4 h-4" />
+          <span className="hidden sm:inline">¿Cómo uso esto?</span>
         </button>
       </div>
+
+      {showHelp && <HelpPanel view={view} />}
 
       {view === "PROPIETARIOS" && (
         <div className="flex items-start gap-2.5 bg-purple-50 border border-purple-200 text-purple-800 rounded-xl px-4 py-3 mb-4 text-sm">
@@ -368,6 +382,52 @@ export default function ClientesPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Help panel (per-view funnel guide) ──────────────────────────────────────
+const HELP_ROWS: Record<"BUSCADORES" | "PROPIETARIOS", { dot: string; col: string; who: string; tag: string }[]> = {
+  BUSCADORES: [
+    { dot: "bg-blue-500",    col: "Cliente Nuevo", who: "Recién te escribió, todavía sin calificar", tag: "🟢 Match ON" },
+    { dot: "bg-emerald-500", col: "Activo",        who: "Calificado, buscando en serio, le muestras propiedades", tag: "🟢 Match ON" },
+    { dot: "bg-amber-500",   col: "En Proceso",    who: "Ya hay oferta / negociación / contrato en trámite", tag: "🟢 Match ON" },
+    { dot: "bg-purple-500",  col: "Cerrado",       who: "Alquiló o compró contigo", tag: "🔴 Match OFF" },
+    { dot: "bg-red-500",     col: "Perdido",       who: "Se cayó, alquiló por otro lado, o no calificó", tag: "🔴 Match OFF" },
+  ],
+  PROPIETARIOS: [
+    { dot: "bg-blue-500",    col: "Cliente Nuevo", who: "Te contactó pero aún no cargas/firmas su propiedad", tag: "Sin cargar" },
+    { dot: "bg-emerald-500", col: "Activo",        who: "Su propiedad está publicada y la estás ofreciendo", tag: "Disponible" },
+    { dot: "bg-amber-500",   col: "En Proceso",    who: "Hay un interesado / negociación sobre su propiedad", tag: "Reservada" },
+    { dot: "bg-purple-500",  col: "Cerrado",       who: "Se vendió o alquiló su propiedad", tag: "Vendida / Alquilada" },
+    { dot: "bg-red-500",     col: "Perdido",       who: "Retiró la propiedad o se fue con otro agente", tag: "No Disponible" },
+  ],
+};
+
+function HelpPanel({ view }: { view: "BUSCADORES" | "PROPIETARIOS" }) {
+  const isBuscadores = view === "BUSCADORES";
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
+      <h3 className="text-sm font-bold text-gray-900 mb-1">
+        {isBuscadores ? "🔍 Cómo organizar Buscadores" : "🏠 Cómo organizar Propietarios"}
+      </h3>
+      <p className="text-xs text-gray-500 mb-4">
+        {isBuscadores
+          ? "El embudo controla el match con los grupos de WhatsApp. Mientras siga buscando → una de las 3 columnas verdes; cuando deja de buscar → Cerrado o Perdido."
+          : "Aquí el embudo es solo organización (no prende ni apaga matches). Lo que hace el match es cargar su propiedad en Propiedades. Alinea la columna al estado de su propiedad."}
+      </p>
+      <div className="space-y-1.5">
+        {HELP_ROWS[view].map((r) => (
+          <div key={r.col} className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-2 w-32 flex-shrink-0">
+              <span className={`w-2 h-2 rounded-full ${r.dot}`} />
+              <span className="font-semibold text-gray-800">{r.col}</span>
+            </div>
+            <span className="flex-1 text-gray-600 text-xs sm:text-sm">{r.who}</span>
+            <span className="text-[11px] font-medium text-gray-500 whitespace-nowrap flex-shrink-0">{r.tag}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
