@@ -33,7 +33,6 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<PersonOption[]>([]);
-  const [owners, setOwners] = useState<PersonOption[]>([]);
   const [provinces, setProvinces] = useState<string[]>([]);
   const [districts, setDistricts] = useState<string[]>([]);
   const [sectors, setSectors] = useState<string[]>([]);
@@ -55,10 +54,8 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
     Promise.all([
       fetch(`/api/properties/${id}`).then((r) => r.json()),
       fetch("/api/clients").then((r) => r.json()),
-      fetch("/api/owners").then((r) => r.json()).catch(() => []),
-    ]).then(([data, clientsData, ownersData]) => {
-      setClients(clientsData);
-      setOwners(Array.isArray(ownersData) ? ownersData : []);
+    ]).then(([data, clientsData]) => {
+      setClients(Array.isArray(clientsData) ? clientsData : []);
       setForm({
         title: data.title || "", propertyType: data.propertyType, operationType: data.operationType, status: data.status,
         address: data.address || "", sector: data.sector || "", city: data.city || "",
@@ -209,11 +206,10 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Propietario</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Propietario (del sistema)">
+            <FormField label="Propietario (Cliente)">
               <select className={inputClass} value={form.ownerId} onChange={(e) => update("ownerId", e.target.value)}>
                 <option value="">Sin vincular</option>
-                {owners.length > 0 && <optgroup label="Propietarios">{owners.map((o) => <option key={o.id} value={o.id}>{o.firstName} {o.lastName}</option>)}</optgroup>}
-                {clients.length > 0 && <optgroup label="Clientes">{clients.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}</optgroup>}
+                {clients.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}
               </select>
             </FormField>
             <div />
