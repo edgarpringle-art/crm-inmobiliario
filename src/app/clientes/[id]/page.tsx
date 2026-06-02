@@ -15,7 +15,7 @@ import { HiPlus, HiTrash } from "react-icons/hi";
 
 interface Activity {
   id: string; type: string; description: string; clientId: string | null;
-  dealId: string | null; createdAt: string;
+  dealId: string | null; createdAt: string; agent: string | null;
 }
 
 const ACTIVITY_TYPES = [
@@ -35,7 +35,8 @@ interface ClientDetail {
   searchPropertyType: string | null; budgetMin: number | null; budgetMax: number | null;
   bedrooms: number | null; bathrooms: number | null; searchNotes: string | null;
   address: string | null; city: string | null; notes: string | null; driveLink: string | null;
-  createdAt: string; updatedAt: string;
+  createdAt: string; updatedAt: string; createdBy: string | null;
+  lastActivityBy: string | null; lastActivityAt: string | null;
   ownedProperties: Array<{ id: string; title: string; propertyType: string; operationType: string; status: string; salePrice: number | null; rentPrice: number | null; currency: string }>;
   deals: Array<{ id: string; dealType: string; status: string; agreedPrice: number | null; currency: string; property: { id: string; title: string } | null }>;
 }
@@ -102,6 +103,7 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
     { label: "Dirección", value: client.address },
     { label: "Ciudad", value: client.city },
     { label: "Registrado", value: formatDate(client.createdAt) },
+    { label: "Creado por", value: client.createdBy },
   ];
 
   const searchInfo = [
@@ -264,7 +266,10 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800">{act.description}</p>
-                      <p className="text-[11px] text-gray-400 mt-0.5">{formatDate(act.createdAt)}</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        {formatDate(act.createdAt)}
+                        {act.agent && <span> · por {act.agent}</span>}
+                      </p>
                     </div>
                     <button onClick={() => deleteActivity(act.id)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all flex-shrink-0">
                       <HiTrash className="w-4 h-4" />

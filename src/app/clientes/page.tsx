@@ -22,6 +22,10 @@ interface Client {
   source: string | null;
   status: string;
   city: string | null;
+  createdAt?: string;
+  createdBy?: string | null;
+  lastActivityAt?: string | null;
+  lastActivityBy?: string | null;
 }
 
 function getInitials(first: string, last: string): string {
@@ -120,6 +124,9 @@ export default function ClientesPage() {
       if (!map[k]) map[k] = [];
       map[k].push(c);
     }
+    // Most recently contacted (or created) first, so a fresh follow-up jumps to the top
+    const ts = (c: Client) => c.lastActivityAt || c.createdAt || "";
+    for (const k of Object.keys(map)) map[k].sort((a, b) => ts(b).localeCompare(ts(a)));
     return map;
   }, [filteredClients]);
 
@@ -481,6 +488,14 @@ function ClientCard({
             </p>
           )}
         </div>
+
+        {(client.lastActivityBy || client.createdBy) && (
+          <p className="text-[10px] text-gray-400 mt-2 pt-2 border-t border-gray-100 truncate">
+            {client.lastActivityBy
+              ? `Últ. contacto: ${client.lastActivityBy}`
+              : `Creado por: ${client.createdBy}`}
+          </p>
+        )}
       </Link>
 
       {/* Move button (top-right) */}

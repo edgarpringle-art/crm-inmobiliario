@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query, insert, remove } from "@/lib/db";
+import { query, insert, update, remove } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,7 +27,21 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     if (!body.type || !body.description) return NextResponse.json({ error: "type y description son obligatorios" }, { status: 400 });
-    const id = await insert("Activity", body);
+
+    const me = await getCurrentUser();
+    const agent = me?.displayName || null;
+    const id = await insert("Activity", { ...body, agent });
+
+    // Bump the client to the top of its column and record who followed up last
+    if (body.clientId) {
+      try {
+        await update("Client", body.clientId, {
+          lastActivityAt: new Date().toISOString(),
+          lastActivityBy: agent,
+        });
+      } catch { /* column may not exist yet on prod — ignore */ }
+    }
+
     const rows = await query("SELECT * FROM Activity WHERE id = ?", [id]);
     return NextResponse.json(rows[0], { status: 201 });
   } catch (error) {

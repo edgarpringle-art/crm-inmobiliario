@@ -27,7 +27,7 @@ interface PropertyDetail {
   driveLink: string | null; portalLinks: string | null; description: string | null; notes: string | null;
   owner: { id: string; firstName: string; lastName: string; phone: string | null; email: string | null } | null;
   ownerName: string | null; ownerPhone: string | null;
-  createdAt: string;
+  createdAt: string; createdBy: string | null;
   deals: Array<{ id: string; dealType: string; status: string; agreedPrice: number | null; currency: string; client: { id: string; firstName: string; lastName: string } | null }>;
 }
 
@@ -180,6 +180,7 @@ export default function PropiedadDetailPage({ params }: { params: Promise<{ id: 
             {property.rentPrice != null && <div><p className="text-xs text-gray-500 uppercase tracking-wide">Precio Alquiler</p><p className="text-lg font-bold text-teal-600 mt-1">{formatCurrency(property.rentPrice, property.currency)}/mes</p></div>}
             {property.maintenanceFee != null && <div><p className="text-xs text-gray-500 uppercase tracking-wide">Mantenimiento</p><p className="text-sm font-medium text-gray-900 mt-1">{formatCurrency(property.maintenanceFee, property.currency)}/mes</p></div>}
             <div><p className="text-xs text-gray-500 uppercase tracking-wide">Registrada</p><p className="text-sm font-medium text-gray-900 mt-1">{formatDate(property.createdAt)}</p></div>
+            {property.createdBy && <div><p className="text-xs text-gray-500 uppercase tracking-wide">Creada por</p><p className="text-sm font-medium text-gray-900 mt-1">{property.createdBy}</p></div>}
           </div>
         </div>
 

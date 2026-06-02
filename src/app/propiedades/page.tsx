@@ -31,6 +31,7 @@ interface Property {
   parkingSpots: number | null;
   owner: { id: string; firstName: string; lastName: string } | null;
   ownerName: string | null;
+  createdBy: string | null;
 }
 
 export default function PropiedadesPage() {
@@ -235,6 +236,10 @@ export default function PropiedadesPage() {
                   {prop.area != null && <span>{prop.area} m2</span>}
                   {prop.parkingSpots != null && <span>{prop.parkingSpots} parq.</span>}
                 </div>
+
+                {prop.createdBy && (
+                  <p className="text-[10px] text-gray-400 mt-2">Creada por: {prop.createdBy}</p>
+                )}
               </div>
             </Link>
           ))}
