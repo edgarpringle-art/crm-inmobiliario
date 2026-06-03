@@ -766,10 +766,10 @@ function TaskCard({
               </button>
             </>
           )}
-          {!task.completed && task.dueDate && hasCalendarAgents && (
+          {!task.completed && task.dueDate && (
             <a
               href={buildCalendarUrl(task, agents)} target="_blank" rel="noopener noreferrer"
-              title={`Agregar al calendario`}
+              title={hasCalendarAgents ? "Agregar al calendario del agente asignado" : "Agregar al calendario"}
               className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             >
               <HiCalendar className="w-4 h-4" />
