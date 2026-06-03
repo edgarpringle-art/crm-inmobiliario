@@ -31,7 +31,7 @@ export const PA_LOCATIONS: Location[] = [
       "Panamá Pacífico", "Howard",
       // Norte / Afueras
       "Las Cumbres", "Chilibre", "Alcalde Díaz", "Pedregal",
-      "Juan Díaz", "Tocumen", "24 de Diciembre", "Las Mañanitas",
+      "Juan Díaz", "Costa Sur", "Tocumen", "24 de Diciembre", "Las Mañanitas",
       "Las Garzas", "Pacora",
     ],
   },
