@@ -171,6 +171,8 @@ export default function ContabilidadPage() {
   const [showGastoForm, setShowGastoForm] = useState(false);
   const [savingGasto, setSavingGasto] = useState(false);
   const [editingGastoId, setEditingGastoId] = useState<string | null>(null);
+  const [gastoMonth, setGastoMonth] = useState<string>(String(new Date().getMonth() + 1));
+  const [gastoYear, setGastoYear] = useState<number>(new Date().getFullYear());
   const [gastoForm, setGastoForm] = useState({
     description: "", amount: "", currency: "USD",
     category: "OTRO", assignedAgent: "", date: new Date().toISOString().split("T")[0], notes: "",
@@ -537,6 +539,13 @@ export default function ContabilidadPage() {
     if (res.ok) setIngresos((prev) => prev.filter((i) => i.id !== id));
   }
 
+  const filteredGastos = gastos.filter((g) => {
+    if (gastoMonth === "ALL") return true;
+    const d = parseLocalDate(g.date);
+    return d.getMonth() + 1 === Number(gastoMonth) && d.getFullYear() === gastoYear;
+  });
+  const filteredGastosTotal = filteredGastos.reduce((s, g) => s + g.amount, 0);
+
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" /></div>;
 
   return (
@@ -876,12 +885,24 @@ export default function ContabilidadPage() {
 
       {/* Gastos */}
       <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 mb-6">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-gray-900">Gastos</h2>
-          <button onClick={() => { if (showGastoForm) { resetGastoForm(); } setShowGastoForm(!showGastoForm); }} className="flex items-center gap-2 bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
-            {showGastoForm ? <HiX className="w-4 h-4" /> : <HiPlus className="w-4 h-4" />}
-            {showGastoForm ? "Cancelar" : "Agregar Gasto"}
-          </button>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold text-gray-900">Gastos</h2>
+            <span className="text-sm font-bold text-red-600">{formatCurrency(filteredGastosTotal)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <select value={gastoMonth} onChange={(e) => setGastoMonth(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white">
+              <option value="ALL">Todos</option>
+              {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
+            <select value={gastoYear} onChange={(e) => setGastoYear(parseInt(e.target.value))} className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white" disabled={gastoMonth === "ALL"}>
+              {[2024, 2025, 2026, 2027].map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <button onClick={() => { if (showGastoForm) { resetGastoForm(); } setShowGastoForm(!showGastoForm); }} className="flex items-center gap-2 bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+              {showGastoForm ? <HiX className="w-4 h-4" /> : <HiPlus className="w-4 h-4" />}
+              {showGastoForm ? "Cancelar" : "Agregar"}
+            </button>
+          </div>
         </div>
 
         {showGastoForm && (
@@ -937,11 +958,11 @@ export default function ContabilidadPage() {
           </form>
         )}
 
-        {gastos.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-6">No hay gastos registrados</p>
+        {filteredGastos.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">{gastoMonth === "ALL" ? "No hay gastos registrados" : "No hay gastos en este periodo"}</p>
         ) : (
           <div className="space-y-2 max-h-[26rem] overflow-y-auto pr-1">
-            {gastos.map((g) => (
+            {filteredGastos.map((g) => (
               <div key={g.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
                 <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
                   <HiCurrencyDollar className="w-5 h-5 text-red-500" />
