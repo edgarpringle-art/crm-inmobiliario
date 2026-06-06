@@ -847,7 +847,7 @@ export default function ContabilidadPage() {
         {ingresos.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-6">No hay ingresos extra registrados</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[26rem] overflow-y-auto pr-1">
             {ingresos.map((i) => (
               <div key={i.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
                 <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center flex-shrink-0">
@@ -940,7 +940,7 @@ export default function ContabilidadPage() {
         {gastos.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-6">No hay gastos registrados</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[26rem] overflow-y-auto pr-1">
             {gastos.map((g) => (
               <div key={g.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
                 <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
@@ -987,7 +987,7 @@ export default function ContabilidadPage() {
         {displayDeals.length === 0 ? (
           <p className="text-center text-sm text-gray-400 py-8">No hay negocios para mostrar</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
             {displayDeals.map((deal) => {
               const payments = parsePayments(deal.commissionPayments);
               const collected = payments.length > 0
