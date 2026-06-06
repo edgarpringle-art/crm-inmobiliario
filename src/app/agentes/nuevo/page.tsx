@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import PageHeader from "@/components/PageHeader";
 import FormField from "@/components/FormField";
+import AvatarUploader from "@/components/AvatarUploader";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 
@@ -32,6 +33,7 @@ export default function NuevoAgentePage() {
     role: "agent",
     initials: "",
     color: "from-blue-500 to-blue-600",
+    photoUrl: "",
     notes: "",
   });
 
@@ -118,6 +120,10 @@ export default function NuevoAgentePage() {
 
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Datos Personales</h2>
+          <div className="mb-5">
+            <p className="text-sm font-medium text-gray-700 mb-2">Foto del agente (catálogo público)</p>
+            <AvatarUploader photoUrl={form.photoUrl} onChange={(url) => update("photoUrl", url)} />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Nombre completo" required>
               <input className={inputClass} value={form.fullName} onChange={(e) => update("fullName", e.target.value)} placeholder="Ej: María González" />

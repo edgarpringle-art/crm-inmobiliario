@@ -4,7 +4,7 @@ import { query, update } from "@/lib/db";
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const rows = await query("SELECT id, code, fullName, email, phone, role, initials, color, active, notes, createdAt FROM Agent WHERE id = ?", [id]);
+    const rows = await query("SELECT id, code, fullName, email, phone, role, initials, color, photoUrl, active, notes, createdAt FROM Agent WHERE id = ?", [id]);
     if (!rows.length) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
     return NextResponse.json(rows[0]);
   } catch (error) {
@@ -30,7 +30,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (typeof body.active === "boolean") body.active = body.active ? 1 : 0;
 
     await update("Agent", id, body);
-    const rows = await query("SELECT id, code, fullName, email, phone, role, initials, color, active FROM Agent WHERE id = ?", [id]);
+    const rows = await query("SELECT id, code, fullName, email, phone, role, initials, color, photoUrl, active FROM Agent WHERE id = ?", [id]);
     return NextResponse.json(rows[0]);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);

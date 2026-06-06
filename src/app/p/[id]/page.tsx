@@ -17,7 +17,15 @@ interface Property {
   hasAC: number; hasBalcony: number; hasGarden: number;
   description: string | null; notes: string | null;
   ownerName: string | null;
+  createdBy: string | null;
   photos: string | null;
+}
+
+interface PublisherAgent {
+  fullName: string;
+  photoUrl: string | null;
+  initials: string | null;
+  color: string | null;
 }
 
 const amenityLabels: Record<string, string> = {
@@ -82,6 +90,16 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
   const rows = await query<Property>("SELECT * FROM Property WHERE id = ?", [id]).catch(() => []);
   if (!rows.length) notFound();
   const p = rows[0];
+
+  // Agente que publicó la propiedad (createdBy = nombre completo del agente)
+  let publisher: PublisherAgent | null = null;
+  if (p.createdBy) {
+    const ag = await query<PublisherAgent>(
+      "SELECT fullName, photoUrl, initials, color FROM Agent WHERE fullName = ? LIMIT 1",
+      [p.createdBy]
+    ).catch(() => []);
+    if (ag.length) publisher = ag[0];
+  }
 
   const activeAmenities = Object.entries(amenityLabels).filter(([k]) => (p as unknown as Record<string, unknown>)[k]);
   const loc = [p.sector, p.city, p.state].filter(Boolean).join(", ");
@@ -342,7 +360,24 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto pt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-500">
+        {publisher && (
+          <div className="max-w-7xl mx-auto pt-6 border-t border-stone-800 flex items-center gap-3">
+            {publisher.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={publisher.photoUrl} alt={publisher.fullName} className="w-9 h-9 rounded-full object-cover border border-stone-700" />
+            ) : (
+              <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${publisher.color || "from-stone-600 to-stone-700"} flex items-center justify-center text-white text-xs font-semibold`}>
+                {publisher.initials || publisher.fullName.charAt(0)}
+              </div>
+            )}
+            <div>
+              <p className="text-[10px] text-stone-500 uppercase tracking-[0.2em]">Publicado por</p>
+              <p className="text-sm text-stone-300 font-medium">{publisher.fullName}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="max-w-7xl mx-auto pt-6 mt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-500">
           <p>© {new Date().getFullYear()} Edgar Pringle Real Estate. Todos los derechos reservados.</p>
           <p className="tracking-[0.2em] uppercase">Panamá · Lic. {BROKER.license}</p>
         </div>

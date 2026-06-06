@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const onlyActive = searchParams.get("active") === "1";
 
-    let sql = "SELECT id, code, fullName, email, phone, role, initials, color, active, notes, createdAt FROM Agent";
+    let sql = "SELECT id, code, fullName, email, phone, role, initials, color, photoUrl, active, notes, createdAt FROM Agent";
     if (onlyActive) sql += " WHERE active = 1";
     sql += " ORDER BY active DESC, fullName ASC";
 
@@ -57,12 +57,13 @@ export async function POST(request: NextRequest) {
       role: body.role || "agent",
       initials: body.initials || null,
       color: body.color || "from-slate-500 to-slate-600",
+      photoUrl: body.photoUrl || null,
       active: 1,
       notes: body.notes || null,
     };
 
     const id = await insert("Agent", data);
-    const row = await query("SELECT id, code, fullName, email, phone, role, initials, color, active FROM Agent WHERE id = ?", [id]);
+    const row = await query("SELECT id, code, fullName, email, phone, role, initials, color, photoUrl, active FROM Agent WHERE id = ?", [id]);
     return NextResponse.json(row[0], { status: 201 });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
