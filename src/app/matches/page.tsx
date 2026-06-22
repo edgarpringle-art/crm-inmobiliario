@@ -102,6 +102,7 @@ export default function MatchesPage() {
   const [error, setError] = useState("");
   const [buscar, setBuscar] = useState("");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [tab, setTab] = useState<"busquedas" | "propiedades">("busquedas");
 
   useEffect(() => {
     setLoading(true);
@@ -134,6 +135,16 @@ export default function MatchesPage() {
     });
   }, [grouped, buscar]);
 
+  // Split by which side is mine: my client searches vs my properties
+  const isProp = (g: MatchGroup) => g.miOferta;
+  const isBusq = (g: MatchGroup) => g.miBusqueda && !g.miOferta;
+  const propCount = useMemo(() => grouped.filter(isProp).length, [grouped]);
+  const busqCount = useMemo(() => grouped.filter(isBusq).length, [grouped]);
+  const visible = useMemo(
+    () => filtered.filter(tab === "propiedades" ? isProp : isBusq),
+    [filtered, tab]
+  );
+
   const toggle = (key: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -142,7 +153,7 @@ export default function MatchesPage() {
     });
   };
 
-  const expandAll = () => setExpanded(new Set(filtered.map((g) => g.key)));
+  const expandAll = () => setExpanded(new Set(visible.map((g) => g.key)));
   const collapseAll = () => setExpanded(new Set());
 
   return (
@@ -151,6 +162,32 @@ export default function MatchesPage() {
         title="Matches Automáticos"
         subtitle="Coincidencias detectadas por el bot entre tus propiedades/clientes y los grupos de WhatsApp"
       />
+
+      {/* Tabs: mis búsquedas vs mis propiedades */}
+      <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit mb-5">
+        <button
+          onClick={() => setTab("busquedas")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            tab === "busquedas" ? "bg-white text-blue-700 shadow-sm" : "text-gray-500 hover:text-gray-800"
+          }`}
+        >
+          🔍 Mis Búsquedas
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${tab === "busquedas" ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-500"}`}>
+            {busqCount}
+          </span>
+        </button>
+        <button
+          onClick={() => setTab("propiedades")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            tab === "propiedades" ? "bg-white text-emerald-700 shadow-sm" : "text-gray-500 hover:text-gray-800"
+          }`}
+        >
+          🏠 Mis Propiedades
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${tab === "propiedades" ? "bg-emerald-100 text-emerald-700" : "bg-gray-200 text-gray-500"}`}>
+            {propCount}
+          </span>
+        </button>
+      </div>
 
       <div className="flex flex-wrap gap-3 mb-6 items-center">
         <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white">
@@ -195,15 +232,15 @@ export default function MatchesPage() {
       {!loading && !error && (
         <>
           <p className="text-xs text-gray-500 mb-3 font-medium">
-            {filtered.length} grupo{filtered.length !== 1 ? "s" : ""} · {filtered.reduce((s, g) => s + g.matches.length, 0)} match{filtered.reduce((s, g) => s + g.matches.length, 0) !== 1 ? "es" : ""}
+            {visible.length} grupo{visible.length !== 1 ? "s" : ""} · {visible.reduce((s, g) => s + g.matches.length, 0)} match{visible.reduce((s, g) => s + g.matches.length, 0) !== 1 ? "es" : ""}
           </p>
           <div className="space-y-3">
-            {filtered.length === 0 && (
+            {visible.length === 0 && (
               <div className="text-center py-16 text-gray-400 text-sm bg-white rounded-xl border border-gray-100">
-                Sin matches en este periodo.
+                {tab === "propiedades" ? "Sin matches de tus propiedades en este periodo." : "Sin matches de tus búsquedas en este periodo."}
               </div>
             )}
-            {filtered.map((g) => (
+            {visible.map((g) => (
               <MatchGroupCard
                 key={g.key}
                 group={g}
