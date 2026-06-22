@@ -58,6 +58,13 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     const existing = await queryOne("SELECT id FROM Client WHERE id = ?", [id]);
     if (!existing) return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
 
+    // Deactivate the mirrored Busqueda so the EP Realty bot stops matching this
+    // client (and removes it from mis_listados / orphan matches on next sync).
+    // We mark it INACTIVO rather than delete it so the bot still sees the flag.
+    try {
+      await query("UPDATE Busqueda SET status = 'INACTIVO' WHERE clientId = ?", [id]);
+    } catch { /* table/column may be missing in some environments — ignore */ }
+
     await remove("Client", id);
     return NextResponse.json({ message: "Cliente eliminado exitosamente" });
   } catch (error) {
