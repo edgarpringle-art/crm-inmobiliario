@@ -6,8 +6,23 @@ import toast from "react-hot-toast";
 import PageHeader from "@/components/PageHeader";
 import SearchBar from "@/components/SearchBar";
 import EmptyState from "@/components/EmptyState";
-import { CLIENT_TYPES, CLIENT_STATUSES, getLabel } from "@/lib/constants";
-import { HiUsers, HiPhone, HiMail, HiFilter, HiX, HiDotsVertical, HiRefresh, HiSearch, HiHome, HiInformationCircle } from "react-icons/hi";
+import { CLIENT_TYPES, CLIENT_STATUSES, getLabel, formatDate } from "@/lib/constants";
+import { HiUsers, HiPhone, HiMail, HiFilter, HiX, HiDotsVertical, HiRefresh, HiSearch, HiHome, HiInformationCircle, HiClock, HiChevronDown, HiChevronRight } from "react-icons/hi";
+
+const ACTIVITY_ICONS: Record<string, string> = {
+  LLAMADA: "📞", VISITA: "🏠", EMAIL: "📧", WHATSAPP: "💬", REUNION: "👥", NOTA: "📝",
+};
+
+interface ActivityFeedItem {
+  id: string;
+  type: string;
+  description: string;
+  agent: string | null;
+  createdAt: string;
+  clientId: string | null;
+  clientFirstName: string | null;
+  clientLastName: string | null;
+}
 
 // Owner-side client types (offer properties, don't search → matched via Property table, not Busqueda)
 const OWNER_TYPES = ["PROPIETARIO", "VENDEDOR"];
@@ -66,6 +81,8 @@ export default function ClientesPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [feed, setFeed] = useState<ActivityFeedItem[]>([]);
+  const [showFeed, setShowFeed] = useState(true);
 
   const activeFilters = typeFilter ? 1 : 0;
 
@@ -81,6 +98,14 @@ export default function ClientesPage() {
     }
     fetchClients();
   }, [search]);
+
+  // Latest follow-ups across all clients, so every agent sees recent updates
+  useEffect(() => {
+    fetch("/api/activities?recent=1&limit=20")
+      .then((r) => r.json())
+      .then((d) => setFeed(Array.isArray(d) ? d : []))
+      .catch(() => setFeed([]));
+  }, []);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -253,6 +278,52 @@ export default function ClientesPage() {
       </div>
 
       {showHelp && <HelpPanel view={view} />}
+
+      {/* Últimos seguimientos — feed compartido para que todos los agentes vean lo que se actualizó */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-4">
+        <button
+          onClick={() => setShowFeed((v) => !v)}
+          className="w-full flex items-center justify-between px-5 py-3"
+        >
+          <div className="flex items-center gap-2">
+            <HiClock className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-bold text-gray-900">Últimos seguimientos</h3>
+            {feed.length > 0 && (
+              <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{feed.length}</span>
+            )}
+          </div>
+          {showFeed ? <HiChevronDown className="w-4 h-4 text-gray-400" /> : <HiChevronRight className="w-4 h-4 text-gray-400" />}
+        </button>
+        {showFeed && (
+          feed.length === 0 ? (
+            <p className="px-5 pb-4 text-xs text-gray-400">Aún no hay seguimientos registrados.</p>
+          ) : (
+            <div className="px-3 pb-3 max-h-72 overflow-y-auto">
+              <div className="divide-y divide-gray-50">
+                {feed.map((a) => (
+                  <Link
+                    key={a.id}
+                    href={a.clientId ? `/clientes/${a.clientId}` : "#"}
+                    className="flex items-start gap-2.5 px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <span className="text-base flex-shrink-0 leading-5">{ACTIVITY_ICONS[a.type] || "📝"}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-800 leading-snug">{a.description}</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5 truncate">
+                        {a.clientFirstName && (
+                          <span className="font-semibold text-gray-600">{a.clientFirstName} {a.clientLastName}</span>
+                        )}
+                        {" · "}{formatDate(a.createdAt)}
+                        {a.agent && <span> · {a.agent}</span>}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )
+        )}
+      </div>
 
       {view === "PROPIETARIOS" && (
         <div className="flex items-start gap-2.5 bg-purple-50 border border-purple-200 text-purple-800 rounded-xl px-4 py-3 mb-4 text-sm">

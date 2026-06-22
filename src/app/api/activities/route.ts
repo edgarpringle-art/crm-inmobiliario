@@ -7,6 +7,22 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get("clientId");
     const dealId = searchParams.get("dealId");
+    const recent = searchParams.get("recent");
+
+    // Cross-client feed: latest follow-ups with the client's name attached
+    if (recent) {
+      const limit = Math.min(Number(searchParams.get("limit")) || 20, 50);
+      const rows = await query(
+        `SELECT a.id, a.type, a.description, a.agent, a.createdAt, a.clientId,
+                c.firstName AS clientFirstName, c.lastName AS clientLastName
+         FROM Activity a
+         LEFT JOIN Client c ON a.clientId = c.id
+         WHERE a.clientId IS NOT NULL
+         ORDER BY a.createdAt DESC LIMIT ?`,
+        [limit]
+      ).catch(() => []);
+      return NextResponse.json(rows);
+    }
 
     let sql = "SELECT * FROM Activity WHERE 1=1";
     const args: unknown[] = [];
