@@ -35,7 +35,8 @@ export default async function RootLayout({
   const isPublic =
     pathname.startsWith("/p/") ||
     pathname.startsWith("/login") ||
-    pathname.startsWith("/catalogo");
+    pathname.startsWith("/catalogo") ||
+    pathname.startsWith("/ver/");
   const showShell = !!user && !isPublic;
 
   return (

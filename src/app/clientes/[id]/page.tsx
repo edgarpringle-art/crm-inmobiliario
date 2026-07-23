@@ -7,11 +7,26 @@ import toast from "react-hot-toast";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import PhotoUploader from "@/components/PhotoUploader";
 import {
-  CLIENT_TYPES, CLIENT_SOURCES, CLIENT_STATUSES, PROPERTY_TYPES, SEARCH_TYPES,
+  CLIENT_TYPES, CLIENT_SOURCES, CLIENT_STATUSES, PROPERTY_TYPES, SEARCH_TYPES, CURRENCIES,
   getLabel, getStatusColor, formatCurrency, formatDate,
 } from "@/lib/constants";
-import { HiPlus, HiTrash } from "react-icons/hi";
+import { HiPlus, HiTrash, HiClipboardCopy, HiExternalLink } from "react-icons/hi";
+
+interface Propuesta {
+  id: string; title: string; description: string | null; zona: string | null;
+  price: number | null; currency: string | null; link: string | null;
+  photos: string | null; status: string; respondedAt: string | null;
+}
+
+const PROP_STATUS: Record<string, { label: string; color: string }> = {
+  PENDIENTE:  { label: "Pendiente", color: "bg-amber-100 text-amber-700" },
+  INTERESADO: { label: "✅ Le interesa", color: "bg-emerald-100 text-emerald-700" },
+  DESCARTADO: { label: "Descartada", color: "bg-gray-100 text-gray-500" },
+};
+
+const emptyPropForm = { title: "", zona: "", price: "", currency: "USD", description: "", link: "", photos: [] as string[] };
 
 interface Activity {
   id: string; type: string; description: string; clientId: string | null;
@@ -50,16 +65,58 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
   const [activities, setActivities] = useState<Activity[]>([]);
   const [newActivity, setNewActivity] = useState({ type: "LLAMADA", description: "" });
   const [savingActivity, setSavingActivity] = useState(false);
+  const [propuestas, setPropuestas] = useState<Propuesta[]>([]);
+  const [showPropForm, setShowPropForm] = useState(false);
+  const [savingProp, setSavingProp] = useState(false);
+  const [propForm, setPropForm] = useState(emptyPropForm);
 
   useEffect(() => {
     Promise.all([
       fetch(`/api/clients/${id}`).then((r) => r.json()),
       fetch(`/api/activities?clientId=${id}`).then((r) => r.json()).catch(() => []),
-    ]).then(([c, a]) => {
+      fetch(`/api/propuestas?clientId=${id}`).then((r) => r.json()).catch(() => []),
+    ]).then(([c, a, p]) => {
       setClient(c);
       setActivities(Array.isArray(a) ? a : []);
+      setPropuestas(Array.isArray(p) ? p : []);
     }).finally(() => setLoading(false));
   }, [id]);
+
+  async function addPropuesta() {
+    if (!propForm.title.trim()) { toast.error("Ponle un título a la opción"); return; }
+    setSavingProp(true);
+    try {
+      const res = await fetch("/api/propuestas", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...propForm, clientId: id }),
+      });
+      if (res.ok) {
+        const p = await res.json();
+        setPropuestas((prev) => [p, ...prev]);
+        setPropForm(emptyPropForm);
+        setShowPropForm(false);
+        toast.success("Opción agregada");
+      } else { toast.error("Error al guardar"); }
+    } finally { setSavingProp(false); }
+  }
+
+  async function deletePropuesta(pid: string) {
+    if (!confirm("¿Eliminar esta opción?")) return;
+    const res = await fetch(`/api/propuestas/${pid}`, { method: "DELETE" });
+    if (res.ok) setPropuestas((prev) => prev.filter((p) => p.id !== pid));
+  }
+
+  function shareLink(): string {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return `${origin}/ver/${id}`;
+  }
+
+  async function copyShareLink() {
+    try {
+      await navigator.clipboard.writeText(shareLink());
+      toast.success("Link copiado");
+    } catch { toast.error("No se pudo copiar"); }
+  }
 
   async function addActivity() {
     if (!newActivity.description.trim()) return;
@@ -187,6 +244,115 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
             )}
           </div>
         )}
+
+        {/* Opciones enviadas al cliente */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Opciones para el cliente</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Súbele propiedades con foto y descripción. El cliente marca cuáles quiere ver desde su link.</p>
+            </div>
+            <button
+              onClick={() => { setShowPropForm((v) => !v); if (showPropForm) setPropForm(emptyPropForm); }}
+              className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+            >
+              <HiPlus className="w-4 h-4" /> {showPropForm ? "Cerrar" : "Agregar opción"}
+            </button>
+          </div>
+
+          {/* Share link */}
+          <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+            <span className="text-xs text-gray-500 flex-1 min-w-0 truncate font-mono">{shareLink()}</span>
+            <button onClick={copyShareLink} className="flex items-center gap-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium">
+              <HiClipboardCopy className="w-4 h-4" /> Copiar
+            </button>
+            {client.phone && (
+              <a
+                href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${client.firstName}, te comparto algunas opciones que encontré para ti. Marca las que te interesen y coordino la visita:\n${shareLink()}`)}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 bg-[#25D366] text-white hover:bg-[#1ebe57] px-3 py-1.5 rounded-lg text-xs font-medium"
+              >
+                <HiExternalLink className="w-4 h-4" /> Enviar por WhatsApp
+              </a>
+            )}
+          </div>
+
+          {/* Add form */}
+          {showPropForm && (
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-5 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-semibold text-gray-500 mb-1 block">Título *</label>
+                  <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl" value={propForm.title} onChange={(e) => setPropForm((p) => ({ ...p, title: e.target.value }))} placeholder="Ej: Apartamento en Costa del Este, 2 rec" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 mb-1 block">Zona</label>
+                  <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl" value={propForm.zona} onChange={(e) => setPropForm((p) => ({ ...p, zona: e.target.value }))} placeholder="Costa del Este" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label className="text-xs font-semibold text-gray-500 mb-1 block">Precio</label>
+                    <input type="number" step="0.01" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl" value={propForm.price} onChange={(e) => setPropForm((p) => ({ ...p, price: e.target.value }))} placeholder="0.00" />
+                  </div>
+                  <div className="w-24">
+                    <label className="text-xs font-semibold text-gray-500 mb-1 block">Moneda</label>
+                    <select className="w-full px-2 py-2 text-sm border border-gray-200 rounded-xl bg-white" value={propForm.currency} onChange={(e) => setPropForm((p) => ({ ...p, currency: e.target.value }))}>
+                      {CURRENCIES.map((c) => <option key={c.value} value={c.value}>{c.value}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-semibold text-gray-500 mb-1 block">Descripción</label>
+                  <textarea rows={2} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl" value={propForm.description} onChange={(e) => setPropForm((p) => ({ ...p, description: e.target.value }))} placeholder="Detalles: m², amenidades, etc." />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-semibold text-gray-500 mb-1 block">Link (opcional)</label>
+                  <input className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl" value={propForm.link} onChange={(e) => setPropForm((p) => ({ ...p, link: e.target.value }))} placeholder="https://..." />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-semibold text-gray-500 mb-1 block">Fotos</label>
+                  <PhotoUploader photos={propForm.photos} onChange={(photos) => setPropForm((p) => ({ ...p, photos }))} maxPhotos={8} />
+                </div>
+              </div>
+              <button onClick={addPropuesta} disabled={savingProp} className="bg-blue-600 text-white hover:bg-blue-700 px-5 py-2 rounded-xl text-sm font-medium disabled:opacity-50">
+                {savingProp ? "Guardando..." : "Guardar opción"}
+              </button>
+            </div>
+          )}
+
+          {/* List */}
+          {propuestas.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">Aún no has agregado opciones.</p>
+          ) : (
+            <div className="space-y-2">
+              {propuestas.map((p) => {
+                const st = PROP_STATUS[p.status] || PROP_STATUS.PENDIENTE;
+                let firstPhoto: string | undefined;
+                try { firstPhoto = p.photos ? JSON.parse(p.photos)[0] : undefined; } catch { /* ignore */ }
+                return (
+                  <div key={p.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                    {firstPhoto ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={firstPhoto} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-lg bg-gray-100 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm truncate">{p.title}</p>
+                      <p className="text-xs text-gray-400 truncate">
+                        {[p.zona, p.price != null ? formatCurrency(p.price, p.currency || "USD") : null].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                    <span className={`text-[11px] font-semibold px-2 py-1 rounded-lg flex-shrink-0 ${st.color}`}>{st.label}</span>
+                    <button onClick={() => deletePropuesta(p.id)} className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0">
+                      <HiTrash className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Propiedades del cliente */}
         {client.ownedProperties.length > 0 && (

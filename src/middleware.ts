@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { verifySession, COOKIE_SESSION } from "@/lib/auth";
 
 // Routes that don't require auth
-const PUBLIC_PREFIXES = ["/login", "/p/", "/catalogo", "/api/auth/", "/api/catalogo"];
+const PUBLIC_PREFIXES = ["/login", "/p/", "/catalogo", "/ver/", "/api/auth/", "/api/catalogo", "/api/propuestas/public", "/api/propuestas/respond"];
 
 // Routes blocked for "agent" role (only broker + admin can access)
 const ADMIN_PREFIXES = ["/contabilidad", "/api/gastos"];
