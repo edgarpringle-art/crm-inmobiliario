@@ -138,6 +138,71 @@ export default function VerPropuestasPage({ params }: { params: Promise<{ id: st
   );
 }
 
+function PhotoCarousel({ photos }: { photos: string[] }) {
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const idx = Math.round(el.scrollLeft / el.offsetWidth);
+      setActive(idx);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const goTo = (idx: number) => {
+    scrollRef.current?.scrollTo({ left: idx * scrollRef.current.offsetWidth, behavior: "smooth" });
+  };
+
+  if (photos.length === 0) {
+    return <div className="w-full h-48 bg-stone-100 flex items-center justify-center text-stone-300 text-sm">Sin fotos</div>;
+  }
+
+  return (
+    <div className="relative">
+      <div ref={scrollRef} className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
+        {photos.map((url, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={i}
+            src={url}
+            alt={`Foto ${i + 1}`}
+            className="w-full aspect-[4/3] object-cover flex-shrink-0 snap-center"
+            style={{ minWidth: "100%" }}
+          />
+        ))}
+      </div>
+
+      {photos.length > 1 && (
+        <>
+          {/* Counter */}
+          <div className="absolute top-3 right-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+            {active + 1} / {photos.length}
+          </div>
+
+          {/* Arrows */}
+          {active > 0 && (
+            <button onClick={() => goTo(active - 1)} className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center text-lg">‹</button>
+          )}
+          {active < photos.length - 1 && (
+            <button onClick={() => goTo(active + 1)} className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center text-lg">›</button>
+          )}
+
+          {/* Dots */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {photos.map((_, i) => (
+              <button key={i} onClick={() => goTo(i)} className={`w-2 h-2 rounded-full transition-colors ${i === active ? "bg-white" : "bg-white/50"}`} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function Card({ p, onRespond }: { p: Propuesta; onRespond: (id: string, status: string) => void }) {
   const photos = parsePhotos(p.photos);
   const isYes = p.status === "INTERESADO";
@@ -145,29 +210,13 @@ function Card({ p, onRespond }: { p: Propuesta; onRespond: (id: string, status: 
 
   return (
     <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-      {/* Photos */}
-      {photos.length > 0 ? (
-        <div className="flex overflow-x-auto snap-x snap-mandatory">
-          {photos.map((url, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={i}
-              src={url}
-              alt={`Foto ${i + 1}`}
-              className="w-full h-56 object-cover flex-shrink-0 snap-center"
-              style={{ minWidth: "100%" }}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="w-full h-40 bg-stone-100 flex items-center justify-center text-stone-300 text-sm">Sin fotos</div>
-      )}
+      <PhotoCarousel photos={photos} />
 
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h3 className="font-bold text-stone-900 leading-snug">{p.title}</h3>
-            {p.zona && <p className="text-sm text-stone-500 mt-0.5">📍 {p.zona}</p>}
+            {p.zona && <p className="text-sm text-stone-500 mt-0.5">{p.zona}</p>}
           </div>
           {p.price != null && (
             <p className="text-lg font-bold text-stone-900 whitespace-nowrap" style={{ fontFamily: "'Cinzel', serif" }}>
@@ -186,11 +235,6 @@ function Card({ p, onRespond }: { p: Propuesta; onRespond: (id: string, status: 
           </a>
         )}
 
-        {photos.length > 1 && (
-          <p className="text-[11px] text-stone-400 mt-2">← Desliza para ver las {photos.length} fotos →</p>
-        )}
-
-        {/* Buttons */}
         <div className="grid grid-cols-2 gap-3 mt-4">
           <button
             onClick={() => onRespond(p.id, isYes ? "PENDIENTE" : "INTERESADO")}
