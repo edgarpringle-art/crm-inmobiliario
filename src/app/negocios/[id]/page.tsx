@@ -34,6 +34,7 @@ interface DealDetail {
   closingDate: string | null; driveLink: string | null; notes: string | null;
   documentChecklist: string | null;
   createdAt: string;
+  externalPropertyTitle: string | null;
   client: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null } | null;
   property: { id: string; title: string; address: string | null; propertyType: string; owner: { id: string; firstName: string; lastName: string } | null } | null;
 }
@@ -125,7 +126,7 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <div>
-      <PageHeader title={`Negocio: ${deal.property?.title || "Sin propiedad"}`}>
+      <PageHeader title={`Negocio: ${deal.property?.title || deal.externalPropertyTitle || "Sin propiedad"}`}>
         <div className="flex gap-2">
           {deal.driveLink && (
             <a href={deal.driveLink} target="_blank" rel="noopener noreferrer" className="bg-green-600 text-white hover:bg-green-700 px-4 py-2.5 rounded-xl font-medium transition-colors">
@@ -263,6 +264,11 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
                 </Link>
                 {deal.property.address && <p className="text-sm text-gray-600 mt-1">{deal.property.address}</p>}
                 <p className="text-sm text-gray-500">{deal.property.propertyType}</p>
+              </div>
+            ) : deal.externalPropertyTitle ? (
+              <div>
+                <p className="font-semibold text-lg text-gray-900">{deal.externalPropertyTitle}</p>
+                <p className="text-xs text-amber-600 mt-1 font-medium">Propiedad externa (otro corredor)</p>
               </div>
             ) : <p className="text-gray-400">Sin propiedad asignada</p>}
           </div>

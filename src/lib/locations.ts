@@ -39,7 +39,7 @@ export const PA_LOCATIONS: Location[] = [
     province: "Panamá",
     district: "San Miguelito",
     sectors: [
-      "Anita", "Belisario Porras", "Buenos Aires", "Cresto",
+      "Anita", "Belisario Porras", "Buenos Aires", "Condado del Rey", "Cresto",
       "El Espino", "Hermosa Provincia", "La Pradera", "La Victoria",
       "Las Acacias", "Las Mañanitas", "Las Quintas", "Loma Linda",
       "Los Andes", "Mateo Iturralde", "Omar Torrijos", "Pedregal",

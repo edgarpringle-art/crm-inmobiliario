@@ -19,6 +19,7 @@ interface Deal {
   commissionAmount: number | null; commissionPaid: boolean; commissionPayments: string | null;
   closingDate: string | null; contractStartDate: string | null; contractEndDate: string | null;
   monthlyRent: number | null;
+  externalPropertyTitle: string | null;
   client: { id: string; firstName: string; lastName: string } | null;
   property: { id: string; title: string; address: string | null } | null;
 }
@@ -99,7 +100,7 @@ export default function NegociosPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-gray-900 truncate">{deal.property?.title || "Sin propiedad"}</h3>
+                    <h3 className="font-bold text-gray-900 truncate">{deal.property?.title || deal.externalPropertyTitle || "Sin propiedad"}</h3>
                     <StatusBadge label={getLabel(DEAL_STATUSES, deal.status)} colorClass={getStatusColor(DEAL_STATUSES, deal.status)} />
                   </div>
                   <p className="text-sm text-gray-400">
@@ -153,7 +154,7 @@ export default function NegociosPage() {
                             <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold ${deal.dealType === "VENTA" ? "bg-blue-100 text-blue-600" : "bg-teal-100 text-teal-600"}`}>
                               {deal.dealType === "VENTA" ? "V" : "A"}
                             </div>
-                            <p className="font-semibold text-gray-900 text-sm truncate">{deal.property?.title || "Sin propiedad"}</p>
+                            <p className="font-semibold text-gray-900 text-sm truncate">{deal.property?.title || deal.externalPropertyTitle || "Sin propiedad"}</p>
                           </div>
                           <p className="text-xs text-gray-400 mb-3 truncate">
                             {deal.client ? `${deal.client.firstName} ${deal.client.lastName}` : "Sin cliente"}

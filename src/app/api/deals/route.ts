@@ -27,9 +27,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      sql += " AND (d.notes LIKE ? OR cl.firstName LIKE ? OR cl.lastName LIKE ? OR p.title LIKE ? OR p.address LIKE ?)";
+      sql += " AND (d.notes LIKE ? OR cl.firstName LIKE ? OR cl.lastName LIKE ? OR p.title LIKE ? OR p.address LIKE ? OR d.externalPropertyTitle LIKE ?)";
       const s = `%${search}%`;
-      args.push(s, s, s, s, s);
+      args.push(s, s, s, s, s, s);
     }
 
     if (status) {

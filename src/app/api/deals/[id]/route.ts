@@ -39,6 +39,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     const d = rows[0] as Record<string, unknown>;
     const deal = {
       ...d,
+      externalPropertyTitle: (d.externalPropertyTitle as string) || null,
       client: d.clientId_rel ? { id: d.clientId_rel, firstName: d.clientFirstName, lastName: d.clientLastName, email: d.clientEmail, phone: d.clientPhone } : null,
       property: d.propertyId_rel ? { id: d.propertyId_rel, title: d.propertyTitle, address: d.propertyAddress, propertyType: d.propertyPropertyType } : null,
     };

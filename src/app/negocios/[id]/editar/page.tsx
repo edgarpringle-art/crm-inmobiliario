@@ -28,7 +28,7 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
   const [form, setForm] = useState({
     dealType: "VENTA", status: "EN_PROCESO",
     internalAgentId: "",
-    clientId: "", propertyId: "",
+    clientId: "", propertyId: "", externalProperty: false, externalPropertyTitle: "",
     agreedPrice: "", currency: "USD",
     commissionPct: "", commissionAmount: "", commissionPaid: false, commissionDate: "",
     companyShare: "",
@@ -59,10 +59,12 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
         if (match) internalAgentId = match.id;
       }
 
+      const hasExternal = !!data.externalPropertyTitle && !data.propertyId;
       setForm({
         dealType: data.dealType, status: data.status,
         internalAgentId,
         clientId: data.clientId || "", propertyId: data.propertyId || "",
+        externalProperty: hasExternal, externalPropertyTitle: data.externalPropertyTitle || "",
         agreedPrice: data.agreedPrice?.toString() || "", currency: data.currency || "USD",
         commissionPct: data.commissionPct?.toString() || "",
         commissionAmount: data.commissionAmount?.toString() || "",
@@ -113,7 +115,9 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
         dealType: form.dealType, status: form.status,
         assignedAgent,
         internalAgentId: form.internalAgentId || null,
-        clientId: form.clientId || null, propertyId: form.propertyId || null,
+        clientId: form.clientId || null,
+        propertyId: form.externalProperty ? null : (form.propertyId || null),
+        externalPropertyTitle: form.externalProperty ? (form.externalPropertyTitle || null) : null,
         agreedPrice: form.agreedPrice ? parseFloat(form.agreedPrice) : null,
         currency: form.currency,
         commissionPct: form.commissionPct ? parseFloat(form.commissionPct) : null,
@@ -162,7 +166,19 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Cliente y Propiedad</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Cliente"><select className={inputClass} value={form.clientId} onChange={(e) => update("clientId", e.target.value)}><option value="">Seleccionar...</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}</select></FormField>
-            <FormField label="Propiedad"><select className={inputClass} value={form.propertyId} onChange={(e) => update("propertyId", e.target.value)}><option value="">Seleccionar...</option>{properties.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select></FormField>
+            <div>
+              <FormField label="Propiedad">
+                {form.externalProperty ? (
+                  <input className={inputClass} value={form.externalPropertyTitle} onChange={(e) => update("externalPropertyTitle", e.target.value)} placeholder="Ej: Apartamento en Punta Pacífica (otro corredor)" />
+                ) : (
+                  <select className={inputClass} value={form.propertyId} onChange={(e) => update("propertyId", e.target.value)}><option value="">Seleccionar...</option>{properties.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select>
+                )}
+              </FormField>
+              <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" checked={form.externalProperty as boolean} onChange={(e) => { update("externalProperty", e.target.checked); if (e.target.checked) update("propertyId", ""); else update("externalPropertyTitle", ""); }} />
+                <span className="text-xs text-gray-500">Propiedad externa (otro corredor)</span>
+              </label>
+            </div>
           </div>
         </div>
 

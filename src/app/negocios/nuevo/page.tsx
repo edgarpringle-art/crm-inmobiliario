@@ -35,7 +35,7 @@ export default function NuevoNegocioPage() {
   const [form, setForm] = useState({
     dealType: "VENTA", status: "EN_PROCESO",
     internalAgentId: "",
-    clientId: "", propertyId: "",
+    clientId: "", propertyId: "", externalProperty: false, externalPropertyTitle: "",
     agreedPrice: "", currency: "USD",
     commissionPct: "", commissionAmount: "",
     companyShare: "",
@@ -122,7 +122,9 @@ export default function NuevoNegocioPage() {
         dealType: form.dealType, status: form.status,
         assignedAgent,
         internalAgentId: form.internalAgentId || null,
-        clientId: form.clientId || null, propertyId: form.propertyId || null,
+        clientId: form.clientId || null,
+        propertyId: form.externalProperty ? null : (form.propertyId || null),
+        externalPropertyTitle: form.externalProperty ? (form.externalPropertyTitle || null) : null,
         agreedPrice: form.agreedPrice ? parseFloat(form.agreedPrice) : null,
         currency: form.currency,
         commissionPct: form.commissionPct ? parseFloat(form.commissionPct) : null,
@@ -179,12 +181,22 @@ export default function NuevoNegocioPage() {
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}
               </select>
             </FormField>
-            <FormField label="Propiedad">
-              <select className={inputClass} value={form.propertyId} onChange={(e) => update("propertyId", e.target.value)}>
-                <option value="">Seleccionar propiedad...</option>
-                {properties.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
-              </select>
-            </FormField>
+            <div>
+              <FormField label="Propiedad">
+                {form.externalProperty ? (
+                  <input className={inputClass} value={form.externalPropertyTitle} onChange={(e) => update("externalPropertyTitle", e.target.value)} placeholder="Ej: Apartamento en Punta Pacífica (otro corredor)" />
+                ) : (
+                  <select className={inputClass} value={form.propertyId} onChange={(e) => update("propertyId", e.target.value)}>
+                    <option value="">Seleccionar propiedad...</option>
+                    {properties.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+                  </select>
+                )}
+              </FormField>
+              <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" checked={form.externalProperty as boolean} onChange={(e) => { update("externalProperty", e.target.checked); if (e.target.checked) update("propertyId", ""); else update("externalPropertyTitle", ""); }} />
+                <span className="text-xs text-gray-500">Propiedad externa (otro corredor)</span>
+              </label>
+            </div>
           </div>
         </div>
 
