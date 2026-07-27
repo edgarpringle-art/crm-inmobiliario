@@ -6,11 +6,17 @@ import toast from "react-hot-toast";
 import PageHeader from "@/components/PageHeader";
 import FormField from "@/components/FormField";
 import { DEAL_TYPES, DEAL_STATUSES, CURRENCIES } from "@/lib/constants";
+import { HiPlus, HiTrash } from "react-icons/hi";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 
 interface Option { id: string; firstName?: string; lastName?: string; title?: string }
 interface AgentOption { id: string; code: string; fullName: string; role: string }
+interface CommissionPayment { id: string; label: string; amount: string; date: string; paid: boolean }
+
+function generateId(): string {
+  return Math.random().toString(36).substring(2, 9);
+}
 
 function toDateInput(val: string | null): string {
   if (!val) return "";
@@ -25,6 +31,7 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
   const [clients, setClients] = useState<Option[]>([]);
   const [properties, setProperties] = useState<Option[]>([]);
   const [agents, setAgents] = useState<AgentOption[]>([]);
+  const [payments, setPayments] = useState<CommissionPayment[]>([]);
   const [form, setForm] = useState({
     dealType: "VENTA", status: "EN_PROCESO",
     internalAgentId: "",
@@ -57,6 +64,15 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
       if (!internalAgentId && data.assignedAgent) {
         const match = agList.find((a) => a.code.toLowerCase() === String(data.assignedAgent).toLowerCase());
         if (match) internalAgentId = match.id;
+      }
+
+      if (data.commissionPayments) {
+        try {
+          const parsed = JSON.parse(data.commissionPayments);
+          setPayments(parsed.map((p: { id: string; label: string; amount: number; date: string | null; paid: boolean }) => ({
+            id: p.id, label: p.label || "", amount: p.amount?.toString() || "", date: p.date ? toDateInput(p.date) : "", paid: !!p.paid,
+          })));
+        } catch { /* ignore */ }
       }
 
       const hasExternal = !!data.externalPropertyTitle && !data.propertyId;
@@ -96,6 +112,28 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
     });
   }
 
+  function splitCommission(parts: number) {
+    const total = parseFloat(form.commissionAmount) || 0;
+    if (total <= 0) { toast.error("Primero ingresa el monto de comisión"); return; }
+    const perPart = (total / parts).toFixed(2);
+    const labels = parts === 2 ? ["A la firma", "Al cierre"] : ["A la firma", "Durante proceso", "Al cierre"];
+    setPayments(labels.slice(0, parts).map((label, i) => ({
+      id: generateId(), label,
+      amount: i === parts - 1 ? (total - parseFloat(perPart) * (parts - 1)).toFixed(2) : perPart,
+      date: "", paid: false,
+    })));
+  }
+
+  function addPayment() {
+    setPayments((prev) => [...prev, { id: generateId(), label: "", amount: "", date: "", paid: false }]);
+  }
+  function removePayment(pid: string) { setPayments((prev) => prev.filter((p) => p.id !== pid)); }
+  function updatePayment(pid: string, field: keyof CommissionPayment, value: string | boolean) {
+    setPayments((prev) => prev.map((p) => p.id === pid ? { ...p, [field]: value } : p));
+  }
+
+  const totalPayments = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  const totalPaid = payments.filter((p) => p.paid).reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
   const commissionTotal = parseFloat(form.commissionAmount) || 0;
   const companyShareNum = parseFloat(form.companyShare) || 0;
   const internalAgentShareNum = parseFloat(form.internalAgentShare) || 0;
@@ -111,6 +149,12 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
       const internalAgent = agents.find((a) => a.id === form.internalAgentId);
       const assignedAgent = internalAgent ? internalAgent.code.toUpperCase() : null;
 
+      const commissionPayments = payments.length > 0 ? JSON.stringify(payments.map((p) => ({
+        id: p.id, label: p.label, amount: parseFloat(p.amount) || 0,
+        date: p.date ? new Date(p.date).toISOString() : null, paid: p.paid,
+      }))) : null;
+      const allPaid = payments.length > 0 ? payments.every((p) => p.paid) : form.commissionPaid;
+
       const body = {
         dealType: form.dealType, status: form.status,
         assignedAgent,
@@ -122,7 +166,8 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
         currency: form.currency,
         commissionPct: form.commissionPct ? parseFloat(form.commissionPct) : null,
         commissionAmount: form.commissionAmount ? parseFloat(form.commissionAmount) : null,
-        commissionPaid: form.commissionPaid,
+        commissionPaid: allPaid,
+        commissionPayments,
         commissionDate: form.commissionDate ? new Date(form.commissionDate).toISOString() : null,
         companyShare: form.companyShare ? parseFloat(form.companyShare) : null,
         internalAgentShare: form.internalAgentShare ? parseFloat(form.internalAgentShare) : null,
@@ -236,6 +281,71 @@ export default function EditarNegocioPage({ params }: { params: Promise<{ id: st
                 <span className="font-bold">{splitDiff > 0 ? `Falta: $${splitDiff.toFixed(2)}` : `Sobra: $${(-splitDiff).toFixed(2)}`}</span>
               )}
             </div>
+          )}
+        </div>
+
+        {/* Pagos parciales */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 border-l-4 border-l-green-500">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Pagos de Comisión</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Registra abonos parciales con su fecha</p>
+            </div>
+            <button type="button" onClick={() => splitCommission(2)} className="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100">Dividir 50/50</button>
+          </div>
+
+          {payments.length === 0 ? (
+            <div className="text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+              <p className="text-sm text-gray-400 mb-3">No hay pagos parciales configurados</p>
+              <button type="button" onClick={addPayment} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 shadow-sm">
+                <HiPlus className="w-4 h-4" /> Agregar pago
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                {payments.map((payment, index) => (
+                  <div key={payment.id} className={`flex items-start gap-3 p-4 rounded-xl border ${payment.paid ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"}`}>
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-200 text-sm font-bold text-gray-600 flex-shrink-0 mt-1">{index + 1}</div>
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label className="text-[10px] font-semibold text-gray-400 uppercase">Concepto</label>
+                        <input type="text" className={`${inputClass} text-sm mt-1`} value={payment.label} onChange={(e) => updatePayment(payment.id, "label", e.target.value)} placeholder="Ej: Abono inicial" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-semibold text-gray-400 uppercase">Monto</label>
+                        <input type="number" step="0.01" className={`${inputClass} text-sm mt-1`} value={payment.amount} onChange={(e) => updatePayment(payment.id, "amount", e.target.value)} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-semibold text-gray-400 uppercase">Fecha</label>
+                        <input type="date" className={`${inputClass} text-sm mt-1`} value={payment.date} onChange={(e) => updatePayment(payment.id, "date", e.target.value)} />
+                      </div>
+                      <div className="flex items-end gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer flex-1">
+                          <input type="checkbox" className="w-4 h-4 text-green-600 rounded border-gray-300" checked={payment.paid} onChange={(e) => updatePayment(payment.id, "paid", e.target.checked)} />
+                          <span className={`text-sm font-medium ${payment.paid ? "text-green-700" : "text-gray-500"}`}>{payment.paid ? "Pagado" : "Pendiente"}</span>
+                        </label>
+                        <button type="button" onClick={() => removePayment(payment.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"><HiTrash className="w-4 h-4" /></button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-200 flex flex-wrap items-center justify-between gap-3">
+                <button type="button" onClick={addPayment} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50">
+                  <HiPlus className="w-3 h-3" /> Agregar pago
+                </button>
+                <div className="flex gap-6 text-sm">
+                  <div>
+                    <span className="text-gray-400">Total pagos: </span>
+                    <span className={`font-bold ${Math.abs(totalPayments - commissionTotal) < 0.01 ? "text-green-600" : "text-red-600"}`}>${totalPayments.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div><span className="text-gray-400">Cobrado: </span><span className="font-bold text-green-600">${totalPaid.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
+                  <div><span className="text-gray-400">Pendiente: </span><span className="font-bold text-amber-600">${(totalPayments - totalPaid).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></div>
+                </div>
+              </div>
+            </>
           )}
         </div>
 
