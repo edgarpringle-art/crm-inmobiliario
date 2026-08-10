@@ -9,7 +9,7 @@ import {
 } from "@/lib/constants";
 import {
   HiCurrencyDollar, HiBriefcase, HiCheckCircle, HiClock,
-  HiTrendingUp, HiTrash, HiPlus, HiX, HiChartBar, HiPencil,
+  HiTrash, HiPlus, HiX, HiChartBar, HiPencil,
 } from "react-icons/hi";
 
 interface CommissionPayment {
@@ -168,6 +168,7 @@ export default function ContabilidadPage() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [agentFilter, setAgentFilter] = useState("ALL");
+  const [tab, setTab] = useState<"resumen" | "movimientos" | "negocios">("resumen");
   const [showGastoForm, setShowGastoForm] = useState(false);
   const [savingGasto, setSavingGasto] = useState(false);
   const [editingGastoId, setEditingGastoId] = useState<string | null>(null);
@@ -550,65 +551,58 @@ export default function ContabilidadPage() {
 
   return (
     <div>
-      <PageHeader title="Contabilidad" subtitle="Comisiones y gastos por agente" />
+      <PageHeader title="Contabilidad" subtitle="Comisiones, ingresos y gastos" />
 
-      {/* Company Overview */}
-      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 mb-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <HiTrendingUp className="w-5 h-5 text-blue-600" />
-          Resumen General - E. Pringle Real Estate
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-          <div className="bg-blue-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-blue-600 uppercase">Negocios</p><p className="text-2xl font-bold text-blue-800 mt-1">{companyTotal.totalDeals}</p></div>
-          <div className="bg-green-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-green-600 uppercase">Cerrados</p><p className="text-2xl font-bold text-green-800 mt-1">{companyTotal.closedDeals}</p></div>
-          <div className="bg-purple-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-purple-600 uppercase">Total Comisiones</p><p className="text-xl font-bold text-purple-800 mt-1">{formatCurrency(companyTotal.totalCommissions)}</p></div>
-          <div className="bg-amber-50 rounded-xl p-4 text-center"><p className="text-xs font-semibold text-amber-600 uppercase">Pendiente Cobro</p><p className="text-xl font-bold text-amber-800 mt-1">{formatCurrency(companyTotal.pendingCommissions)}</p></div>
+      {/* Hero — resultado de la empresa */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 sm:p-8 mb-6">
+        <div className="pointer-events-none absolute -right-20 -top-24 w-72 h-72 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -left-24 -bottom-24 w-72 h-72 rounded-full bg-sky-500/10 blur-3xl" />
+
+        <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-7">
+          <div>
+            <p className="text-[11px] font-semibold tracking-[0.22em] text-slate-400 uppercase">Ingreso Neto</p>
+            <p className={`text-4xl sm:text-5xl font-bold mt-2 tracking-tight ${companyNet >= 0 ? "text-white" : "text-orange-300"}`}>
+              {formatCurrency(companyNet)}
+            </p>
+            <p className="text-xs text-slate-400 mt-2">Comisiones cobradas + ingresos extra − gastos</p>
+          </div>
+          <div className="grid grid-cols-3 gap-3 lg:min-w-[400px]">
+            <HeroStat label="Cobrado" value={formatCurrency(companyTotal.collectedCommissions)} dot="bg-emerald-400" />
+            <HeroStat label="Extra" value={formatCurrency(totalIngresosCompany)} dot="bg-sky-400" />
+            <HeroStat label="Gastos" value={formatCurrency(totalGastosCompany)} dot="bg-rose-400" />
+          </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100"><p className="text-xs font-semibold text-emerald-600 uppercase">Comisiones</p><p className="text-xl font-bold text-emerald-800 mt-1">{formatCurrency(companyTotal.collectedCommissions)}</p><p className="text-[10px] text-emerald-500 mt-0.5">Cobradas</p></div>
-          <div className="bg-teal-50 rounded-xl p-4 text-center border border-teal-100"><p className="text-xs font-semibold text-teal-600 uppercase">Ingresos Extra</p><p className="text-xl font-bold text-teal-800 mt-1">{formatCurrency(totalIngresosCompany)}</p><p className="text-[10px] text-teal-500 mt-0.5">Contratos, asesorías</p></div>
-          <div className="bg-red-50 rounded-xl p-4 text-center border border-red-100"><p className="text-xs font-semibold text-red-600 uppercase">Gastos Totales</p><p className="text-xl font-bold text-red-800 mt-1">{formatCurrency(totalGastosCompany)}</p><p className="text-[10px] text-red-500 mt-0.5">Todos los gastos</p></div>
-          <div className={`rounded-xl p-4 text-center border ${companyNet >= 0 ? "bg-blue-50 border-blue-100" : "bg-orange-50 border-orange-100"}`}><p className={`text-xs font-semibold uppercase ${companyNet >= 0 ? "text-blue-600" : "text-orange-600"}`}>Ingreso Neto</p><p className={`text-xl font-bold mt-1 ${companyNet >= 0 ? "text-blue-800" : "text-orange-800"}`}>{formatCurrency(companyNet)}</p><p className={`text-[10px] mt-0.5 ${companyNet >= 0 ? "text-blue-500" : "text-orange-500"}`}>Total − Gastos</p></div>
+
+        <div className="relative mt-7 pt-5 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-5">
+          <HeroMini label="Negocios" value={String(companyTotal.totalDeals)} />
+          <HeroMini label="Cerrados" value={String(companyTotal.closedDeals)} />
+          <HeroMini label="Comisiones totales" value={formatCurrency(companyTotal.totalCommissions)} />
+          <HeroMini label="Pendiente por cobrar" value={formatCurrency(companyTotal.pendingCommissions)} accent="text-amber-300" />
         </div>
       </div>
 
-      {/* Agent Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {agentSummaries.map((agent) => (
-          <div key={agent.agent} className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-            <div className="flex items-center gap-3 mb-5">
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${agent.color} flex items-center justify-center shadow-sm`}>
-                <span className="text-white font-bold text-lg">{agent.initials}</span>
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900 text-lg">{agent.label}</h3>
-                <p className="text-xs text-gray-400">{agent.totalDeals} negocios | {agent.closedDeals} cerrados</p>
-              </div>
-            </div>
-            <div className="mb-4">
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-gray-500">Progreso de cobro</span>
-                <span className="font-bold text-gray-700">{agent.totalCommissions > 0 ? Math.round((agent.collectedCommissions / agent.totalCommissions) * 100) : 0}%</span>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-2.5">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2.5 rounded-full transition-all" style={{ width: `${agent.totalCommissions > 0 ? Math.min((agent.collectedCommissions / agent.totalCommissions) * 100, 100) : 0}%` }} />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <div className="bg-gray-50 rounded-xl p-3 text-center"><p className="text-[10px] font-semibold text-gray-400 uppercase">Total</p><p className="text-sm font-bold text-gray-900 mt-0.5">{formatCurrency(agent.totalCommissions)}</p></div>
-              <div className="bg-green-50 rounded-xl p-3 text-center"><p className="text-[10px] font-semibold text-green-600 uppercase">Cobrado</p><p className="text-sm font-bold text-green-700 mt-0.5">{formatCurrency(agent.collectedCommissions)}</p></div>
-              <div className="bg-amber-50 rounded-xl p-3 text-center"><p className="text-[10px] font-semibold text-amber-600 uppercase">Pendiente</p><p className="text-sm font-bold text-amber-700 mt-0.5">{formatCurrency(agent.pendingCommissions)}</p></div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-gray-100">
-              <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100"><p className="text-[10px] font-semibold text-emerald-600 uppercase">Comis.</p><p className="text-sm font-bold text-emerald-700 mt-0.5">{formatCurrency(agent.collectedCommissions)}</p></div>
-              <div className="bg-teal-50 rounded-xl p-3 text-center border border-teal-100"><p className="text-[10px] font-semibold text-teal-600 uppercase">Extra</p><p className="text-sm font-bold text-teal-700 mt-0.5">{formatCurrency(agent.totalExtraIncome)}</p></div>
-              <div className="bg-red-50 rounded-xl p-3 text-center border border-red-100"><p className="text-[10px] font-semibold text-red-600 uppercase">Gastos</p><p className="text-sm font-bold text-red-700 mt-0.5">{formatCurrency(agent.totalExpenses)}</p></div>
-              <div className={`rounded-xl p-3 text-center border ${agent.netIncome >= 0 ? "bg-blue-50 border-blue-100" : "bg-orange-50 border-orange-100"}`}><p className={`text-[10px] font-semibold uppercase ${agent.netIncome >= 0 ? "text-blue-600" : "text-orange-600"}`}>Neto</p><p className={`text-sm font-bold mt-0.5 ${agent.netIncome >= 0 ? "text-blue-700" : "text-orange-700"}`}>{formatCurrency(agent.netIncome)}</p></div>
-            </div>
-          </div>
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 bg-gray-100 rounded-2xl mb-6 w-full sm:w-fit">
+        {([
+          { id: "resumen", label: "Resumen", icon: HiChartBar },
+          { id: "movimientos", label: "Movimientos", icon: HiCurrencyDollar },
+          { id: "negocios", label: "Negocios", icon: HiBriefcase },
+        ] as const).map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              tab === t.id ? "bg-white text-slate-900 shadow-sm" : "text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            <t.icon className="w-4 h-4" />
+            {t.label}
+          </button>
         ))}
       </div>
 
+      {tab === "resumen" && (
+        <>
       {unassignedDeals.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex items-center gap-3">
           <HiClock className="w-5 h-5 text-amber-600 flex-shrink-0" />
@@ -634,32 +628,38 @@ export default function ContabilidadPage() {
 
       {/* Monthly Chart */}
       <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 mb-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
-          <HiChartBar className="w-5 h-5 text-blue-600" />
-          Últimos 6 Meses
-        </h2>
-        <div className="flex items-end gap-3 h-40">
-          {chartData.map((d, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <div className="w-full flex gap-1 items-end" style={{ height: "120px" }}>
-                <div
-                  className="flex-1 bg-gradient-to-t from-green-500 to-emerald-400 rounded-t-md transition-all"
-                  style={{ height: `${(d.commissions / chartMax) * 120}px`, minHeight: d.commissions > 0 ? "4px" : "0" }}
-                  title={`Comisiones: ${formatCurrency(d.commissions)}`}
-                />
-                <div
-                  className="flex-1 bg-gradient-to-t from-red-400 to-rose-300 rounded-t-md transition-all"
-                  style={{ height: `${(d.expenses / chartMax) * 120}px`, minHeight: d.expenses > 0 ? "4px" : "0" }}
-                  title={`Gastos: ${formatCurrency(d.expenses)}`}
-                />
-              </div>
-              <span className="text-[10px] font-semibold text-gray-500">{d.label}</span>
-            </div>
-          ))}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-base font-bold text-gray-900">Últimos 6 meses</h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /><span className="text-xs text-gray-500">Comisiones</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-rose-400" /><span className="text-xs text-gray-500">Gastos</span></div>
+          </div>
         </div>
-        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-emerald-400" /><span className="text-xs text-gray-500">Comisiones</span></div>
-          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-rose-300" /><span className="text-xs text-gray-500">Gastos</span></div>
+
+        <div className="flex items-end gap-2 sm:gap-4">
+          {chartData.map((d, i) => {
+            const isCurrent = i === chartData.length - 1;
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+                <div className="w-full flex gap-1 sm:gap-1.5 items-end justify-center" style={{ height: "150px" }}>
+                  <div
+                    className="flex-1 max-w-[26px] bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-lg transition-all duration-500 group-hover:opacity-80"
+                    style={{ height: `${(d.commissions / chartMax) * 100}%`, minHeight: d.commissions > 0 ? "4px" : "0" }}
+                    title={`Comisiones: ${formatCurrency(d.commissions)}`}
+                  />
+                  <div
+                    className="flex-1 max-w-[26px] bg-gradient-to-t from-rose-500 to-rose-300 rounded-t-lg transition-all duration-500 group-hover:opacity-80"
+                    style={{ height: `${(d.expenses / chartMax) * 100}%`, minHeight: d.expenses > 0 ? "4px" : "0" }}
+                    title={`Gastos: ${formatCurrency(d.expenses)}`}
+                  />
+                </div>
+                <span className={`text-[11px] font-semibold ${isCurrent ? "text-slate-900" : "text-gray-400"}`}>{d.label}</span>
+                <span className={`text-[10px] font-bold ${d.net >= 0 ? "text-emerald-600" : "text-rose-500"}`} title={`Neto: ${formatCurrency(d.net)}`}>
+                  {d.net >= 0 ? "+" : "−"}{compactMoney(Math.abs(d.net))}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -674,22 +674,22 @@ export default function ContabilidadPage() {
           <p className="text-sm text-gray-400 text-center py-4">No hay movimientos en este periodo</p>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
-              <div className="bg-green-50 rounded-xl p-4 text-center border border-green-100">
-                <p className="text-xs font-semibold text-green-600 uppercase">Comisiones</p>
-                <p className="text-xl font-bold text-green-700 mt-1">{formatCurrency(monthlyCommissionsTotal)}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+              <div className="bg-emerald-50 rounded-2xl p-4">
+                <p className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-wide">Comisiones</p>
+                <p className="text-xl font-bold text-emerald-700 mt-1">{formatCurrency(monthlyCommissionsTotal)}</p>
               </div>
-              <div className="bg-teal-50 rounded-xl p-4 text-center border border-teal-100">
-                <p className="text-xs font-semibold text-teal-600 uppercase">Ingresos Extra</p>
-                <p className="text-xl font-bold text-teal-700 mt-1">{formatCurrency(monthlyIngresosTotal)}</p>
+              <div className="bg-sky-50 rounded-2xl p-4">
+                <p className="text-[10px] font-bold text-sky-600/70 uppercase tracking-wide">Ingresos Extra</p>
+                <p className="text-xl font-bold text-sky-700 mt-1">{formatCurrency(monthlyIngresosTotal)}</p>
               </div>
-              <div className="bg-red-50 rounded-xl p-4 text-center border border-red-100">
-                <p className="text-xs font-semibold text-red-600 uppercase">Gastos</p>
-                <p className="text-xl font-bold text-red-700 mt-1">{formatCurrency(monthlyGastosTotal)}</p>
+              <div className="bg-rose-50 rounded-2xl p-4">
+                <p className="text-[10px] font-bold text-rose-600/70 uppercase tracking-wide">Gastos</p>
+                <p className="text-xl font-bold text-rose-700 mt-1">{formatCurrency(monthlyGastosTotal)}</p>
               </div>
-              <div className={`rounded-xl p-4 text-center border ${monthlyNet >= 0 ? "bg-blue-50 border-blue-100" : "bg-orange-50 border-orange-100"}`}>
-                <p className={`text-xs font-semibold uppercase ${monthlyNet >= 0 ? "text-blue-600" : "text-orange-600"}`}>Neto</p>
-                <p className={`text-xl font-bold mt-1 ${monthlyNet >= 0 ? "text-blue-700" : "text-orange-700"}`}>{formatCurrency(monthlyNet)}</p>
+              <div className="bg-slate-900 rounded-2xl p-4">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Neto</p>
+                <p className={`text-xl font-bold mt-1 ${monthlyNet >= 0 ? "text-white" : "text-orange-300"}`}>{formatCurrency(monthlyNet)}</p>
               </div>
             </div>
 
@@ -707,21 +707,12 @@ export default function ContabilidadPage() {
                   </div>
 
                   <div className="grid grid-cols-4 gap-2 mb-3">
-                    <div className="bg-white rounded-lg p-2 text-center border border-green-100">
-                      <p className="text-[10px] font-semibold text-green-600 uppercase">Comis.</p>
-                      <p className="text-sm font-bold text-green-700 mt-0.5">{formatCurrency(agent.commissions)}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-2 text-center border border-teal-100">
-                      <p className="text-[10px] font-semibold text-teal-600 uppercase">Extra</p>
-                      <p className="text-sm font-bold text-teal-700 mt-0.5">{formatCurrency(agent.extraIncome)}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-2 text-center border border-red-100">
-                      <p className="text-[10px] font-semibold text-red-600 uppercase">Gastos</p>
-                      <p className="text-sm font-bold text-red-700 mt-0.5">{formatCurrency(agent.expenses)}</p>
-                    </div>
-                    <div className={`bg-white rounded-lg p-2 text-center border ${agent.net >= 0 ? "border-blue-100" : "border-orange-100"}`}>
-                      <p className={`text-[10px] font-semibold uppercase ${agent.net >= 0 ? "text-blue-600" : "text-orange-600"}`}>Neto</p>
-                      <p className={`text-sm font-bold mt-0.5 ${agent.net >= 0 ? "text-blue-700" : "text-orange-700"}`}>{formatCurrency(agent.net)}</p>
+                    <MiniTile label="Comis." value={formatCurrency(agent.commissions)} tone="emerald" />
+                    <MiniTile label="Extra" value={formatCurrency(agent.extraIncome)} tone="sky" />
+                    <MiniTile label="Gastos" value={formatCurrency(agent.expenses)} tone="rose" />
+                    <div className="rounded-xl px-2 py-2.5 text-center bg-slate-900">
+                      <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400">Neto</p>
+                      <p className={`text-[13px] font-bold mt-0.5 truncate ${agent.net >= 0 ? "text-white" : "text-orange-300"}`}>{formatCurrency(agent.net)}</p>
                     </div>
                   </div>
 
@@ -783,6 +774,49 @@ export default function ContabilidadPage() {
         )}
       </div>
 
+      {/* Agentes — totales históricos */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-6">
+        {agentSummaries.map((agent) => {
+          const pct = agent.totalCommissions > 0 ? Math.min((agent.collectedCommissions / agent.totalCommissions) * 100, 100) : 0;
+          return (
+            <div key={agent.agent} className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${agent.color} flex items-center justify-center flex-shrink-0`}>
+                  <span className="text-white font-bold">{agent.initials}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-gray-900 truncate">{agent.label}</h3>
+                  <p className="text-xs text-gray-400">{agent.totalDeals} negocios · {agent.closedDeals} cerrados</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Neto</p>
+                  <p className={`text-lg font-bold ${agent.netIncome >= 0 ? "text-slate-900" : "text-orange-600"}`}>{formatCurrency(agent.netIncome)}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] mb-1.5">
+                <span className="text-gray-400">Cobrado {Math.round(pct)}%</span>
+                <span className="text-gray-500 font-medium">{formatCurrency(agent.collectedCommissions)} / {formatCurrency(agent.totalCommissions)}</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-2 mb-4 overflow-hidden">
+                <div className="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+              </div>
+
+              <div className="grid grid-cols-4 gap-2">
+                <MiniTile label="Comis." value={formatCurrency(agent.collectedCommissions)} tone="emerald" />
+                <MiniTile label="Extra" value={formatCurrency(agent.totalExtraIncome)} tone="sky" />
+                <MiniTile label="Gastos" value={formatCurrency(agent.totalExpenses)} tone="rose" />
+                <MiniTile label="Pend." value={formatCurrency(agent.pendingCommissions)} tone="amber" />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+        </>
+      )}
+
+      {tab === "movimientos" && (
+        <>
       {/* Ingresos Extra */}
       <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 mb-6">
         <div className="flex items-center justify-between mb-5">
@@ -986,8 +1020,10 @@ export default function ContabilidadPage() {
           </div>
         )}
       </div>
+        </>
+      )}
 
-      {/* Deals by Agent */}
+      {tab === "negocios" && (
       <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -1044,6 +1080,50 @@ export default function ContabilidadPage() {
           </div>
         )}
       </div>
+      )}
+    </div>
+  );
+}
+
+/** Compact money for tight spaces: 12500 → 12.5k */
+function compactMoney(n: number): string {
+  if (n >= 1000) return `$${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k`;
+  return `$${Math.round(n)}`;
+}
+
+function HeroStat({ label, value, dot }: { label: string; value: string; dot: string }) {
+  return (
+    <div className="rounded-2xl bg-white/5 border border-white/10 p-3.5">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span className={`w-2 h-2 rounded-full ${dot}`} />
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{label}</span>
+      </div>
+      <p className="text-base font-bold text-white truncate" title={value}>{value}</p>
+    </div>
+  );
+}
+
+function HeroMini({ label, value, accent }: { label: string; value: string; accent?: string }) {
+  return (
+    <div>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</p>
+      <p className={`text-lg font-bold mt-0.5 ${accent || "text-slate-100"}`}>{value}</p>
+    </div>
+  );
+}
+
+const TILE_TONES: Record<string, string> = {
+  emerald: "bg-emerald-50 text-emerald-700",
+  sky: "bg-sky-50 text-sky-700",
+  rose: "bg-rose-50 text-rose-700",
+  amber: "bg-amber-50 text-amber-700",
+};
+
+function MiniTile({ label, value, tone }: { label: string; value: string; tone: keyof typeof TILE_TONES }) {
+  return (
+    <div className={`rounded-xl px-2 py-2.5 text-center ${TILE_TONES[tone]}`}>
+      <p className="text-[9px] font-bold uppercase tracking-wide opacity-70">{label}</p>
+      <p className="text-[13px] font-bold mt-0.5 truncate" title={value}>{value}</p>
     </div>
   );
 }
