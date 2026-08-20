@@ -81,17 +81,23 @@ function getCommissionsByMonth(deals: Deal[], month: number, year: number, broke
       results.push({ agent: agentCode, amount, label, dealTitle });
     };
 
+    // Each payment is divided among the internal parties in proportion to their
+    // shares. The base is the payment schedule's own total — on co-brokered deals
+    // the schedule only covers the house's half, so using the gross commission
+    // here would under-report every payment.
+    const scheduledTotal = payments.reduce((s, p) => s + p.amount, 0);
+    const splitBase = scheduledTotal > 0 ? scheduledTotal : (deal.commissionAmount || 0);
+
     for (const p of payments) {
       if (p.paid && p.date) {
         const d = parseLocalDate(p.date);
         if (d.getMonth() + 1 === month && d.getFullYear() === year) {
-          if (hasSplits && deal.commissionAmount && deal.commissionAmount > 0) {
-            const commTotal = deal.commissionAmount;
+          if (hasSplits && splitBase > 0) {
             if (deal.companyShare != null) {
-              pushSplit(brokerCode, p.amount * (deal.companyShare / commTotal), p.label);
+              pushSplit(brokerCode, p.amount * (deal.companyShare / splitBase), p.label);
             }
             if (deal.internalAgentShare != null && deal.assignedAgent) {
-              pushSplit(deal.assignedAgent, p.amount * (deal.internalAgentShare / commTotal), p.label);
+              pushSplit(deal.assignedAgent, p.amount * (deal.internalAgentShare / splitBase), p.label);
             }
           } else {
             pushSplit(deal.assignedAgent || "SIN_ASIGNAR", p.amount, p.label);
@@ -291,15 +297,17 @@ export default function ContabilidadPage() {
       if (deal.status === "CERRADO") closedDeals++;
       totalCommissions += share;
 
-      // Apply collected/pending proportionally
-      const commTotal = deal.commissionAmount || 0;
-      const ratio = commTotal > 0 ? share / commTotal : 1;
+      // Split the agent's share by how much of the payment schedule has been
+      // collected. Scaling by the schedule (rather than the gross commission)
+      // keeps co-brokered deals correct, where the schedule only covers the
+      // house's half and would otherwise leave phantom money as pending.
       const payments = parsePayments(deal.commissionPayments);
       if (payments.length > 0) {
-        for (const p of payments) {
-          if (p.paid) collectedCommissions += p.amount * ratio;
-          else pendingCommissions += p.amount * ratio;
-        }
+        const scheduled = payments.reduce((s, p) => s + p.amount, 0);
+        const paid = payments.filter((p) => p.paid).reduce((s, p) => s + p.amount, 0);
+        const paidRatio = scheduled > 0 ? paid / scheduled : 0;
+        collectedCommissions += share * paidRatio;
+        pendingCommissions += share * (1 - paidRatio);
       } else {
         if (deal.commissionPaid) collectedCommissions += share;
         else pendingCommissions += share;

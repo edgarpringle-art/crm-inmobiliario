@@ -86,13 +86,16 @@ export default function MisComisionesPage() {
     totalCommissions += share;
     if (d.status === "CERRADO") closedCount++;
 
-    const ratio = (d.commissionAmount && d.commissionAmount > 0) ? share / d.commissionAmount : 1;
+    // Scale my share by how much of the payment schedule has been collected.
+    // On co-brokered deals the schedule only covers the house's half, so the
+    // gross commission is the wrong denominator here.
     const payments = parsePayments(d.commissionPayments);
     if (payments.length > 0) {
-      for (const p of payments) {
-        if (p.paid) collected += p.amount * ratio;
-        else pending += p.amount * ratio;
-      }
+      const scheduled = payments.reduce((s, p) => s + p.amount, 0);
+      const paid = payments.filter((p) => p.paid).reduce((s, p) => s + p.amount, 0);
+      const paidRatio = scheduled > 0 ? paid / scheduled : 0;
+      collected += share * paidRatio;
+      pending += share * (1 - paidRatio);
     } else {
       if (d.commissionPaid) collected += share;
       else pending += share;
@@ -103,8 +106,10 @@ export default function MisComisionesPage() {
   const monthlyPayments: { amount: number; label: string; date: string; dealTitle: string }[] = [];
   for (const d of deals) {
     const share = myShareFromDeal(d);
-    const ratio = (d.commissionAmount && d.commissionAmount > 0) ? share / d.commissionAmount : 1;
     const payments = parsePayments(d.commissionPayments);
+    const scheduledTotal = payments.reduce((s, p) => s + p.amount, 0);
+    // Each payment carries my share in proportion to the schedule it belongs to.
+    const ratio = scheduledTotal > 0 ? share / scheduledTotal : 1;
     for (const p of payments) {
       if (p.paid && p.date) {
         const dt = parseLocalDate(p.date);

@@ -69,6 +69,8 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
       p.id === paymentId ? { ...p, paid: !p.paid, date: !p.paid ? new Date().toISOString() : p.date } : p
     );
     const allPaid = updated.every((p) => p.paid);
+    // A deal waiting only on payment closes itself once everything is collected.
+    const newStatus = allPaid && deal.status === "PENDIENTE_PAGO" ? "CERRADO" : deal.status;
 
     const res = await fetch(`/api/deals/${id}`, {
       method: "PUT",
@@ -76,6 +78,7 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
       body: JSON.stringify({
         commissionPayments: JSON.stringify(updated),
         commissionPaid: allPaid,
+        status: newStatus,
       }),
     });
     if (res.ok) {
@@ -83,8 +86,9 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
         ...prev,
         commissionPayments: JSON.stringify(updated),
         commissionPaid: allPaid,
+        status: newStatus,
       } : prev);
-      toast.success("Pago actualizado");
+      toast.success(newStatus !== deal.status ? "Pago actualizado · Negocio cerrado" : "Pago actualizado");
     }
   }
 
@@ -123,6 +127,10 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
   const payments: CommissionPayment[] = deal.commissionPayments ? JSON.parse(deal.commissionPayments) : [];
   const totalPaid = payments.filter((p) => p.paid).reduce((sum, p) => sum + p.amount, 0);
   const totalPending = payments.filter((p) => !p.paid).reduce((sum, p) => sum + p.amount, 0);
+  // Progress is measured against the payment schedule, not the gross commission:
+  // on co-brokered deals the schedule only covers the house's half.
+  const scheduledTotal = totalPaid + totalPending;
+  const collectedPct = scheduledTotal > 0 ? Math.round((totalPaid / scheduledTotal) * 100) : 0;
 
   return (
     <div>
@@ -166,9 +174,7 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-400">Progreso de cobro</p>
-                <p className="text-lg font-bold text-green-600">
-                  {deal.commissionAmount ? Math.round((totalPaid / deal.commissionAmount) * 100) : 0}%
-                </p>
+                <p className="text-lg font-bold text-green-600">{collectedPct}%</p>
               </div>
             </div>
 
@@ -176,7 +182,7 @@ export default function NegocioDetailPage({ params }: { params: Promise<{ id: st
             <div className="w-full bg-gray-100 rounded-full h-2.5 mb-5">
               <div
                 className="bg-gradient-to-r from-green-500 to-emerald-500 h-2.5 rounded-full transition-all duration-500"
-                style={{ width: `${deal.commissionAmount ? Math.min((totalPaid / deal.commissionAmount) * 100, 100) : 0}%` }}
+                style={{ width: `${Math.min(collectedPct, 100)}%` }}
               />
             </div>
 
