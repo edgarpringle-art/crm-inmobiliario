@@ -18,6 +18,7 @@ import {
   HiLogout,
   HiUserGroup,
   HiGlobe,
+  HiSpeakerphone,
 } from "react-icons/hi";
 
 type Role = "broker" | "admin" | "agent";
@@ -40,6 +41,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/mis-comisiones", label: "Mis Comisiones", icon: HiCurrencyDollar, description: "Tus números personales", visibleFor: ["agent"] },
   { href: "/agentes", label: "Agentes", icon: HiUserGroup, description: "Gestión de usuarios", visibleFor: ["broker"] },
   { href: "/grupos", label: "Grupos WA", icon: HiChat, description: "Feed de grupos WhatsApp", visibleFor: ["broker", "admin", "agent"] },
+  { href: "/publicar", label: "Publicar", icon: HiSpeakerphone, description: "Enviar a grupos de WhatsApp", visibleFor: ["broker", "admin", "agent"] },
   { href: "/matches", label: "Matches", icon: HiSparkles, description: "Coincidencias automáticas", visibleFor: ["broker", "admin", "agent"] },
   { href: "/catalogo", label: "Catálogo Público", icon: HiGlobe, description: "Página web de propiedades", visibleFor: ["broker", "admin", "agent"] },
 ];
