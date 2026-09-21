@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import PageHeader from "@/components/PageHeader";
 import {
   HiSpeakerphone, HiCheckCircle, HiXCircle, HiClock, HiRefresh,
-  HiSearch, HiHome, HiChat,
+  HiSearch, HiHome, HiChat, HiEyeOff, HiEye,
 } from "react-icons/hi";
 
 interface Grupo {
@@ -15,6 +15,7 @@ interface Grupo {
   ultimo_ms: number;
   tipo: "oferta" | "busqueda" | "mixto";
   clasificado: boolean;
+  activo: boolean;
 }
 
 interface ResultadoEnvio {
@@ -69,19 +70,49 @@ export default function PublicarPage() {
   const [enviando, setEnviando] = useState(false);
   const [envio, setEnvio] = useState<Envio | null>(null);
   const [historial, setHistorial] = useState<Envio[]>([]);
+  const [verOcultos, setVerOcultos] = useState(false);
+  const [ocultos, setOcultos] = useState<Grupo[]>([]);
 
   async function cargarGrupos() {
     setLoading(true);
     setError("");
     try {
-      const r = await fetch("/api/grupos-lista?dias=60");
+      const [r, ro] = await Promise.all([
+        fetch("/api/grupos-lista?dias=60"),
+        fetch("/api/grupos-lista?dias=60&ocultos=1"),
+      ]);
       const d = await r.json();
+      const dOcultos = await ro.json().catch(() => ({}));
       if (d.error) { setError(d.error); setGrupos([]); }
       else setGrupos(Array.isArray(d.grupos) ? d.grupos : []);
+      setOcultos(Array.isArray(dOcultos.grupos) ? dOcultos.grupos : []);
     } catch {
       setError("No se pudo conectar al bot");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function ocultarGrupo(g: Grupo, ocultar: boolean) {
+    // Optimista: mover el grupo de una lista a la otra
+    if (ocultar) {
+      setGrupos((prev) => prev.filter((x) => x.id !== g.id));
+      setOcultos((prev) => [...prev, { ...g, activo: false }]);
+      setSeleccion((prev) => { const n = new Set(prev); n.delete(g.id); return n; });
+    } else {
+      setOcultos((prev) => prev.filter((x) => x.id !== g.id));
+      setGrupos((prev) => [...prev, { ...g, activo: true }]);
+    }
+    try {
+      await fetch("/api/grupos-lista", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: g.id, nombre: g.nombre, ocultar }),
+      });
+      toast.success(ocultar ? `"${g.nombre}" oculto` : `"${g.nombre}" restaurado`);
+    } catch {
+      toast.error("No se pudo guardar");
+      cargarGrupos();
     }
   }
 
@@ -338,9 +369,49 @@ export default function PublicarPage() {
                       <option value="busqueda">Búsquedas</option>
                       <option value="mixto">Mixto</option>
                     </select>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); ocultarGrupo(g, true); }}
+                      title="Ocultar — el bot deja de leer este grupo"
+                      className="text-gray-300 hover:text-red-500 transition-colors flex-shrink-0"
+                    >
+                      <HiEyeOff className="w-4 h-4" />
+                    </button>
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Ocultos */}
+          {ocultos.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <button
+                onClick={() => setVerOcultos(!verOcultos)}
+                className="flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-gray-800"
+              >
+                <HiEye className="w-4 h-4" />
+                {ocultos.length} grupo{ocultos.length === 1 ? "" : "s"} oculto{ocultos.length === 1 ? "" : "s"}
+                <span className="text-gray-300">{verOcultos ? "▲" : "▼"}</span>
+              </button>
+
+              {verOcultos && (
+                <div className="space-y-1.5 mt-3 max-h-64 overflow-y-auto pr-1">
+                  {ocultos.map((g) => (
+                    <div key={g.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-500 truncate line-through">{g.nombre}</p>
+                        <p className="text-[11px] text-gray-400">{g.mensajes} mensajes capturados antes de ocultarlo</p>
+                      </div>
+                      <button
+                        onClick={() => ocultarGrupo(g, false)}
+                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex-shrink-0"
+                      >
+                        Restaurar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -7,9 +7,10 @@ const EP_REALTY_TOKEN = process.env.EP_REALTY_TOKEN || "";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const dias = searchParams.get("dias") || "30";
+  const ocultos = searchParams.get("ocultos") === "1" ? "&ocultos=1" : "";
 
   try {
-    const res = await fetch(`${EP_REALTY_URL}/api/v1/grupos?dias=${dias}`, {
+    const res = await fetch(`${EP_REALTY_URL}/api/v1/grupos?dias=${dias}${ocultos}`, {
       headers: { Authorization: `Bearer ${EP_REALTY_TOKEN}` },
       cache: "no-store",
     });
@@ -27,11 +28,15 @@ export async function GET(request: Request) {
   }
 }
 
-/** Fija la categoría de un grupo (oferta / busqueda / mixto). */
+/**
+ * Fija la categoría de un grupo, o lo oculta/restaura si viene `ocultar`.
+ * Ocultar además hace que el bot deje de capturar ese grupo.
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const res = await fetch(`${EP_REALTY_URL}/api/v1/grupos/tipo`, {
+    const destino = "ocultar" in body ? "ocultar" : "tipo";
+    const res = await fetch(`${EP_REALTY_URL}/api/v1/grupos/${destino}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${EP_REALTY_TOKEN}`,
