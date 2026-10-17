@@ -301,15 +301,30 @@ function MatchGroupCard({ group, isExpanded, onToggle }: { group: MatchGroup; is
               </span>
             )}
           </div>
-          <p className="text-gray-900 text-sm font-bold truncate">
-            {(e.tipo || "—").toUpperCase()} · {e.zona || "Sin zona"}
-          </p>
-          <p className="text-xs text-gray-500 truncate">
-            <span className="font-semibold text-gray-700">
-              {isOferta ? (e.precio_texto || "Sin precio") : (e.presupuesto_texto || "Sin presupuesto")}
-            </span>
-            {e.contacto_nombre ? <> · {e.contacto_nombre}</> : null}
-          </p>
+          {/* En una búsqueda lo que identifica el grupo es el cliente, no la zona.
+              En una propiedad no hay cliente: contacto_nombre siempre es el broker. */}
+          {!isOferta && e.contacto_nombre ? (
+            <>
+              <p className="text-gray-900 text-sm font-bold truncate">{e.contacto_nombre}</p>
+              <p className="text-xs text-gray-500 truncate">
+                {(e.tipo || "—").toUpperCase()} · {e.zona || "Sin zona"} ·{" "}
+                <span className="font-semibold text-gray-700">
+                  {e.presupuesto_texto || "Sin presupuesto"}
+                </span>
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-900 text-sm font-bold truncate">
+                {(e.tipo || "—").toUpperCase()} · {e.zona || "Sin zona"}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                <span className="font-semibold text-gray-700">
+                  {isOferta ? (e.precio_texto || "Sin precio") : (e.presupuesto_texto || "Sin presupuesto")}
+                </span>
+              </p>
+            </>
+          )}
         </div>
 
         {/* Count badge */}
