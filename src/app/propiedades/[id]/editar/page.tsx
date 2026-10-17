@@ -9,6 +9,7 @@ import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "
 import { getProvinces, getDistricts, getSectors } from "@/lib/locations";
 import { HiPlus, HiTrash } from "react-icons/hi";
 import PhotoUploader from "@/components/PhotoUploader";
+import { parseFeatures } from "@/lib/publicProperty";
 
 interface PortalLink { name: string; url: string; }
 const PORTAL_NAMES = ["Encuentra24", "Corotos", "SuperCasas", "Lamudi", "Inmobiliaria.com.do", "Otro"];
@@ -37,6 +38,8 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
   const [districts, setDistricts] = useState<string[]>([]);
   const [sectors, setSectors] = useState<string[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [featuresText, setFeaturesText] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [portalLinks, setPortalLinks] = useState<PortalLink[]>([]);
   const [newPortal, setNewPortal] = useState({ name: "Encuentra24", url: "" });
   const [form, setForm] = useState({
@@ -75,6 +78,8 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
       });
       if (data.portalLinks) { try { setPortalLinks(JSON.parse(data.portalLinks)); } catch { /* ignore */ } }
       if (data.photos) { try { setPhotos(JSON.parse(data.photos)); } catch { /* ignore */ } }
+      if (data.features) { try { setFeaturesText((JSON.parse(data.features) as string[]).join(String.fromCharCode(10))); } catch { /* ignore */ } }
+      setVideoUrl(data.videoUrl || "");
       setProvinces(getProvinces());
       setLoading(false);
     });
@@ -116,6 +121,8 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         driveLink: form.driveLink || null, description: form.description || null, notes: form.notes || null,
         portalLinks: portalLinks.length > 0 ? JSON.stringify(portalLinks) : null,
         photos: photos.length > 0 ? JSON.stringify(photos) : null,
+        features: parseFeatures(featuresText),
+        videoUrl: videoUrl.trim() || null,
       };
       const res = await fetch(`/api/properties/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error("Error");
@@ -242,7 +249,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
 
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Fotos</h2>
-          <PhotoUploader photos={photos} onChange={setPhotos} />
+          <PhotoUploader photos={photos} onChange={setPhotos} maxPhotos={30} />
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6">
@@ -250,6 +257,8 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
           <div className="grid grid-cols-1 gap-4">
             <FormField label="Link Google Drive"><input className={inputClass} value={form.driveLink} onChange={(e) => update("driveLink", e.target.value)} /></FormField>
             <FormField label="Descripción"><textarea className={inputClass} rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} /></FormField>
+            <FormField label="Características adicionales (una por línea — se muestran en la web)"><textarea className={inputClass} rows={4} value={featuresText} onChange={(e) => setFeaturesText(e.target.value)} placeholder="Ej: Cuarto de servicio, Vista al mar, Acepta mascotas" /></FormField>
+            <FormField label="Video (YouTube)"><input className={inputClass} value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." /></FormField>
             <FormField label="Notas adicionales WhatsApp (opcional)"><textarea className={inputClass} rows={2} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Ej: Remodelado, vista al mar, acepta mascotas. (El resumen se genera automáticamente)" /></FormField>
           </div>
         </div>

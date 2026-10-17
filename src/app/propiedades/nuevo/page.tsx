@@ -9,6 +9,7 @@ import LocationSelect from "@/components/LocationSelect";
 import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "@/lib/constants";
 import { getProvinces, getDistricts, getSectors } from "@/lib/locations";
 import PhotoUploader from "@/components/PhotoUploader";
+import { parseFeatures } from "@/lib/publicProperty";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 const checkboxClass = "w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500";
@@ -36,6 +37,8 @@ export default function NuevaPropiedadPage() {
   const [districts, setDistricts] = useState<string[]>([]);
   const [sectors, setSectors] = useState<string[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [featuresText, setFeaturesText] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [form, setForm] = useState({
     title: "", propertyType: "APARTAMENTO", operationType: "VENTA", status: "DISPONIBLE",
     address: "", sector: "", city: "", state: "", country: "Panamá", referencePoint: "",
@@ -80,6 +83,8 @@ export default function NuevaPropiedadPage() {
       const body = {
         ...form,
         photos: photos.length > 0 ? JSON.stringify(photos) : null,
+        features: parseFeatures(featuresText),
+        videoUrl: videoUrl.trim() || null,
         salePrice: form.salePrice ? parseFloat(form.salePrice) : null,
         rentPrice: form.rentPrice ? parseFloat(form.rentPrice) : null,
         maintenanceFee: form.maintenanceFee ? parseFloat(form.maintenanceFee) : null,
@@ -214,7 +219,7 @@ export default function NuevaPropiedadPage() {
 
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Fotos</h2>
-          <PhotoUploader photos={photos} onChange={setPhotos} />
+          <PhotoUploader photos={photos} onChange={setPhotos} maxPhotos={30} />
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6">
@@ -222,6 +227,8 @@ export default function NuevaPropiedadPage() {
           <div className="grid grid-cols-1 gap-4">
             <FormField label="Link Google Drive"><input className={inputClass} value={form.driveLink} onChange={(e) => update("driveLink", e.target.value)} placeholder="https://drive.google.com/..." /></FormField>
             <FormField label="Descripción"><textarea className={inputClass} rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} /></FormField>
+            <FormField label="Características adicionales (una por línea — se muestran en la web)"><textarea className={inputClass} rows={4} value={featuresText} onChange={(e) => setFeaturesText(e.target.value)} placeholder="Ej: Cuarto de servicio, Vista al mar, Acepta mascotas" /></FormField>
+            <FormField label="Video (YouTube)"><input className={inputClass} value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." /></FormField>
             <FormField label="Notas adicionales WhatsApp (opcional)">
               <textarea className={inputClass} rows={2} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Ej: Remodelado, vista al mar, acepta mascotas. (El resumen se genera automáticamente al ver la propiedad)" />
             </FormField>

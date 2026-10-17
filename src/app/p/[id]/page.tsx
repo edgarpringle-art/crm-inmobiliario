@@ -4,6 +4,8 @@ import { formatCurrency } from "@/lib/constants";
 import type { Metadata } from "next";
 import Link from "next/link";
 import PhotoGallery from "./PhotoGallery";
+import LeadForm from "./LeadForm";
+import { optimizePhoto, youtubeEmbedUrl } from "@/lib/publicProperty";
 
 interface Property {
   id: string; title: string; propertyType: string; operationType: string; status: string;
@@ -19,6 +21,8 @@ interface Property {
   ownerName: string | null;
   createdBy: string | null;
   photos: string | null;
+  features: string | null;
+  videoUrl: string | null;
 }
 
 interface PublisherAgent {
@@ -68,7 +72,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title: p.title,
       description: `${loc} · ${price}`,
       siteName: "Edgar Pringle Real Estate",
-      images: firstPhoto ? [{ url: firstPhoto }] : undefined,
+      images: firstPhoto ? [{ url: optimizePhoto(firstPhoto, 1200) }] : undefined,
     },
   };
 }
@@ -104,7 +108,12 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
   const activeAmenities = Object.entries(amenityLabels).filter(([k]) => (p as unknown as Record<string, unknown>)[k]);
   const loc = [p.sector, p.city, p.state].filter(Boolean).join(", ");
   let photos: string[] = [];
-  if (p.photos) { try { photos = JSON.parse(p.photos); } catch { /* ignore */ } }
+  if (p.photos) { try { photos = (JSON.parse(p.photos) as string[]).map((u) => optimizePhoto(u)); } catch { /* ignore */ } }
+  let features: string[] = [];
+  if (p.features) { try { features = JSON.parse(p.features); } catch { /* ignore */ } }
+  const videoEmbed = youtubeEmbedUrl(p.videoUrl);
+  const mapQuery = [p.address, p.sector, p.city, p.state, "Panamá"].filter(Boolean).join(", ");
+  const refCode = p.id.slice(-6).toUpperCase();
   const fullAddress = [p.address, loc].filter(Boolean).join(" · ");
   const isVenta = p.operationType === "VENTA" || p.operationType === "VENTA_Y_ALQUILER";
   const isAlquiler = p.operationType === "ALQUILER" || p.operationType === "VENTA_Y_ALQUILER";
@@ -189,6 +198,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
               <span className="text-[10px] text-stone-400 font-semibold uppercase tracking-[0.2em] border border-stone-200 px-3 py-1 rounded">
                 {typeLabel[p.propertyType] || "Propiedad"}
               </span>
+              <span className="text-[10px] text-stone-400 font-semibold uppercase tracking-[0.2em]">Ref. {refCode}</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-medium text-stone-900 leading-tight mb-3" style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.01em" }}>
@@ -243,6 +253,44 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
             </div>
           )}
 
+          {/* Extra features */}
+          {features.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.3em] mb-4">Más características</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
+                {features.map((f) => (
+                  <div key={f} className="flex items-center gap-2 text-sm text-stone-700 py-2 border-b border-stone-100">
+                    <span className="text-[#0F766E]"><IconCheck /></span>
+                    {f}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Video */}
+          {videoEmbed && (
+            <div>
+              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.3em] mb-4">Video</p>
+              <div className="aspect-video rounded-xl overflow-hidden border border-stone-200 bg-stone-100">
+                <iframe src={videoEmbed} title={`Video ${p.title}`} className="w-full h-full" loading="lazy"
+                  allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+              </div>
+            </div>
+          )}
+
+          {/* Map */}
+          {(p.sector || p.city || p.address) && (
+            <div>
+              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.3em] mb-4">Ubicación</p>
+              <div className="h-72 rounded-xl overflow-hidden border border-stone-200 bg-stone-100">
+                <iframe src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`}
+                  title="Mapa" className="w-full h-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+              </div>
+              <p className="text-[11px] text-stone-400 mt-2">Ubicación aproximada.</p>
+            </div>
+          )}
+
           {/* Notes */}
           {p.notes && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
@@ -254,7 +302,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
 
         {/* Right column — sticky sidebar with prices + contact */}
         <aside className="lg:col-span-1">
-          <div className="sticky top-28 space-y-4">
+          <div className="space-y-4">
 
             {/* Prices card */}
             <div className="bg-white border border-stone-200 rounded-xl p-6">
@@ -286,6 +334,8 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
                 )}
               </div>
             </div>
+
+            <LeadForm propertyId={p.id} waHref={`https://wa.me/${BROKER.phone}?text=${waText}`} />
 
             {/* Contact CTA */}
             <div className="bg-stone-900 text-white rounded-xl p-6">
