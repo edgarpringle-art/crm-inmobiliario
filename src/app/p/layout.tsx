@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  icons: { icon: "/logo.svg" },
+  icons: { icon: "/brand/pi-isotipo.png" },
 };
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {

@@ -80,9 +80,7 @@ export default function VerPropuestasPage({ params }: { params: Promise<{ id: st
       {/* Header */}
       <header className="bg-stone-900 text-white px-5 py-6 text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.svg" alt="EP" className="w-11 h-11 mx-auto mb-2 invert" />
-        <h1 className="text-lg font-semibold tracking-[0.15em]" style={{ fontFamily: "'Cinzel', serif" }}>EDGAR PRINGLE</h1>
-        <p className="text-[11px] text-stone-400 uppercase tracking-[0.2em]">Real Estate · Panamá</p>
+        <img src="/brand/panamainmo-logo-blanco.png" alt="PanamaInmo — Real Estate & Legal Advisory" className="h-10 w-auto mx-auto" />
       </header>
 
       <div className="max-w-lg mx-auto px-4 py-6">
@@ -131,7 +129,7 @@ export default function VerPropuestasPage({ params }: { params: Promise<{ id: st
         )}
 
         <p className="text-center text-[11px] text-stone-400 mt-10 pb-6">
-          Edgar Pringle Real Estate · Panamá
+          PanamaInmo · Real Estate &amp; Legal Advisory
         </p>
       </div>
     </div>

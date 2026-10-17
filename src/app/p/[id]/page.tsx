@@ -66,12 +66,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   let firstPhoto: string | undefined;
   if (p.photos) { try { const arr = JSON.parse(p.photos); firstPhoto = arr[0]; } catch { /* ignore */ } }
   return {
-    title: `${p.title} — Edgar Pringle Real Estate`,
+    title: `${p.title} — PanamaInmo`,
     description: `${typeLabel[p.propertyType] || "Propiedad"} ${opLabel[p.operationType] || ""} · ${loc} · ${price}`,
     openGraph: {
       title: p.title,
       description: `${loc} · ${price}`,
-      siteName: "Edgar Pringle Real Estate",
+      siteName: "PanamaInmo",
       images: firstPhoto ? [{ url: optimizePhoto(firstPhoto, 1200) }] : undefined,
     },
   };
@@ -150,13 +150,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <Link href="/catalogo" className="flex items-center gap-3 cursor-pointer">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.svg" alt="EP" className="w-10 h-10 sm:w-11 sm:h-11" />
-            <div className="border-l border-stone-300 pl-3">
-              <p className="text-sm sm:text-base font-medium text-stone-900 leading-tight tracking-[0.18em]" style={{ fontFamily: "'Cinzel', serif" }}>
-                EDGAR PRINGLE
-              </p>
-              <p className="text-[10px] sm:text-[11px] text-stone-500 tracking-[0.2em] uppercase">Real Estate · Panamá</p>
-            </div>
+            <img src="/brand/panamainmo-logo.png" alt="PanamaInmo — Real Estate & Legal Advisory" className="h-9 sm:h-11 w-auto" />
           </Link>
 
           <a href={`https://wa.me/${BROKER.phone}?text=${waText}`} target="_blank" rel="noopener noreferrer"
@@ -341,20 +335,20 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
             <div className="bg-stone-900 text-white rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo.svg" alt="EP" className="w-10 h-10 invert" />
+                <img src="/brand/pi-isotipo-blanco.png" alt="PI" className="h-10 w-auto" />
                 <div>
-                  <p className="text-sm font-medium tracking-[0.15em]" style={{ fontFamily: "'Cinzel', serif" }}>EDGAR PRINGLE</p>
-                  <p className="text-[10px] text-stone-400 uppercase tracking-[0.2em]">Real Estate · Panamá</p>
+                  <p className="text-sm font-medium tracking-[0.15em]" style={{ fontFamily: "'Cinzel', serif" }}>PANAMAINMO</p>
+                  <p className="text-[10px] text-stone-400 uppercase tracking-[0.2em]">Real Estate &amp; Legal Advisory</p>
                 </div>
               </div>
               <p className="text-stone-300 text-sm leading-relaxed mb-5">
-                ¿Te interesa esta propiedad? Estoy disponible para responder tus preguntas o coordinar una visita.
+                ¿Te interesa esta propiedad? Estamos disponibles para responder tus preguntas o coordinar una visita.
               </p>
               <a href={`https://wa.me/${BROKER.phone}?text=${waText}`} target="_blank" rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold w-full py-3 rounded text-xs uppercase tracking-[0.15em] transition-colors duration-200 cursor-pointer mb-2">
                 <IconWA /> WhatsApp
               </a>
-              <a href={`mailto:${BROKER.email}?subject=${encodeURIComponent(`Consulta: ${p.title}`)}&body=${encodeURIComponent(`Hola Edgar,\n\nMe interesa la propiedad "${p.title}" — https://panamainmo.com/p/${p.id}\n\nGracias.`)}`}
+              <a href={`mailto:${BROKER.email}?subject=${encodeURIComponent(`Consulta: ${p.title}`)}&body=${encodeURIComponent(`Hola PanamaInmo,\n\nMe interesa la propiedad "${p.title}" — https://panamainmo.com/p/${p.id}\n\nGracias.`)}`}
                 className="flex items-center justify-center gap-2 bg-transparent border border-stone-700 hover:border-white text-white font-semibold w-full py-3 rounded text-xs uppercase tracking-[0.15em] transition-colors duration-200 cursor-pointer">
                 <IconMail /> Email
               </a>
@@ -372,16 +366,10 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
       <footer className="bg-stone-900 text-stone-400 pt-14 pb-6 px-4 sm:px-6 mt-10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-3 mb-5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.svg" alt="EP" className="w-12 h-12 invert" />
-              <div className="border-l border-stone-700 pl-3">
-                <p className="text-white text-base font-medium tracking-[0.2em]" style={{ fontFamily: "'Cinzel', serif" }}>EDGAR PRINGLE</p>
-                <p className="text-stone-500 text-[10px] uppercase tracking-[0.2em]">Real Estate · Panamá</p>
-              </div>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/panamainmo-logo-blanco.png" alt="PanamaInmo" className="h-10 w-auto mb-5" />
             <p className="text-sm leading-relaxed text-stone-400 max-w-md mb-4">
-              Asesoría inmobiliaria profesional en Panamá. Compra, venta y alquiler de propiedades con transparencia y dedicación.
+              Real Estate & Legal Advisory en Panamá. Compra, venta, alquiler y asesoría legal inmobiliaria con transparencia y respaldo profesional.
             </p>
             <p className="text-xs text-stone-500">
               <span className="uppercase tracking-[0.15em]">Licencia</span> <span className="text-white font-semibold ml-1">{BROKER.license}</span>
@@ -428,7 +416,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
         )}
 
         <div className="max-w-7xl mx-auto pt-6 mt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-500">
-          <p>© {new Date().getFullYear()} Edgar Pringle Real Estate. Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} PanamaInmo. Todos los derechos reservados.</p>
           <p className="tracking-[0.2em] uppercase">Panamá · Lic. {BROKER.license}</p>
         </div>
       </footer>

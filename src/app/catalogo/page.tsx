@@ -251,14 +251,7 @@ export default function CatalogoPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <Link href="/catalogo" className="flex items-center gap-3 cursor-pointer">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.svg" alt="EP" className="w-10 h-10 sm:w-11 sm:h-11" />
-            <div className="border-l border-stone-300 pl-3">
-              <p className="text-sm sm:text-base font-medium text-stone-900 leading-tight tracking-[0.18em]"
-                style={{ fontFamily: "'Cinzel', serif" }}>
-                EDGAR PRINGLE
-              </p>
-              <p className="text-[10px] sm:text-[11px] text-stone-500 tracking-[0.2em] uppercase">Real Estate · Panamá</p>
-            </div>
+            <img src="/brand/panamainmo-logo.png" alt="PanamaInmo — Real Estate & Legal Advisory" className="h-9 sm:h-11 w-auto" />
           </Link>
 
           {/* Desktop nav */}
@@ -498,17 +491,17 @@ export default function CatalogoPage() {
       <section className="py-16 sm:py-20 px-4 sm:px-6 bg-white">
         <div className="max-w-5xl mx-auto text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="EP" className="w-16 h-16 mx-auto mb-6" />
-          <p className="text-[#0F766E] text-[10px] font-semibold uppercase tracking-[0.3em] mb-3">Sobre Edgar Pringle</p>
+          <img src="/brand/pi-isotipo.png" alt="PanamaInmo" className="h-16 w-auto mx-auto mb-6" />
+          <p className="text-[#0F766E] text-[10px] font-semibold uppercase tracking-[0.3em] mb-3">Sobre PanamaInmo</p>
           <h2 className="text-2xl sm:text-3xl font-medium text-stone-900 mb-5"
             style={{ fontFamily: "'Cinzel', serif" }}>
-            Asesoría inmobiliaria con experiencia
+            Real Estate & Legal Advisory
           </h2>
           <p className="text-stone-600 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto mb-8">
-            Agente inmobiliario licenciado en Panamá. Te acompaño en cada paso del proceso de compra, venta o alquiler — con transparencia, dedicación y conocimiento profundo del mercado local.
+            Somos una empresa inmobiliaria en Panamá con asesoría legal integrada. Te acompañamos en cada paso de la compra, venta o alquiler — con transparencia, respaldo legal y conocimiento profundo del mercado local.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <a href={`https://wa.me/${BROKER.phone}?text=${encodeURIComponent("Hola Edgar, me interesa información sobre tus servicios.")}`}
+            <a href={`https://wa.me/${BROKER.phone}?text=${encodeURIComponent("Hola PanamaInmo, me interesa información sobre sus servicios.")}`}
               target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-7 py-3 rounded text-xs uppercase tracking-[0.15em] transition-colors duration-200 cursor-pointer">
               <Icon.wa /> WhatsApp
@@ -526,16 +519,10 @@ export default function CatalogoPage() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <div className="flex items-center gap-3 mb-5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.svg" alt="EP" className="w-12 h-12 invert" />
-              <div className="border-l border-stone-700 pl-3">
-                <p className="text-white text-base font-medium tracking-[0.2em]" style={{ fontFamily: "'Cinzel', serif" }}>EDGAR PRINGLE</p>
-                <p className="text-stone-500 text-[10px] uppercase tracking-[0.2em]">Real Estate · Panamá</p>
-              </div>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/panamainmo-logo-blanco.png" alt="PanamaInmo" className="h-10 w-auto mb-5" />
             <p className="text-sm leading-relaxed text-stone-400 max-w-md mb-4">
-              Asesoría inmobiliaria profesional en Panamá. Compra, venta y alquiler de propiedades con transparencia y dedicación.
+              Real Estate & Legal Advisory en Panamá. Compra, venta, alquiler y asesoría legal inmobiliaria con transparencia y respaldo profesional.
             </p>
             <p className="text-xs text-stone-500">
               <span className="uppercase tracking-[0.15em]">Licencia</span> <span className="text-white font-semibold ml-1">{BROKER.license}</span>
@@ -567,7 +554,7 @@ export default function CatalogoPage() {
         </div>
 
         <div className="max-w-7xl mx-auto pt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-500">
-          <p>© {new Date().getFullYear()} Edgar Pringle Real Estate. Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} PanamaInmo. Todos los derechos reservados.</p>
           <p className="tracking-[0.2em] uppercase">Panamá · Lic. {BROKER.license}</p>
         </div>
       </footer>
