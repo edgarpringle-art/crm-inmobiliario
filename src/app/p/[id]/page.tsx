@@ -4,7 +4,9 @@ import { formatCurrency } from "@/lib/constants";
 import type { Metadata } from "next";
 import Link from "next/link";
 import PhotoGallery from "./PhotoGallery";
-import LeadForm from "./LeadForm";
+import LeadForm from "@/components/portal/LeadForm";
+import PortalHeader from "@/components/portal/PortalHeader";
+import PortalFooter from "@/components/portal/PortalFooter";
 import { optimizePhoto, youtubeEmbedUrl } from "@/lib/publicProperty";
 
 interface Property {
@@ -123,51 +125,14 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
   );
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "'Josefin Sans', sans-serif", color: "#1c1917" }}>
+    <div className="min-h-screen bg-[#FBF8F3]" style={{ fontFamily: "'Josefin Sans', sans-serif", color: "#1E1A15" }}>
 
-      {/* ─── Top utility bar ─── */}
-      <div className="hidden md:block bg-stone-900 text-stone-300 text-xs">
-        <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <a href={`tel:+${BROKER.phone}`} className="flex items-center gap-1.5 hover:text-white transition-colors">
-              <IconPhone /> {BROKER.phoneDisplay}
-            </a>
-            <a href={`mailto:${BROKER.email}`} className="flex items-center gap-1.5 hover:text-white transition-colors">
-              <IconMail /> {BROKER.email}
-            </a>
-            <a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-white transition-colors">
-              <IconInstagram /> @{BROKER.instagram}
-            </a>
-          </div>
-          <div className="flex items-center gap-1.5 text-stone-400">
-            <IconBadge /> Licencia <span className="text-white font-semibold tracking-wider">{BROKER.license}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Main navbar ─── */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <Link href="/catalogo" className="flex items-center gap-3 cursor-pointer">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/panamainmo-logo.png" alt="PanamaInmo — Real Estate & Legal Advisory" className="h-9 sm:h-11 w-auto" />
-          </Link>
-
-          <a href={`https://wa.me/${BROKER.phone}?text=${waText}`} target="_blank" rel="noopener noreferrer"
-            className="hidden sm:flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-5 py-2.5 rounded text-xs font-semibold uppercase tracking-[0.15em] transition-colors duration-200 cursor-pointer">
-            <IconWA /> WhatsApp
-          </a>
-          <a href={`https://wa.me/${BROKER.phone}?text=${waText}`} target="_blank" rel="noopener noreferrer"
-            className="sm:hidden flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded">
-            <IconWA />
-          </a>
-        </div>
-      </header>
+      <PortalHeader />
 
       {/* ─── Breadcrumb ─── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        <Link href="/catalogo" className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-500 hover:text-stone-900 transition-colors uppercase tracking-[0.15em]">
-          <IconArrow /> Volver al catálogo
+        <Link href="/catalogo/propiedades" className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6155] hover:text-[#1E1A15] transition-colors uppercase tracking-[0.15em]">
+          <IconArrow /> Volver a propiedades
         </Link>
       </div>
 
@@ -179,7 +144,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
 
           {/* Gallery */}
           {photos.length > 0 && (
-            <div className="bg-white rounded-xl overflow-hidden border border-stone-200">
+            <div className="bg-white rounded-2xl overflow-hidden border border-[#E9E0D0]">
               <PhotoGallery photos={photos} title={p.title} />
             </div>
           )}
@@ -187,31 +152,31 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Title + badges */}
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              {isVenta && <span className="bg-stone-900 text-white text-[10px] font-semibold px-3 py-1 rounded uppercase tracking-[0.2em]">En Venta</span>}
-              {isAlquiler && <span className="bg-[#0F766E] text-white text-[10px] font-semibold px-3 py-1 rounded uppercase tracking-[0.2em]">En Alquiler</span>}
-              <span className="text-[10px] text-stone-400 font-semibold uppercase tracking-[0.2em] border border-stone-200 px-3 py-1 rounded">
+              {isVenta && <span className="bg-[#1E1A15] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">En Venta</span>}
+              {isAlquiler && <span className="bg-[#8A6A3A] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">En Alquiler</span>}
+              <span className="text-[10px] text-[#9C9182] font-semibold uppercase tracking-[0.2em] border border-[#E4D9C6] px-3 py-1 rounded-full">
                 {typeLabel[p.propertyType] || "Propiedad"}
               </span>
-              <span className="text-[10px] text-stone-400 font-semibold uppercase tracking-[0.2em]">Ref. {refCode}</span>
+              <span className="text-[10px] text-[#9C9182] font-semibold uppercase tracking-[0.2em]">Ref. {refCode}</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-medium text-stone-900 leading-tight mb-3" style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.01em" }}>
+            <h1 className="text-3xl sm:text-4xl font-medium text-[#1E1A15] leading-tight mb-3" style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.01em" }}>
               {p.title}
             </h1>
 
             {fullAddress && (
-              <p className="flex items-start gap-2 text-stone-600 text-sm">
-                <span className="mt-0.5 text-stone-400"><IconPin /></span>
+              <p className="flex items-start gap-2 text-[#5C5347] text-sm">
+                <span className="mt-0.5 text-[#9C9182]"><IconPin /></span>
                 <span>{fullAddress}</span>
               </p>
             )}
-            {p.referencePoint && <p className="text-stone-400 text-xs mt-1 ml-6">{p.referencePoint}</p>}
+            {p.referencePoint && <p className="text-[#9C9182] text-xs mt-1 ml-6">{p.referencePoint}</p>}
           </div>
 
           {/* Specs grid */}
           {(p.area || p.landArea || p.bedrooms || p.bathrooms || p.parkingSpots || p.floors || p.yearBuilt) && (
-            <div className="bg-stone-50 rounded-xl border border-stone-200 p-6">
-              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.3em] mb-5">Características</p>
+            <div className="bg-[#F3ECDF] rounded-2xl border border-[#E9E0D0] p-6">
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-5">Características</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                 {p.area != null && <SpecItem value={p.area} unit="m² área" />}
                 {p.landArea != null && <SpecItem value={p.landArea} unit="m² terreno" />}
@@ -227,19 +192,19 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Description */}
           {p.description && (
             <div>
-              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.3em] mb-4">Descripción</p>
-              <p className="text-sm text-stone-700 whitespace-pre-wrap leading-relaxed">{p.description}</p>
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Descripción</p>
+              <p className="text-sm text-[#4A4238] whitespace-pre-wrap leading-relaxed">{p.description}</p>
             </div>
           )}
 
           {/* Amenities */}
           {activeAmenities.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.3em] mb-4">Amenidades</p>
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Amenidades</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {activeAmenities.map(([, label]) => (
-                  <div key={label} className="flex items-center gap-2 text-sm text-stone-700 py-2 border-b border-stone-100">
-                    <span className="text-[#0F766E]"><IconCheck /></span>
+                  <div key={label} className="flex items-center gap-2 text-sm text-[#4A4238] py-2 border-b border-[#EFE6D6]">
+                    <span className="text-[#8A6A3A]"><IconCheck /></span>
                     {label}
                   </div>
                 ))}
@@ -250,11 +215,11 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Extra features */}
           {features.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.3em] mb-4">Más características</p>
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Más características</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
                 {features.map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-sm text-stone-700 py-2 border-b border-stone-100">
-                    <span className="text-[#0F766E]"><IconCheck /></span>
+                  <div key={f} className="flex items-center gap-2 text-sm text-[#4A4238] py-2 border-b border-[#EFE6D6]">
+                    <span className="text-[#8A6A3A]"><IconCheck /></span>
                     {f}
                   </div>
                 ))}
@@ -265,8 +230,8 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Video */}
           {videoEmbed && (
             <div>
-              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.3em] mb-4">Video</p>
-              <div className="aspect-video rounded-xl overflow-hidden border border-stone-200 bg-stone-100">
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Video</p>
+              <div className="aspect-video rounded-2xl overflow-hidden border border-[#E9E0D0] bg-[#EDE3D2]">
                 <iframe src={videoEmbed} title={`Video ${p.title}`} className="w-full h-full" loading="lazy"
                   allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
               </div>
@@ -276,12 +241,12 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Map */}
           {(p.sector || p.city || p.address) && (
             <div>
-              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.3em] mb-4">Ubicación</p>
-              <div className="h-72 rounded-xl overflow-hidden border border-stone-200 bg-stone-100">
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Ubicación</p>
+              <div className="h-72 rounded-2xl overflow-hidden border border-[#E9E0D0] bg-[#EDE3D2]">
                 <iframe src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`}
                   title="Mapa" className="w-full h-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
               </div>
-              <p className="text-[11px] text-stone-400 mt-2">Ubicación aproximada.</p>
+              <p className="text-[11px] text-[#9C9182] mt-2">Ubicación aproximada.</p>
             </div>
           )}
 
@@ -299,30 +264,30 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           <div className="space-y-4">
 
             {/* Prices card */}
-            <div className="bg-white border border-stone-200 rounded-xl p-6">
-              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.3em] mb-4">Precio</p>
+            <div className="bg-white border border-[#E9E0D0] rounded-2xl p-6">
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Precio</p>
               <div className="space-y-3">
                 {p.salePrice != null && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">Venta</p>
-                    <p className="text-3xl font-semibold text-stone-900" style={{ fontFamily: "'Cinzel', serif" }}>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">Venta</p>
+                    <p className="text-3xl font-semibold text-[#1E1A15]" style={{ fontFamily: "'Cinzel', serif" }}>
                       {formatCurrency(p.salePrice, p.currency)}
                     </p>
                   </div>
                 )}
                 {p.rentPrice != null && (
-                  <div className={p.salePrice != null ? "pt-3 border-t border-stone-100" : ""}>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">Alquiler</p>
-                    <p className="text-3xl font-semibold text-[#0F766E]" style={{ fontFamily: "'Cinzel', serif" }}>
-                      {formatCurrency(p.rentPrice, p.currency)}<span className="text-base text-stone-500 font-normal">/mes</span>
+                  <div className={p.salePrice != null ? "pt-3 border-t border-[#EFE6D6]" : ""}>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">Alquiler</p>
+                    <p className="text-3xl font-semibold text-[#8A6A3A]" style={{ fontFamily: "'Cinzel', serif" }}>
+                      {formatCurrency(p.rentPrice, p.currency)}<span className="text-base text-[#6B6155] font-normal">/mes</span>
                     </p>
                   </div>
                 )}
                 {p.maintenanceFee != null && (
-                  <div className="pt-3 border-t border-stone-100">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-0.5">Mantenimiento</p>
-                    <p className="text-base font-semibold text-stone-700">
-                      {formatCurrency(p.maintenanceFee, p.currency)}<span className="text-xs text-stone-500 font-normal">/mes</span>
+                  <div className="pt-3 border-t border-[#EFE6D6]">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">Mantenimiento</p>
+                    <p className="text-base font-semibold text-[#4A4238]">
+                      {formatCurrency(p.maintenanceFee, p.currency)}<span className="text-xs text-[#6B6155] font-normal">/mes</span>
                     </p>
                   </div>
                 )}
@@ -332,94 +297,54 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
             <LeadForm propertyId={p.id} waHref={`https://wa.me/${BROKER.phone}?text=${waText}`} />
 
             {/* Contact CTA */}
-            <div className="bg-stone-900 text-white rounded-xl p-6">
+            <div className="bg-[#1E1A15] text-white rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/brand/pi-isotipo-blanco.png" alt="PI" className="h-10 w-auto" />
                 <div>
                   <p className="text-sm font-medium tracking-[0.15em]" style={{ fontFamily: "'Cinzel', serif" }}>PANAMAINMO</p>
-                  <p className="text-[10px] text-stone-400 uppercase tracking-[0.2em]">Real Estate &amp; Legal Advisory</p>
+                  <p className="text-[10px] text-[#9C9182] uppercase tracking-[0.2em]">Real Estate &amp; Legal Advisory</p>
                 </div>
               </div>
-              <p className="text-stone-300 text-sm leading-relaxed mb-5">
+              <p className="text-[#CFC4B2] text-sm leading-relaxed mb-5">
                 ¿Te interesa esta propiedad? Estamos disponibles para responder tus preguntas o coordinar una visita.
               </p>
               <a href={`https://wa.me/${BROKER.phone}?text=${waText}`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold w-full py-3 rounded text-xs uppercase tracking-[0.15em] transition-colors duration-200 cursor-pointer mb-2">
+                className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-semibold w-full py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors duration-200 cursor-pointer mb-2">
                 <IconWA /> WhatsApp
               </a>
               <a href={`mailto:${BROKER.email}?subject=${encodeURIComponent(`Consulta: ${p.title}`)}&body=${encodeURIComponent(`Hola PanamaInmo,\n\nMe interesa la propiedad "${p.title}" — https://panamainmo.com/p/${p.id}\n\nGracias.`)}`}
-                className="flex items-center justify-center gap-2 bg-transparent border border-stone-700 hover:border-white text-white font-semibold w-full py-3 rounded text-xs uppercase tracking-[0.15em] transition-colors duration-200 cursor-pointer">
+                className="flex items-center justify-center gap-2 bg-transparent border border-white/25 hover:border-[#D9BE8F] text-white font-semibold w-full py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors duration-200 cursor-pointer">
                 <IconMail /> Email
               </a>
-              <div className="border-t border-stone-700 pt-4 mt-5 space-y-2 text-xs">
-                <a href={`tel:+${BROKER.phone}`} className="flex items-center gap-2 text-stone-300 hover:text-white transition-colors"><IconPhone />{BROKER.phoneDisplay}</a>
-                <a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-stone-300 hover:text-white transition-colors"><IconInstagram />@{BROKER.instagram}</a>
-                <p className="flex items-center gap-2 text-stone-400"><IconBadge />Licencia {BROKER.license}</p>
+              <div className="border-t border-white/15 pt-4 mt-5 space-y-2 text-xs">
+                <a href={`tel:+${BROKER.phone}`} className="flex items-center gap-2 text-[#CFC4B2] hover:text-white transition-colors"><IconPhone />{BROKER.phoneDisplay}</a>
+                <a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#CFC4B2] hover:text-white transition-colors"><IconInstagram />@{BROKER.instagram}</a>
+                <p className="flex items-center gap-2 text-[#9C9182]"><IconBadge />Licencia {BROKER.license}</p>
               </div>
             </div>
           </div>
         </aside>
       </main>
 
-      {/* ─── Footer ─── */}
-      <footer className="bg-stone-900 text-stone-400 pt-14 pb-6 px-4 sm:px-6 mt-10">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
-          <div className="lg:col-span-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/panamainmo-logo-blanco.png" alt="PanamaInmo" className="h-10 w-auto mb-5" />
-            <p className="text-sm leading-relaxed text-stone-400 max-w-md mb-4">
-              Real Estate & Legal Advisory en Panamá. Compra, venta, alquiler y asesoría legal inmobiliaria con transparencia y respaldo profesional.
-            </p>
-            <p className="text-xs text-stone-500">
-              <span className="uppercase tracking-[0.15em]">Licencia</span> <span className="text-white font-semibold ml-1">{BROKER.license}</span>
-            </p>
-          </div>
-
-          <div>
-            <p className="text-white text-xs font-semibold uppercase tracking-[0.2em] mb-4">Contacto</p>
-            <ul className="space-y-3 text-sm">
-              <li><a href={`tel:+${BROKER.phone}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconPhone />{BROKER.phoneDisplay}</a></li>
-              <li><a href={`mailto:${BROKER.email}`} className="flex items-center gap-2 hover:text-white transition-colors break-all"><IconMail /><span className="break-all">{BROKER.email}</span></a></li>
-              <li><a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors"><IconInstagram />@{BROKER.instagram}</a></li>
-              <li><a href={`https://wa.me/${BROKER.phone}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors"><IconWA />WhatsApp</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="text-white text-xs font-semibold uppercase tracking-[0.2em] mb-4">Explorar</p>
-            <ul className="space-y-3 text-sm">
-              <li><Link href="/catalogo" className="hover:text-white transition-colors">Todas las propiedades</Link></li>
-              <li><Link href="/catalogo" className="hover:text-white transition-colors">En venta</Link></li>
-              <li><Link href="/catalogo" className="hover:text-white transition-colors">En alquiler</Link></li>
-              <li><Link href="/catalogo" className="hover:text-white transition-colors">Apartamentos</Link></li>
-              <li><Link href="/catalogo" className="hover:text-white transition-colors">Casas</Link></li>
-            </ul>
-          </div>
-        </div>
-
-        {publisher && (
-          <div className="max-w-7xl mx-auto pt-6 border-t border-stone-800 flex items-center gap-3">
+      {publisher && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-10  flex items-center gap-3">
             {publisher.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={publisher.photoUrl} alt={publisher.fullName} className="w-9 h-9 rounded-full object-cover border border-stone-700" />
+              <img src={publisher.photoUrl} alt={publisher.fullName} className="w-9 h-9 rounded-full object-cover border border-[#E4D9C6]" />
             ) : (
-              <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${publisher.color || "from-stone-600 to-stone-700"} flex items-center justify-center text-white text-xs font-semibold`}>
+              <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${publisher.color || "from-[#5C5347] to-[#4A4238]"} flex items-center justify-center text-white text-xs font-semibold`}>
                 {publisher.initials || publisher.fullName.charAt(0)}
               </div>
             )}
             <div>
-              <p className="text-[10px] text-stone-500 uppercase tracking-[0.2em]">Publicado por</p>
-              <p className="text-sm text-stone-300 font-medium">{publisher.fullName}</p>
+              <p className="text-[10px] text-[#8A6A3A] uppercase tracking-[0.2em]">Publicado por</p>
+              <p className="text-sm text-[#1E1A15] font-medium">{publisher.fullName}</p>
             </div>
           </div>
         )}
 
-        <div className="max-w-7xl mx-auto pt-6 mt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-stone-500">
-          <p>© {new Date().getFullYear()} PanamaInmo. Todos los derechos reservados.</p>
-          <p className="tracking-[0.2em] uppercase">Panamá · Lic. {BROKER.license}</p>
-        </div>
-      </footer>
+      <PortalFooter />
     </div>
   );
 }
@@ -427,8 +352,8 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
 function SpecItem({ value, unit }: { value: number; unit: string }) {
   return (
     <div>
-      <p className="text-2xl font-semibold text-stone-900" style={{ fontFamily: "'Cinzel', serif" }}>{value}</p>
-      <p className="text-[11px] text-stone-500 uppercase tracking-[0.15em] mt-0.5">{unit}</p>
+      <p className="text-2xl font-semibold text-[#1E1A15]" style={{ fontFamily: "'Cinzel', serif" }}>{value}</p>
+      <p className="text-[11px] text-[#6B6155] uppercase tracking-[0.15em] mt-0.5">{unit}</p>
     </div>
   );
 }

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 
-export default function LeadForm({ propertyId, waHref }: { propertyId: string; waHref: string }) {
+export default function LeadForm({ propertyId, waHref, title = "Solicitar información", cta = "Enviar solicitud" }: {
+  propertyId?: string; waHref: string; title?: string; cta?: string;
+}) {
   const [form, setForm] = useState({ name: "", phone: "", email: "", message: "", website: "" });
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState("");
@@ -20,7 +22,7 @@ export default function LeadForm({ propertyId, waHref }: { propertyId: string; w
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, propertyId }),
+        body: JSON.stringify({ ...form, propertyId: propertyId || "" }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Error");
@@ -32,22 +34,22 @@ export default function LeadForm({ propertyId, waHref }: { propertyId: string; w
 
   if (state === "done") {
     return (
-      <div className="bg-white border border-stone-200 rounded-xl p-6 text-center">
-        <p className="text-lg font-medium text-stone-900 mb-2" style={{ fontFamily: "'Cinzel', serif" }}>¡Gracias!</p>
-        <p className="text-sm text-stone-600 mb-4">Recibimos tu solicitud. Te contactaremos muy pronto.</p>
+      <div className="bg-white border border-[#E9E0D0] rounded-2xl p-6 text-center">
+        <p className="text-lg font-medium text-[#1E1A15] mb-2" style={{ fontFamily: "'Cinzel', serif" }}>¡Gracias!</p>
+        <p className="text-sm text-[#6B6155] mb-4">Recibimos tu solicitud. Te contactaremos muy pronto.</p>
         <a href={waHref} target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-center justify-center bg-green-500 hover:bg-green-600 text-white font-semibold w-full py-3 rounded text-xs uppercase tracking-[0.15em] transition-colors">
+          className="inline-flex items-center justify-center bg-[#25D366] hover:bg-[#1EBE5A] text-white font-semibold w-full py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors">
           Escribir ahora por WhatsApp
         </a>
       </div>
     );
   }
 
-  const input = "w-full border border-stone-300 rounded px-3 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-stone-900";
+  const input = "w-full bg-[#FBF8F3] border border-[#E4D9C6] rounded-lg px-3.5 py-2.5 text-sm text-[#1E1A15] placeholder:text-[#9C9182] focus:outline-none focus:border-[#B8945F] focus:bg-white transition-colors";
 
   return (
-    <form onSubmit={submit} className="bg-white border border-stone-200 rounded-xl p-6 space-y-3">
-      <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.3em] mb-1">Solicitar información</p>
+    <form onSubmit={submit} className="relative bg-white border border-[#E9E0D0] rounded-2xl p-6 space-y-3 shadow-[0_10px_30px_-18px_rgba(30,26,21,0.25)]">
+      <p className="text-[11px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-1">{title}</p>
       <input className={input} placeholder="Nombre completo *" value={form.name} onChange={set("name")} maxLength={100} autoComplete="name" />
       <input className={input} placeholder="Teléfono / WhatsApp *" value={form.phone} onChange={set("phone")} maxLength={30} type="tel" autoComplete="tel" />
       <input className={input} placeholder="Email" value={form.email} onChange={set("email")} maxLength={150} type="email" autoComplete="email" />
@@ -57,10 +59,10 @@ export default function LeadForm({ propertyId, waHref }: { propertyId: string; w
         className="absolute -left-[9999px] w-px h-px opacity-0" aria-hidden="true" />
       {state === "error" && <p className="text-xs text-red-600">{error}</p>}
       <button type="submit" disabled={state === "sending"}
-        className="w-full bg-stone-900 hover:bg-stone-800 text-white font-semibold py-3 rounded text-xs uppercase tracking-[0.15em] transition-colors disabled:opacity-60 cursor-pointer">
-        {state === "sending" ? "Enviando..." : "Enviar solicitud"}
+        className="w-full bg-[#1E1A15] hover:bg-[#B8945F] text-white font-semibold py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors disabled:opacity-60 cursor-pointer">
+        {state === "sending" ? "Enviando..." : cta}
       </button>
-      <p className="text-[11px] text-stone-400 leading-snug">Te contactaremos por WhatsApp o email. Tus datos no se comparten con terceros.</p>
+      <p className="text-[11px] text-[#9C9182] leading-snug">Te contactaremos por WhatsApp o email. Tus datos no se comparten con terceros.</p>
     </form>
   );
 }

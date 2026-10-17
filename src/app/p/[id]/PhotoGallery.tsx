@@ -33,32 +33,30 @@ export default function PhotoGallery({ photos, title }: { photos: string[]; titl
   return (
     <>
       {/* Grid preview */}
-      <div
-        className={`relative cursor-pointer ${photos.length === 1 ? "" : "grid grid-cols-2 grid-rows-2"} max-h-72 sm:max-h-96 overflow-hidden`}
-        onClick={() => openAt(0)}
-      >
+      <div className={`relative cursor-pointer h-72 sm:h-[460px] overflow-hidden ${photos.length === 1 ? "" : "grid grid-cols-4 grid-rows-2 gap-1"}`}>
         {photos.length === 1 ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photos[0]} alt={title} className="w-full h-72 sm:h-96 object-cover" />
+          <img src={photos[0]} alt={title} onClick={() => openAt(0)} className="w-full h-full object-cover" />
         ) : (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={photos[0]} alt={`${title} 1`} className="row-span-2 w-full h-full object-cover" />
-            {photos[1] && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photos[1]} alt={`${title} 2`} className="w-full h-full object-cover" />
-            )}
-            {photos[2] && (
-              <div className="relative w-full h-full">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={photos[2]} alt={`${title} 3`} className="w-full h-full object-cover" />
-                {photos.length > 3 && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <span className="text-white font-bold text-xl">+{photos.length - 3}</span>
-                  </div>
-                )}
-              </div>
-            )}
+            <img src={photos[0]} alt={`${title} 1`} onClick={() => openAt(0)} className="col-span-2 row-span-2 w-full h-full object-cover hover:opacity-90 transition-opacity" />
+            {photos.slice(1, 5).map((src, k, thumbs) => {
+              // Thumbnails stretch so the grid never leaves holes.
+              const span = thumbs.length === 1 ? "col-span-2 row-span-2" : thumbs.length === 2 || (thumbs.length === 3 && k === 2) ? "col-span-2" : "";
+              const isLast = k === thumbs.length - 1 && photos.length > 5;
+              return (
+                <div key={src + k} className={`relative w-full h-full ${span}`} onClick={() => openAt(k + 1)}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt={`${title} ${k + 2}`} loading="lazy" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
+                  {isLast && (
+                    <div className="absolute inset-0 bg-[#1E1A15]/55 flex items-center justify-center">
+                      <span className="text-white font-semibold text-xl">+{photos.length - 5}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </>
         )}
         {/* "Ver todas" hint */}
