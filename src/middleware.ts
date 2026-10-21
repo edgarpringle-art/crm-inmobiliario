@@ -6,7 +6,7 @@ import { verifySession, COOKIE_SESSION } from "@/lib/auth";
 const PUBLIC_PREFIXES = ["/login", "/p/", "/catalogo", "/ver/", "/api/auth/", "/api/catalogo", "/api/leads", "/api/propuestas/public", "/api/propuestas/respond"];
 
 // Public site pages served at clean URLs on panamainmo.com (files live in /catalogo/*)
-const PORTAL_PAGES = ["/propiedades", "/servicios", "/nosotros", "/contacto"];
+const PORTAL_PAGES = ["/propiedades", "/buscar", "/servicios", "/nosotros", "/contacto"];
 
 // Routes blocked for "agent" role (only broker + admin can access)
 const ADMIN_PREFIXES = ["/contabilidad", "/api/gastos"];

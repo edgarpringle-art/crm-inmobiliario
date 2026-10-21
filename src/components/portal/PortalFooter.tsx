@@ -26,6 +26,7 @@ export default function PortalFooter({ portal = false }: { portal?: boolean }) {
             <li><Link href={h("/propiedades?op=ALQUILER")} className="hover:text-white transition-colors">En alquiler</Link></li>
             <li><Link href={h("/propiedades?type=APARTAMENTO")} className="hover:text-white transition-colors">Apartamentos</Link></li>
             <li><Link href={h("/propiedades?type=CASA")} className="hover:text-white transition-colors">Casas</Link></li>
+            <li><Link href={h("/buscar")} className="hover:text-white transition-colors">Buscador MLS</Link></li>
           </ul>
         </div>
 

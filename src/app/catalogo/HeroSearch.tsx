@@ -25,6 +25,7 @@ export default function HeroSearch({ portal = false }: { portal?: boolean }) {
   const field = "w-full appearance-none bg-[#FBF8F3] border border-[#E4D9C6] text-[#1E1A15] text-sm rounded-lg px-3.5 py-3 focus:outline-none focus:border-[#B8945F] transition-colors";
 
   return (
+    <>
     <form onSubmit={(e) => { e.preventDefault(); go(); }}
       className="bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-2.5 sm:p-3 max-w-3xl mx-auto text-left">
       <div className="flex gap-1 mb-2.5 p-1 bg-[#F3ECDF] rounded-full">
@@ -65,5 +66,10 @@ export default function HeroSearch({ portal = false }: { portal?: boolean }) {
         </button>
       </div>
     </form>
+    <a href={portalHref("/buscar", portal)}
+      className="inline-flex items-center gap-2 mt-5 text-xs sm:text-sm text-white/85 hover:text-white border-b border-[#D9BE8F]/70 pb-0.5">
+      ¿Buscas más opciones? Explora todo el inventario MLS · +1,200 propiedades →
+    </a>
+    </>
   );
 }

@@ -9,6 +9,9 @@ export const BROKER = {
   license: "PN5016",
 };
 
+// Official MLS ACOBIR (Xposure) search portal branded with our agent id.
+export const MLS_PORTAL_URL = "https://propiedades.mlsacobir.com/panama-provincia/userId_701390";
+
 export const waLink = (text?: string) =>
   `https://wa.me/${BROKER.phone}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
 
@@ -20,6 +23,7 @@ export const SANS = { fontFamily: "'Josefin Sans', sans-serif" } as const;
 export const NAV = [
   { href: "/", label: "Inicio" },
   { href: "/propiedades", label: "Propiedades" },
+  { href: "/buscar", label: "Buscador MLS" },
   { href: "/servicios", label: "Servicios" },
   { href: "/nosotros", label: "Nosotros" },
   { href: "/contacto", label: "Contacto" },
