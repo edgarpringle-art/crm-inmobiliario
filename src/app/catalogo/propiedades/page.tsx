@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { isPortalRequest } from "@/components/portal/portalHost";
 import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
 import { getAvailableProperties } from "@/components/portal/data";
-import { SANS, SERIF } from "@/components/portal/brand";
+import { SANS, SERIF, portalHref } from "@/components/portal/brand";
 import Listing from "./Listing";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +18,12 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) 
 
 export default async function PropiedadesPage({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
+  const portal = await isPortalRequest();
   const properties = await getAvailableProperties();
 
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#1E1A15]" style={SANS}>
-      <PortalHeader />
+      <PortalHeader portal={portal} />
       <section className="relative bg-[#1E1A15] overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(184,148,95,0.35),transparent_60%)]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
@@ -32,9 +34,10 @@ export default async function PropiedadesPage({ searchParams }: { searchParams: 
       </section>
       <Listing
         properties={properties}
+        basePath={portalHref("/propiedades", portal)}
         initial={{ op: one(sp.op), type: one(sp.type), zone: one(sp.zone), q: one(sp.q), beds: one(sp.beds) }}
       />
-      <PortalFooter />
+      <PortalFooter portal={portal} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { isPortalRequest } from "@/components/portal/portalHost";
 import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
 import PageHero from "@/components/portal/PageHero";
@@ -11,7 +12,8 @@ export const metadata: Metadata = {
   description: "Escríbenos para comprar, vender o alquilar tu propiedad en Panamá.",
 };
 
-export default function ContactoPage() {
+export default async function ContactoPage() {
+  const portal = await isPortalRequest();
   const items = [
     { icon: IconWA, label: "WhatsApp", value: BROKER.phoneDisplay, href: waLink("Hola PanamaInmo") },
     { icon: IconPhone, label: "Teléfono", value: BROKER.phoneDisplay, href: `tel:+${BROKER.phone}` },
@@ -21,7 +23,7 @@ export default function ContactoPage() {
 
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#1E1A15]" style={SANS}>
-      <PortalHeader />
+      <PortalHeader portal={portal} />
       <PageHero eyebrow="Contacto" title="Hablemos de tu próxima propiedad"
         subtitle="Déjanos tus datos y te respondemos a la brevedad, o escríbenos directo por WhatsApp."
         image="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2000&q=75" />
@@ -47,7 +49,7 @@ export default function ContactoPage() {
           </div>
         </div>
       </section>
-      <PortalFooter />
+      <PortalFooter portal={portal} />
     </div>
   );
 }

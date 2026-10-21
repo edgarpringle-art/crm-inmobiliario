@@ -4,23 +4,18 @@ import PortalFooter from "@/components/portal/PortalFooter";
 import PropertyCard from "@/components/portal/PropertyCard";
 import SectionTitle from "@/components/portal/SectionTitle";
 import { getAvailableProperties } from "@/components/portal/data";
-import { BROKER, CATEGORIES, SANS, SERIF, waLink } from "@/components/portal/brand";
-import { IconArrow, IconChat, IconGlobe, IconKey, IconScale, IconShield, IconTag, IconWA } from "@/components/portal/icons";
+import { BROKER, CATEGORIES, SANS, SERIF, portalHref, waLink } from "@/components/portal/brand";
+import { IconArrow, IconChat, IconKey, IconScale, IconShield, IconWA } from "@/components/portal/icons";
 import { optimizePhoto } from "@/lib/publicProperty";
 import HeroSearch from "./HeroSearch";
+import ServicesSection from "./ServicesSection";
+import { isPortalRequest } from "@/components/portal/portalHost";
 
 export const dynamic = "force-dynamic";
 
 const HERO_IMG = "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=2400&q=80";
 const WHY_IMG = "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1400&q=80";
 const CTA_IMG = "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=2000&q=80";
-
-const SERVICES = [
-  { icon: IconKey, title: "Compra", text: "Te ayudamos a encontrar y negociar la propiedad ideal para vivir o invertir." },
-  { icon: IconTag, title: "Venta y alquiler", text: "Promocionamos tu propiedad y te acompañamos hasta el cierre." },
-  { icon: IconScale, title: "Asesoría legal", text: "Revisión de contratos, debida diligencia y acompañamiento notarial." },
-  { icon: IconGlobe, title: "Inversión en Panamá", text: "Orientación para extranjeros que quieren invertir o mudarse a Panamá." },
-];
 
 // Bento grid: first card 2x2, the rest stretch so the grid never leaves holes.
 function bentoSpan(i: number, n: number): string {
@@ -32,6 +27,8 @@ function bentoSpan(i: number, n: number): string {
 }
 
 export default async function CatalogoHome() {
+  const portal = await isPortalRequest();
+  const h = (path: string) => portalHref(path, portal);
   const properties = await getAvailableProperties();
   const featured = properties.slice(0, 6);
 
@@ -47,7 +44,7 @@ export default async function CatalogoHome() {
 
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#1E1A15]" style={SANS}>
-      <PortalHeader />
+      <PortalHeader portal={portal} />
 
       {/* ─── Hero ─── */}
       <section className="relative overflow-hidden">
@@ -67,7 +64,7 @@ export default async function CatalogoHome() {
           <p className="text-white/80 text-sm sm:text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
             Compra, venta y alquiler de propiedades con asesoría legal integrada en cada paso.
           </p>
-          <HeroSearch />
+          <HeroSearch portal={portal} />
         </div>
 
         {/* Trust strip */}
@@ -96,7 +93,7 @@ export default async function CatalogoHome() {
             <SectionTitle eyebrow="Categorías" title="Explora por tipo" subtitle="Encuentra el espacio que va con tu estilo de vida." />
             <div className="mt-10 grid grid-cols-2 md:grid-cols-4 auto-rows-[170px] sm:auto-rows-[210px] gap-3 sm:gap-4">
               {categories.map((c, i) => (
-                <Link key={c.type} href={`/catalogo/propiedades?type=${c.type}`}
+                <Link key={c.type} href={h(`/propiedades?type=${c.type}`)}
                   className={`group relative overflow-hidden rounded-2xl ${bentoSpan(i, categories.length)}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={c.img} alt={c.label} loading="lazy"
@@ -124,7 +121,7 @@ export default async function CatalogoHome() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-10">
             <SectionTitle align="left" eyebrow="Recién publicadas" title="Propiedades destacadas" />
-            <Link href="/catalogo/propiedades"
+            <Link href={h("/propiedades")}
               className="inline-flex items-center gap-2 self-start sm:self-auto text-xs font-semibold uppercase tracking-[0.2em] text-[#1E1A15] border-b border-[#B8945F] pb-1 hover:text-[#8A6A3A]">
               Ver todas <IconArrow />
             </Link>
@@ -163,7 +160,7 @@ export default async function CatalogoHome() {
                 </div>
               ))}
             </div>
-            <Link href="/catalogo/nosotros"
+            <Link href={h("/nosotros")}
               className="inline-flex items-center gap-2 mt-10 text-xs font-semibold uppercase tracking-[0.2em] text-[#D9BE8F] border-b border-[#B8945F] pb-1 hover:text-white">
               Conoce al equipo <IconArrow />
             </Link>
@@ -179,21 +176,7 @@ export default async function CatalogoHome() {
       </section>
 
       {/* ─── Services teaser ─── */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto">
-          <SectionTitle eyebrow="Servicios" title="¿Cómo te ayudamos?" subtitle="Un solo equipo para tu operación inmobiliaria y legal." />
-          <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {SERVICES.map(({ icon: I, title, text }) => (
-              <Link key={title} href="/catalogo/servicios"
-                className="group bg-white rounded-2xl p-7 border border-[#E9E0D0] hover:border-[#B8945F] hover:-translate-y-1 hover:shadow-[0_20px_40px_-24px_rgba(30,26,21,0.4)] transition-all">
-                <span className="w-14 h-14 rounded-full bg-[#F3ECDF] text-[#8A6A3A] flex items-center justify-center mb-5 group-hover:bg-[#B8945F] group-hover:text-white transition-colors"><I /></span>
-                <p className="text-lg font-medium mb-2" style={SERIF}>{title}</p>
-                <p className="text-sm text-[#6B6155] leading-relaxed">{text}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ServicesSection href={h("/servicios")} />
 
       {/* ─── CTA ─── */}
       <section className="relative overflow-hidden mx-4 sm:mx-6 mb-16 sm:mb-20 rounded-3xl">
@@ -207,7 +190,7 @@ export default async function CatalogoHome() {
               className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-semibold px-7 py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-colors">
               <IconWA /> Escríbenos
             </a>
-            <Link href="/catalogo/contacto"
+            <Link href={h("/contacto")}
               className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/40 hover:bg-white hover:text-[#1E1A15] text-white font-semibold px-7 py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-colors">
               Formulario de contacto
             </Link>
@@ -215,7 +198,7 @@ export default async function CatalogoHome() {
         </div>
       </section>
 
-      <PortalFooter />
+      <PortalFooter portal={portal} />
     </div>
   );
 }

@@ -3,14 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BROKER, NAV, waLink } from "./brand";
+import { BROKER, NAV, portalHref, waLink } from "./brand";
 import { IconBadge, IconClose, IconInstagram, IconMail, IconMenu, IconPhone, IconWA } from "./icons";
 
-export default function PortalHeader() {
+export default function PortalHeader({ portal = false }: { portal?: boolean }) {
   const pathname = usePathname() || "";
   const [open, setOpen] = useState(false);
-  const isActive = (href: string) =>
-    href === "/catalogo" ? pathname === "/catalogo" : pathname.startsWith(href) || (href === "/catalogo/propiedades" && pathname.startsWith("/p/"));
+  const h = (path: string) => portalHref(path, portal);
+  const isActive = (path: string) => {
+    const href = h(path);
+    if (path === "/") return pathname === href;
+    return pathname.startsWith(href) || (path === "/propiedades" && pathname.startsWith("/p/"));
+  };
 
   return (
     <>
@@ -30,14 +34,14 @@ export default function PortalHeader() {
 
       <header className="sticky top-0 z-40 bg-[#FBF8F3]/95 backdrop-blur-md border-b border-[#E4D9C6]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
-          <Link href="/catalogo" className="shrink-0" aria-label="PanamaInmo — Inicio">
+          <Link href={h("/")} className="shrink-0" aria-label="PanamaInmo — Inicio">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/panamainmo-logo.png" alt="PanamaInmo — Real Estate & Legal Advisory" className="h-9 sm:h-11 w-auto" />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-5 xl:gap-8">
             {NAV.map((n) => (
-              <Link key={n.href} href={n.href}
+              <Link key={n.href} href={h(n.href)}
                 className={`relative text-[12px] xl:text-[13px] font-medium uppercase tracking-[0.16em] transition-colors py-1 ${
                   isActive(n.href) ? "text-[#1E1A15]" : "text-[#6B6155] hover:text-[#1E1A15]"
                 }`}>
@@ -62,7 +66,7 @@ export default function PortalHeader() {
           <div className="lg:hidden border-t border-[#E4D9C6] bg-[#FBF8F3]">
             <div className="px-6 py-5 flex flex-col gap-4">
               {NAV.map((n) => (
-                <Link key={n.href} href={n.href} onClick={() => setOpen(false)}
+                <Link key={n.href} href={h(n.href)} onClick={() => setOpen(false)}
                   className={`text-sm font-medium uppercase tracking-[0.18em] ${isActive(n.href) ? "text-[#8A6A3A]" : "text-[#1E1A15]"}`}>
                   {n.label}
                 </Link>

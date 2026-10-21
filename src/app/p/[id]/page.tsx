@@ -5,9 +5,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PhotoGallery from "./PhotoGallery";
 import LeadForm from "@/components/portal/LeadForm";
+import { isPortalRequest } from "@/components/portal/portalHost";
 import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
 import { optimizePhoto, youtubeEmbedUrl } from "@/lib/publicProperty";
+import { portalHref } from "@/components/portal/brand";
 
 interface Property {
   id: string; title: string; propertyType: string; operationType: string; status: string;
@@ -93,6 +95,7 @@ const IconCheck = () => <svg className="w-4 h-4" fill="none" stroke="currentColo
 
 export default async function PublicPropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const portal = await isPortalRequest();
   const rows = await query<Property>("SELECT * FROM Property WHERE id = ?", [id]).catch(() => []);
   if (!rows.length) notFound();
   const p = rows[0];
@@ -127,11 +130,11 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
   return (
     <div className="min-h-screen bg-[#FBF8F3]" style={{ fontFamily: "'Josefin Sans', sans-serif", color: "#1E1A15" }}>
 
-      <PortalHeader />
+      <PortalHeader portal={portal} />
 
       {/* ─── Breadcrumb ─── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        <Link href="/catalogo/propiedades" className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6155] hover:text-[#1E1A15] transition-colors uppercase tracking-[0.15em]">
+        <Link href={portalHref("/propiedades", portal)} className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6155] hover:text-[#1E1A15] transition-colors uppercase tracking-[0.15em]">
           <IconArrow /> Volver a propiedades
         </Link>
       </div>
@@ -344,7 +347,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           </div>
         )}
 
-      <PortalFooter />
+      <PortalFooter portal={portal} />
     </div>
   );
 }

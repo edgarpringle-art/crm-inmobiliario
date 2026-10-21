@@ -14,7 +14,7 @@ const PRICE_STEPS = [
   { v: "150000", l: "Hasta $150,000" }, { v: "300000", l: "Hasta $300,000" }, { v: "500000", l: "Hasta $500,000" }, { v: "1000000", l: "Hasta $1,000,000" },
 ];
 
-export default function Listing({ properties, initial }: { properties: PortalProperty[]; initial: Filters }) {
+export default function Listing({ properties, initial, basePath }: { properties: PortalProperty[]; initial: Filters; basePath: string }) {
   const [f, setF] = useState<Filters>({ ...initial, maxPrice: "" });
   const set = (k: keyof Filters, v: string) => {
     setF((prev) => {
@@ -22,7 +22,7 @@ export default function Listing({ properties, initial }: { properties: PortalPro
       // Keep the URL shareable without a server round trip.
       const params = new URLSearchParams();
       (["op", "type", "zone", "q", "beds"] as const).forEach((key) => next[key] && params.set(key, next[key]));
-      window.history.replaceState(null, "", `/catalogo/propiedades${params.toString() ? `?${params}` : ""}`);
+      window.history.replaceState(null, "", `${basePath}${params.toString() ? `?${params}` : ""}`);
       return next;
     });
   };
@@ -103,7 +103,7 @@ export default function Listing({ properties, initial }: { properties: PortalPro
             <span className="text-[#1E1A15] font-semibold">{filtered.length}</span> propiedad{filtered.length !== 1 ? "es" : ""}
           </p>
           {hasFilters && (
-            <button onClick={() => { setF({ op: "", type: "", zone: "", q: "", beds: "", maxPrice: "" }); window.history.replaceState(null, "", "/catalogo/propiedades"); }}
+            <button onClick={() => { setF({ op: "", type: "", zone: "", q: "", beds: "", maxPrice: "" }); window.history.replaceState(null, "", basePath); }}
               className="text-xs text-[#8A6A3A] hover:text-[#1E1A15] underline underline-offset-4">
               Limpiar filtros
             </button>

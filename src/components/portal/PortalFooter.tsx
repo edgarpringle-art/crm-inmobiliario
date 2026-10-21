@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { BROKER, waLink } from "./brand";
+import { BROKER, portalHref, waLink } from "./brand";
 import { IconInstagram, IconMail, IconPhone, IconWA } from "./icons";
 
-export default function PortalFooter() {
+export default function PortalFooter({ portal = false }: { portal?: boolean }) {
+  const h = (path: string) => portalHref(path, portal);
   return (
     <footer className="bg-[#1E1A15] text-[#B5AA98] pt-16 pb-6 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
@@ -20,20 +21,20 @@ export default function PortalFooter() {
         <div>
           <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">Explorar</p>
           <ul className="space-y-3 text-sm">
-            <li><Link href="/catalogo/propiedades" className="hover:text-white transition-colors">Todas las propiedades</Link></li>
-            <li><Link href="/catalogo/propiedades?op=VENTA" className="hover:text-white transition-colors">En venta</Link></li>
-            <li><Link href="/catalogo/propiedades?op=ALQUILER" className="hover:text-white transition-colors">En alquiler</Link></li>
-            <li><Link href="/catalogo/propiedades?type=APARTAMENTO" className="hover:text-white transition-colors">Apartamentos</Link></li>
-            <li><Link href="/catalogo/propiedades?type=CASA" className="hover:text-white transition-colors">Casas</Link></li>
+            <li><Link href={h("/propiedades")} className="hover:text-white transition-colors">Todas las propiedades</Link></li>
+            <li><Link href={h("/propiedades?op=VENTA")} className="hover:text-white transition-colors">En venta</Link></li>
+            <li><Link href={h("/propiedades?op=ALQUILER")} className="hover:text-white transition-colors">En alquiler</Link></li>
+            <li><Link href={h("/propiedades?type=APARTAMENTO")} className="hover:text-white transition-colors">Apartamentos</Link></li>
+            <li><Link href={h("/propiedades?type=CASA")} className="hover:text-white transition-colors">Casas</Link></li>
           </ul>
         </div>
 
         <div>
           <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">Empresa</p>
           <ul className="space-y-3 text-sm">
-            <li><Link href="/catalogo/servicios" className="hover:text-white transition-colors">Servicios</Link></li>
-            <li><Link href="/catalogo/nosotros" className="hover:text-white transition-colors">Nosotros</Link></li>
-            <li><Link href="/catalogo/contacto" className="hover:text-white transition-colors">Contacto</Link></li>
+            <li><Link href={h("/servicios")} className="hover:text-white transition-colors">Servicios</Link></li>
+            <li><Link href={h("/nosotros")} className="hover:text-white transition-colors">Nosotros</Link></li>
+            <li><Link href={h("/contacto")} className="hover:text-white transition-colors">Contacto</Link></li>
           </ul>
         </div>
 

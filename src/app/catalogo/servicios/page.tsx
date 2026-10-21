@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { isPortalRequest } from "@/components/portal/portalHost";
 import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
 import PageHero from "@/components/portal/PageHero";
 import SectionTitle from "@/components/portal/SectionTitle";
-import { SANS, SERIF, waLink } from "@/components/portal/brand";
-import { IconCheck, IconGlobe, IconKey, IconScale, IconTag, IconWA } from "@/components/portal/icons";
+import { SANS, SERIF, portalHref, waLink } from "@/components/portal/brand";
+import { IconBuilding, IconCheck, IconGlobe, IconKey, IconScale, IconTag, IconWA } from "@/components/portal/icons";
 
 export const metadata: Metadata = {
   title: "Servicios · PanamaInmo",
@@ -32,6 +33,12 @@ const SERVICES = [
     img: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=75",
   },
   {
+    icon: IconBuilding, title: "Administración de propiedades",
+    text: "Nos encargamos de tu inmueble alquilado para que recibas tu renta sin preocupaciones.",
+    items: ["Cobro y control de alquileres", "Mantenimiento y reparaciones", "Inspecciones periódicas", "Relación con el inquilino y el PH"],
+    img: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=75",
+  },
+  {
     icon: IconGlobe, title: "Inversión en Panamá",
     text: "Orientación para extranjeros y locales que quieren invertir en bienes raíces o mudarse a Panamá.",
     items: ["Zonas con mejor potencial", "Proyectos en preventa", "Opciones para renta", "Coordinación con bancos y abogados"],
@@ -46,10 +53,12 @@ const STEPS = [
   { n: "04", t: "Cerramos", d: "Te acompañamos en la firma y la entrega." },
 ];
 
-export default function ServiciosPage() {
+export default async function ServiciosPage() {
+  const portal = await isPortalRequest();
+  const h = (path: string) => portalHref(path, portal);
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#1E1A15]" style={SANS}>
-      <PortalHeader />
+      <PortalHeader portal={portal} />
       <PageHero eyebrow="Servicios" title="Todo lo que necesitas para tu operación inmobiliaria"
         subtitle="Un solo equipo para comprar, vender o alquilar, con asesoría legal integrada."
         image="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2000&q=75" />
@@ -103,13 +112,13 @@ export default function ServiciosPage() {
             className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-semibold px-7 py-3.5 rounded-full text-xs uppercase tracking-[0.15em]">
             <IconWA /> WhatsApp
           </a>
-          <Link href="/catalogo/contacto"
+          <Link href={h("/contacto")}
             className="inline-flex items-center gap-2 border border-[#1E1A15] hover:bg-[#1E1A15] hover:text-white font-semibold px-7 py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-colors">
             Contacto
           </Link>
         </div>
       </section>
-      <PortalFooter />
+      <PortalFooter portal={portal} />
     </div>
   );
 }

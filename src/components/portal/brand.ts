@@ -18,12 +18,19 @@ export const SERIF = { fontFamily: "'Cinzel', serif" } as const;
 export const SANS = { fontFamily: "'Josefin Sans', sans-serif" } as const;
 
 export const NAV = [
-  { href: "/catalogo", label: "Inicio" },
-  { href: "/catalogo/propiedades", label: "Propiedades" },
-  { href: "/catalogo/servicios", label: "Servicios" },
-  { href: "/catalogo/nosotros", label: "Nosotros" },
-  { href: "/catalogo/contacto", label: "Contacto" },
+  { href: "/", label: "Inicio" },
+  { href: "/propiedades", label: "Propiedades" },
+  { href: "/servicios", label: "Servicios" },
+  { href: "/nosotros", label: "Nosotros" },
+  { href: "/contacto", label: "Contacto" },
 ];
+
+/** Clean path ("/servicios") → real href. On panamainmo.com it stays clean; on the CRM domain it lives under /catalogo. */
+export function portalHref(path: string, portal: boolean): string {
+  if (portal) return path;
+  const [p, qs] = path.split("?");
+  return `${p === "/" ? "/catalogo" : `/catalogo${p}`}${qs ? `?${qs}` : ""}`;
+}
 
 export const typeLabel: Record<string, string> = {
   APARTAMENTO: "Apartamento", PENTHOUSE: "Penthouse", CASA: "Casa", VILLA: "Villa",

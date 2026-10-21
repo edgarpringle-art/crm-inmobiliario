@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { isPortalRequest } from "@/components/portal/portalHost";
 import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
 import PageHero from "@/components/portal/PageHero";
@@ -24,13 +25,14 @@ const VALUES = [
 ];
 
 export default async function NosotrosPage() {
+  const portal = await isPortalRequest();
   const team = await query<TeamMember>(
     "SELECT fullName, photoUrl, initials, phone FROM Agent WHERE active = 1 ORDER BY createdAt ASC"
   ).catch(() => []);
 
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#1E1A15]" style={SANS}>
-      <PortalHeader />
+      <PortalHeader portal={portal} />
       <PageHero eyebrow="Nosotros" title="Real Estate & Legal Advisory en Panamá"
         subtitle="Unimos el servicio inmobiliario con la asesoría legal para que comprar, vender o alquilar sea simple y seguro."
         image="https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=2000&q=75" />
@@ -104,7 +106,7 @@ export default async function NosotrosPage() {
           </div>
         </section>
       )}
-      <PortalFooter />
+      <PortalFooter portal={portal} />
     </div>
   );
 }

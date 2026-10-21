@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ZONAS } from "@/lib/zonas";
-import { PROPERTY_TYPE_OPTIONS } from "@/components/portal/brand";
+import { PROPERTY_TYPE_OPTIONS, portalHref } from "@/components/portal/brand";
 import { IconChevron, IconSearch } from "@/components/portal/icons";
 
-export default function HeroSearch() {
+export default function HeroSearch({ portal = false }: { portal?: boolean }) {
   const router = useRouter();
   const [op, setOp] = useState("");
   const [q, setQ] = useState("");
@@ -19,7 +19,7 @@ export default function HeroSearch() {
     if (q.trim()) params.set("q", q.trim());
     if (zone) params.set("zone", zone);
     if (type) params.set("type", type);
-    router.push(`/catalogo/propiedades${params.toString() ? `?${params}` : ""}`);
+    router.push(`${portalHref("/propiedades", portal)}${params.toString() ? `?${params}` : ""}`);
   }
 
   const field = "w-full appearance-none bg-[#FBF8F3] border border-[#E4D9C6] text-[#1E1A15] text-sm rounded-lg px-3.5 py-3 focus:outline-none focus:border-[#B8945F] transition-colors";
