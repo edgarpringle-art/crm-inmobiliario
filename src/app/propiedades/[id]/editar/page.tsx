@@ -29,6 +29,17 @@ const amenities = [
   { field: "hasGarden", label: "Jardín" },
 ];
 
+// Districts of a province; if the saved province isn't in the list (old spelling), offer all districts.
+function districtsFor(province: string): string[] {
+  const d = getDistricts(province);
+  return d.length ? d : getDistricts();
+}
+
+// Keeps a saved value selectable even when it isn't in the predefined list.
+function withSaved(options: string[], saved: string): string[] {
+  return saved && !options.includes(saved) ? [saved, ...options] : options;
+}
+
 export default function EditarPropiedadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const router = useRouter();
@@ -82,6 +93,9 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
       if (data.features) { try { setFeaturesText((JSON.parse(data.features) as string[]).join(String.fromCharCode(10))); } catch { /* ignore */ } }
       setVideoUrl(data.videoUrl || "");
       setProvinces(getProvinces());
+      // Fill the cascades for the saved location (they used to load only after changing the province).
+      if (data.state) setDistricts(districtsFor(data.state));
+      if (data.city) setSectors(getSectors(data.city));
       setLoading(false);
     });
   }, [id]);
@@ -90,7 +104,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
     setForm((prev) => ({ ...prev, [field]: value }));
 
     if (field === "state" && typeof value === "string") {
-      setDistricts(getDistricts(value));
+      setDistricts(districtsFor(value));
       setSectors([]);
       setForm((prev) => ({ ...prev, city: "" }));
     }
@@ -156,13 +170,13 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
             <FormField label="Provincia">
               <select className={inputClass} value={form.state} onChange={(e) => update("state", e.target.value)}>
                 <option value="">Seleccionar...</option>
-                {provinces.map((p) => <option key={p} value={p}>{p}</option>)}
+                {withSaved(provinces, form.state).map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </FormField>
             <FormField label="Distrito">
               <select className={inputClass} value={form.city} onChange={(e) => update("city", e.target.value)} disabled={!form.state}>
                 <option value="">Seleccionar...</option>
-                {districts.map((d) => <option key={d} value={d}>{d}</option>)}
+                {withSaved(districts, form.city).map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </FormField>
             <FormField label="Corregimiento / Sector">
