@@ -18,12 +18,12 @@ export const SERIF = { fontFamily: "'Cinzel', serif" } as const;
 export const SANS = { fontFamily: "'Josefin Sans', sans-serif" } as const;
 
 export const NAV = [
-  { href: "/", label: "Inicio" },
-  { href: "/propiedades", label: "Propiedades" },
-  { href: "/servicios", label: "Servicios" },
-  { href: "/nosotros", label: "Nosotros" },
-  { href: "/contacto", label: "Contacto" },
-];
+  { href: "/", key: "home" },
+  { href: "/propiedades", key: "properties" },
+  { href: "/servicios", key: "services" },
+  { href: "/nosotros", key: "about" },
+  { href: "/contacto", key: "contact" },
+] as const;
 
 /** Clean path ("/servicios") → real href. On panamainmo.com it stays clean; on the CRM domain it lives under /catalogo. */
 export function portalHref(path: string, portal: boolean): string {
@@ -73,24 +73,39 @@ export interface PortalProperty {
   source?: "own" | "mls";
 }
 
+/** Location fields of a listing; `n` = how many listings share it (for compact summaries). */
+export type PlaceItem = Pick<PortalProperty, "state" | "city" | "sector" | "corregimiento"> & { n?: number };
+
+/** Unique locations with counts — a compact stand-in for the full listing array. */
+export function summarizePlaces(props: PortalProperty[]): PlaceItem[] {
+  const m = new Map<string, PlaceItem & { n: number }>();
+  for (const p of props) {
+    const k = [p.state, p.city, p.corregimiento, p.sector].map(placeKey).join("|");
+    const e = m.get(k) || { state: p.state, city: p.city, corregimiento: p.corregimiento ?? null, sector: p.sector, n: 0 };
+    e.n++;
+    m.set(k, e);
+  }
+  return [...m.values()];
+}
+
 export interface ZoneGroup { area: string; count: number; barrios: { name: string; count: number }[] }
 
 /**
  * Zones as the MLS organizes them — Área (corregimiento) → Urb/Barrio — built from the listings
  * themselves, so every option has results. Own listings without a corregimiento group by district.
  */
-export function buildZoneGroups(props: PortalProperty[]): ZoneGroup[] {
+export function buildZoneGroups(props: PlaceItem[]): ZoneGroup[] {
   const key = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
   const areas = new Map<string, { area: string; count: number; barrios: Map<string, { name: string; count: number }> }>();
   for (const p of props) {
     const area = (p.corregimiento || p.city || p.sector || "").trim();
     if (!area) continue;
     const a = areas.get(key(area)) || { area, count: 0, barrios: new Map() };
-    a.count++;
+    a.count += p.n ?? 1;
     const barrio = (p.sector || "").trim();
     if (barrio && key(barrio) !== key(area)) {
       const b = a.barrios.get(key(barrio)) || { name: barrio, count: 0 };
-      b.count++;
+      b.count += p.n ?? 1;
       a.barrios.set(key(barrio), b);
     }
     areas.set(key(area), a);
@@ -100,6 +115,40 @@ export function buildZoneGroups(props: PortalProperty[]): ZoneGroup[] {
   return [...areas.values()]
     .map((a) => ({ area: a.area, count: a.count, barrios: [...a.barrios.values()].sort(byName) }))
     .sort(byName);
+}
+
+export interface PlaceNode { name: string; count: number }
+export interface ProvinceNode extends PlaceNode { districts: PlaceNode[] }
+
+export const placeKey = (s: string | null | undefined) =>
+  (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+
+/** Provincia → Distrito from the listings themselves (only places that have properties), with counts. */
+export function buildPlaceTree(props: PlaceItem[]): ProvinceNode[] {
+  const provs = new Map<string, { name: string; count: number; districts: Map<string, PlaceNode> }>();
+  for (const p of props) {
+    if (!p.state) continue;
+    const pk = placeKey(p.state);
+    const prov = provs.get(pk) || { name: p.state, count: 0, districts: new Map() };
+    prov.count += p.n ?? 1;
+    if (p.city) {
+      const dk = placeKey(p.city);
+      const d = prov.districts.get(dk) || { name: p.city, count: 0 };
+      d.count += p.n ?? 1;
+      prov.districts.set(dk, d);
+    }
+    provs.set(pk, prov);
+  }
+  return [...provs.values()]
+    .map((p) => ({ name: p.name, count: p.count, districts: [...p.districts.values()].sort((a, b) => a.name.localeCompare(b.name, "es")) }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "es"));
+}
+
+/** Listings in a province / district (accent-insensitive). Empty filter = all. */
+export function inPlace(p: PlaceItem, prov: string, dist: string): boolean {
+  if (prov && placeKey(p.state) !== placeKey(prov)) return false;
+  if (dist && placeKey(p.city) !== placeKey(dist)) return false;
+  return true;
 }
 
 export function parsePhotos(raw: unknown): string[] {

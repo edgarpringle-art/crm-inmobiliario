@@ -124,7 +124,7 @@ export function parseXposure(html: string, url: string, code: string): MlsRecord
     parkingSpots: num(get("número de estacionamientos")),
     yearBuilt: num(get(/año de constru/)),
     sector: titleCase(get("barrio")) || titleCase(get("área")),
-    city: get("barrio") && get("área") && titleCase(get("barrio")) !== titleCase(get("área")) ? titleCase(get("área")) : null,
+    city: titleCase(get("área")), // district; display code avoids repeating it when it equals the barrio
     state: get("departamento", "provincia"),
     corregimiento: null,
     description, features, photos,

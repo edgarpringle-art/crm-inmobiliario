@@ -3,28 +3,30 @@
 import { useEffect, useMemo, useState } from "react";
 import ZoneSelect from "@/components/portal/ZoneSelect";
 import PropertyCard from "@/components/portal/PropertyCard";
-import { PROPERTY_TYPE_OPTIONS, SERIF, buildZoneGroups, waLink, type PortalProperty } from "@/components/portal/brand";
+import { PROPERTY_TYPE_OPTIONS, SERIF, buildPlaceTree, buildZoneGroups, inPlace, placeKey, waLink, type PortalProperty } from "@/components/portal/brand";
 import { IconChevron, IconHouse, IconSearch, IconWA } from "@/components/portal/icons";
+import { tr, type Lang } from "@/components/portal/i18n";
 
 // lowercase + no accents, so "Panama" finds "Panamá"
 const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-interface Filters { op: string; type: string; zone: string; q: string; beds: string; maxPrice?: string }
+interface Filters { op: string; type: string; prov: string; dist: string; zone: string; q: string; beds: string; maxPrice?: string }
 
-const PRICE_STEPS = [
-  { v: "", l: "Sin límite" },
-  { v: "1000", l: "Hasta $1,000" }, { v: "2000", l: "Hasta $2,000" }, { v: "3500", l: "Hasta $3,500" },
-  { v: "150000", l: "Hasta $150,000" }, { v: "300000", l: "Hasta $300,000" }, { v: "500000", l: "Hasta $500,000" }, { v: "1000000", l: "Hasta $1,000,000" },
-];
+const PRICE_STEPS = ["1000", "2000", "3500", "150000", "300000", "500000", "1000000"];
 
-export default function Listing({ properties, initial, basePath }: { properties: PortalProperty[]; initial: Filters; basePath: string }) {
+export default function Listing({ properties, initial, basePath, lang = "es" }: { properties: PortalProperty[]; initial: Filters; basePath: string; lang?: Lang }) {
+  const t = tr(lang);
   const [f, setF] = useState<Filters>({ ...initial, maxPrice: "" });
-  const set = (k: keyof Filters, v: string) => setF((prev) => ({ ...prev, [k]: v }));
+  // Province → district → zone cascade: changing a level clears the ones below it.
+  const set = (k: keyof Filters, v: string) => setF((prev) => ({
+    ...prev, [k]: v,
+    ...(k === "prov" ? { dist: "", zone: "" } : k === "dist" ? { zone: "" } : {}),
+  }));
 
   // Keep the URL shareable without a server round trip.
   useEffect(() => {
     const params = new URLSearchParams();
-    (["op", "type", "zone", "q", "beds"] as const).forEach((key) => f[key] && params.set(key, f[key]));
+    (["op", "type", "prov", "dist", "zone", "q", "beds"] as const).forEach((key) => f[key] && params.set(key, f[key]));
     const url = `${basePath}${params.toString() ? `?${params}` : ""}`;
     if (url !== window.location.pathname + window.location.search) window.history.replaceState(null, "", url);
   }, [f, basePath]);
@@ -36,6 +38,7 @@ export default function Listing({ properties, initial, basePath }: { properties:
     return properties.filter((p) => {
       if (f.op && !(p.operationType === f.op || p.operationType === "VENTA_Y_ALQUILER")) return false;
       if (f.type && p.propertyType !== f.type) return false;
+      if (!inPlace(p, f.prov, f.dist)) return false;
       if (zone && ![p.sector, p.corregimiento, p.city, p.state, p.title].some((s) => s && fold(s).includes(zone))) return false;
       if (f.beds && (p.bedrooms ?? 0) < Number(f.beds)) return false;
       if (max != null) {
@@ -52,9 +55,15 @@ export default function Listing({ properties, initial, basePath }: { properties:
   useEffect(() => setShown(PAGE), [f]);
   const visible = filtered.slice(0, shown);
 
-  const zoneGroups = useMemo(() => buildZoneGroups(properties), [properties]);
+  const places = useMemo(() => buildPlaceTree(properties), [properties]);
+  const districts = places.find((p) => placeKey(p.name) === placeKey(f.prov))?.districts
+    ?? places.flatMap((p) => p.districts);
+  const zoneGroups = useMemo(
+    () => buildZoneGroups(properties.filter((p) => inPlace(p, f.prov, f.dist))),
+    [properties, f.prov, f.dist]
+  );
 
-  const hasFilters = f.op || f.type || f.zone || f.q || f.beds || f.maxPrice;
+  const hasFilters = f.op || f.type || f.prov || f.dist || f.zone || f.q || f.beds || f.maxPrice;
   const field = "w-full appearance-none bg-white border border-[#E4D9C6] text-[#1E1A15] text-sm rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#B8945F] transition-colors";
 
   return (
@@ -63,7 +72,7 @@ export default function Listing({ properties, initial, basePath }: { properties:
         {/* Filters */}
         <div className="-mt-6 relative z-10 bg-white rounded-2xl border border-[#E9E0D0] shadow-[0_20px_40px_-28px_rgba(30,26,21,0.45)] p-4 sm:p-5">
           <div className="flex flex-wrap gap-2 mb-4">
-            {[{ v: "", l: "Todo" }, { v: "VENTA", l: "Comprar" }, { v: "ALQUILER", l: "Alquilar" }].map((o) => (
+            {[{ v: "", l: t.search.all }, { v: "VENTA", l: t.search.buy }, { v: "ALQUILER", l: t.search.rent }].map((o) => (
               <button key={o.v} onClick={() => set("op", o.v)}
                 className={`px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] rounded-full border transition-all ${
                   f.op === o.v ? "bg-[#1E1A15] text-white border-[#1E1A15]" : "border-[#E4D9C6] text-[#6B6155] hover:border-[#B8945F] hover:text-[#1E1A15]"
@@ -72,45 +81,61 @@ export default function Listing({ properties, initial, basePath }: { properties:
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5">
-            <div className="col-span-2 lg:col-span-1 relative">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <div className="col-span-2 relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9C9182] pointer-events-none"><IconSearch className="w-4 h-4" /></span>
-              <input value={f.q} onChange={(e) => set("q", e.target.value)} placeholder="Buscar..." className={`${field} pl-9`} />
+              <input value={f.q} onChange={(e) => set("q", e.target.value)} placeholder={t.listing.searchPh} className={`${field} pl-9`} />
             </div>
             <div className="relative">
               <select value={f.type} onChange={(e) => set("type", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
-                {PROPERTY_TYPE_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
-            </div>
-            <div className="relative">
-<ZoneSelect groups={zoneGroups} value={f.zone} onChange={(v) => set("zone", v)} className={`${field} pr-9 cursor-pointer`} />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
-            </div>
-            <div className="relative">
-              <select value={f.beds} onChange={(e) => set("beds", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
-                <option value="">Habitaciones</option>
-                {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}+ hab</option>)}
+                {PROPERTY_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.value ? t.types[o.value] : t.allTypes}</option>)}
               </select>
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
             </div>
             <div className="relative">
               <select value={f.maxPrice} onChange={(e) => set("maxPrice", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
-                {PRICE_STEPS.map((p) => <option key={p.v} value={p.v}>{p.l}</option>)}
+                <option value="">{t.listing.noLimit}</option>
+                {PRICE_STEPS.map((v) => <option key={v} value={v}>{t.listing.upTo(`$${Number(v).toLocaleString("en-US")}`)}</option>)}
               </select>
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
             </div>
+            <div className="relative">
+              <select value={f.prov} onChange={(e) => set("prov", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
+                <option value="">{t.search.allProvinces}</option>
+                {places.map((o) => <option key={o.name} value={o.name}>{o.name} ({o.count})</option>)}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
+            </div>
+            <div className="relative">
+              <select value={f.dist} onChange={(e) => set("dist", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
+                <option value="">{t.search.allDistricts}</option>
+                {districts.map((o) => <option key={o.name} value={o.name}>{o.name} ({o.count})</option>)}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
+            </div>
+            <div className="relative">
+<ZoneSelect lang={lang} groups={zoneGroups} value={f.zone} onChange={(v) => set("zone", v)} className={`${field} pr-9 cursor-pointer`} />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
+            </div>
+            <div className="relative">
+              <select value={f.beds} onChange={(e) => set("beds", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
+                <option value="">{t.listing.beds}</option>
+                {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{t.listing.bedsN(n)}</option>)}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
+            </div>
+
           </div>
         </div>
 
         <div className="flex items-center justify-between mt-8 mb-6">
           <p className="text-sm text-[#6B6155]">
-            <span className="text-[#1E1A15] font-semibold">{filtered.length}</span> propiedad{filtered.length !== 1 ? "es" : ""}
+            <span className="text-[#1E1A15] font-semibold">{filtered.length}</span> {t.listing.results(filtered.length)}
           </p>
           {hasFilters && (
-            <button onClick={() => { setF({ op: "", type: "", zone: "", q: "", beds: "", maxPrice: "" }); }}
+            <button onClick={() => { setF({ op: "", type: "", prov: "", dist: "", zone: "", q: "", beds: "", maxPrice: "" }); }}
               className="text-xs text-[#8A6A3A] hover:text-[#1E1A15] underline underline-offset-4">
-              Limpiar filtros
+              {t.listing.clear}
             </button>
           )}
         </div>
@@ -118,24 +143,24 @@ export default function Listing({ properties, initial, basePath }: { properties:
         {filtered.length === 0 ? (
           <div className="text-center py-16 rounded-2xl bg-[#F3ECDF] border border-[#E9E0D0]">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white flex items-center justify-center text-[#B8945F]"><IconHouse /></div>
-            <p className="text-lg mb-1" style={SERIF}>Sin resultados</p>
-            <p className="text-sm text-[#6B6155] mb-5">Cuéntanos qué buscas y te avisamos cuando tengamos opciones.</p>
-            <a href={waLink("Hola PanamaInmo, busco una propiedad en Panamá.")} target="_blank" rel="noopener noreferrer"
+            <p className="text-lg mb-1" style={SERIF}>{t.listing.emptyTitle}</p>
+            <p className="text-sm text-[#6B6155] mb-5">{t.listing.emptyText}</p>
+            <a href={waLink(t.listing.emptyWaMsg)} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-[#1E1A15] hover:bg-[#B8945F] text-white font-semibold px-6 py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors">
-              <IconWA /> Consultar disponibilidad
+              <IconWA /> {t.listing.emptyWa}
             </a>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {visible.map((p) => <PropertyCard key={p.id} p={p} />)}
+            {visible.map((p) => <PropertyCard key={p.id} p={p} lang={lang} />)}
           </div>
         )}
         {filtered.length > shown && (
           <div className="text-center mt-10">
-            <p className="text-xs text-[#6B6155] mb-3">Mostrando {shown} de {filtered.length}</p>
+            <p className="text-xs text-[#6B6155] mb-3">{t.listing.showing(shown, filtered.length)}</p>
             <button onClick={() => setShown((n) => n + PAGE)}
               className="inline-flex items-center gap-2 border border-[#1E1A15] hover:bg-[#1E1A15] hover:text-white text-[#1E1A15] font-semibold px-8 py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors">
-              Ver más propiedades
+              {t.listing.more}
             </button>
           </div>
         )}
