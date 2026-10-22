@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { isPortalRequest } from "@/components/portal/portalHost";
+import { getLang, isPortalRequest } from "@/components/portal/portalHost";
+import { tr } from "@/components/portal/i18n";
 import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
 import PageHero from "@/components/portal/PageHero";
@@ -10,20 +11,20 @@ import { query } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Nosotros · PanamaInmo",
-  description: "Conoce a PanamaInmo: Real Estate & Legal Advisory en Panamá.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = tr(await getLang()).about;
+  return { title: t.metaTitle, description: t.metaDesc };
+}
 
 interface TeamMember { fullName: string; photoUrl: string | null; initials: string | null; phone: string | null }
 
 // Public team, in display order. Photo and WhatsApp come from the matching CRM agent (by name), if any.
 const TEAM = [
-  { name: "Edgar Pringle", role: "Corredor de Bienes Raíces", detail: `Licencia ${BROKER.license}` },
-  { name: "Ana Lorena Chanis", role: "Abogada", detail: "Asesoría Legal Inmobiliaria" },
-  { name: "Félix Olivares", role: "Asesor Inmobiliario", detail: null },
-  { name: "Valentina Velásquez", role: "Atención al Cliente", detail: "Redes Sociales y Comunicación" },
-];
+  { name: "Edgar Pringle", roleKey: "broker" },
+  { name: "Ana Lorena Chanis", roleKey: "lawyer" },
+  { name: "Félix Olivares", roleKey: "agent" },
+  { name: "Valentina Velásquez", roleKey: "support" },
+] as const;
 
 const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 // "Edgar Pringle" matches "Edgar Enrique Pringle Vasquez": every word of the public name must appear.
@@ -32,54 +33,55 @@ const samePerson = (publicName: string, agentName: string) => {
   return norm(publicName).split(/\s+/).every((w) => words.includes(w));
 };
 
-const VALUES = [
-  { icon: IconShield, t: "Transparencia", d: "Información clara sobre precios, costos y documentos desde el primer día." },
-  { icon: IconScale, t: "Respaldo legal", d: "Cada operación pasa por una revisión legal antes de firmar." },
-  { icon: IconChat, t: "Cercanía", d: "Atención personal y directa, cuando la necesitas." },
-  { icon: IconKey, t: "Compromiso", d: "Te acompañamos hasta la entrega de llaves y después." },
-];
+const VALUE_ICONS = [IconShield, IconScale, IconChat, IconKey];
 
 export default async function NosotrosPage() {
   const portal = await isPortalRequest();
+  const lang = await getLang();
+  const t = tr(lang).about;
+  const values = t.values.map((v, i) => ({ ...v, icon: VALUE_ICONS[i] }));
   const agents = await query<TeamMember>(
     "SELECT fullName, photoUrl, initials, phone FROM Agent ORDER BY (photoUrl IS NULL OR photoUrl = ''), active DESC, createdAt ASC"
   ).catch(() => []);
-  const team = TEAM.map((t) => {
+  const team = TEAM.map((m) => {
     // Exact name first; otherwise the only agent sharing the first name (CRM spelling may differ: Velázquez/Velasquez…).
-    const first = norm(t.name).split(/\s+/)[0];
+    const first = norm(m.name).split(/\s+/)[0];
     const byFirst = agents.filter((x) => norm(x.fullName).split(/\s+/)[0] === first);
     const withPhoto = byFirst.filter((x) => x.photoUrl);
-    const a = agents.find((x) => samePerson(t.name, x.fullName))
+    const a = agents.find((x) => samePerson(m.name, x.fullName))
       || (byFirst.length === 1 ? byFirst[0] : withPhoto.length === 1 ? withPhoto[0] : undefined);
+    const r = t.roles[m.roleKey] as { role: string; detail?: string | ((lic: string) => string) };
     return {
-      ...t,
+      name: m.name,
+      role: r.role,
+      detail: typeof r.detail === "function" ? r.detail(BROKER.license) : r.detail || null,
       photoUrl: a?.photoUrl || null,
       phone: a?.phone || null,
-      initials: (t.name[0] + t.name.split(" ").pop()![0]).toUpperCase(),
+      initials: (m.name[0] + m.name.split(" ").pop()![0]).toUpperCase(),
     };
   });
 
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#1E1A15]" style={SANS}>
-      <PortalHeader portal={portal} />
-      <PageHero eyebrow="Nosotros" title="Real Estate & Legal Advisory en Panamá"
-        subtitle="Unimos el servicio inmobiliario con la asesoría legal para que comprar, vender o alquilar sea simple y seguro."
+      <PortalHeader portal={portal} lang={lang} />
+      <PageHero eyebrow={t.heroEyebrow} title={t.heroTitle}
+        subtitle={t.heroSub}
         image="https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=2000&q=75" />
 
       <section className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <SectionTitle align="left" eyebrow="Quiénes somos" title="Una inmobiliaria con respaldo legal" />
+            <SectionTitle align="left" eyebrow={t.whoEyebrow} title={t.whoTitle} />
             <div className="mt-6 space-y-4 text-[#4A4238] leading-relaxed">
-              <p>PanamaInmo nace para ofrecer una experiencia inmobiliaria completa: encontrar la propiedad correcta y cerrar la operación con seguridad jurídica.</p>
-              <p>Trabajamos con compradores, inquilinos, propietarios e inversionistas en Ciudad de Panamá y alrededores, con atención personalizada en cada etapa.</p>
+              <p>{t.p1}</p>
+              <p>{t.p2}</p>
             </div>
-            <p className="mt-6 text-sm text-[#6B6155]">Licencia <span className="font-semibold text-[#8A6A3A]">{BROKER.license}</span></p>
+            <p className="mt-6 text-sm text-[#6B6155]">{t.license} <span className="font-semibold text-[#8A6A3A]">{BROKER.license}</span></p>
           </div>
           <div className="relative">
             <div className="absolute -inset-3 rounded-3xl border border-[#B8945F]/40 translate-x-3 translate-y-3" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=75" alt="Propiedad"
+            <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=75" alt={t.imgAlt}
               className="relative rounded-3xl w-full h-80 sm:h-[420px] object-cover" />
             <div className="absolute -bottom-6 -left-4 sm:-left-8 bg-[#1E1A15] rounded-2xl p-5 shadow-xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -91,12 +93,12 @@ export default async function NosotrosPage() {
 
       <section className="py-16 sm:py-20 px-4 sm:px-6 bg-[#F3ECDF]">
         <div className="max-w-6xl mx-auto">
-          <SectionTitle eyebrow="Nuestros valores" title="Lo que nos define" />
+          <SectionTitle eyebrow={t.valuesEyebrow} title={t.valuesTitle} />
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {VALUES.map(({ icon: I, t, d }) => (
-              <div key={t} className="bg-white rounded-2xl p-7 border border-[#E9E0D0]">
+            {values.map(({ icon: I, t: title, d }) => (
+              <div key={title} className="bg-white rounded-2xl p-7 border border-[#E9E0D0]">
                 <span className="w-14 h-14 rounded-full bg-[#1E1A15] text-[#D9BE8F] flex items-center justify-center mb-5"><I /></span>
-                <p className="text-lg mb-2" style={SERIF}>{t}</p>
+                <p className="text-lg mb-2" style={SERIF}>{title}</p>
                 <p className="text-sm text-[#6B6155] leading-relaxed">{d}</p>
               </div>
             ))}
@@ -107,7 +109,7 @@ export default async function NosotrosPage() {
       {team.length > 0 && (
         <section className="py-16 sm:py-20 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
-            <SectionTitle eyebrow="El equipo" title="Personas reales, atención directa" />
+            <SectionTitle eyebrow={t.teamEyebrow} title={t.teamTitle} />
             <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-sm sm:max-w-none mx-auto">
               {team.map((m) => (
                 <div key={m.name} className="bg-white rounded-3xl border border-[#E9E0D0] overflow-hidden text-center">
@@ -136,7 +138,7 @@ export default async function NosotrosPage() {
           </div>
         </section>
       )}
-      <PortalFooter portal={portal} />
+      <PortalFooter portal={portal} lang={lang} />
     </div>
   );
 }

@@ -10,6 +10,8 @@ import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
 import { optimizePhoto, youtubeEmbedUrl } from "@/lib/publicProperty";
 import { portalHref } from "@/components/portal/brand";
+import { getLang } from "@/components/portal/portalHost";
+import { tr } from "@/components/portal/i18n";
 import { getPublicProperty } from "@/components/portal/data";
 
 interface Property {
@@ -39,21 +41,6 @@ interface PublisherAgent {
   color: string | null;
 }
 
-const amenityLabels: Record<string, string> = {
-  hasPool: "Piscina", hasGym: "Gimnasio", hasElevator: "Ascensor", hasSecurity: "Seguridad 24/7",
-  hasGenerator: "Planta Eléctrica", hasFurniture: "Amueblado", hasAppliances: "Línea Blanca",
-  hasAC: "Aires Acondicionados", hasBalcony: "Balcón", hasGarden: "Jardín",
-};
-
-const typeLabel: Record<string, string> = {
-  APARTAMENTO: "Apartamento", PENTHOUSE: "Penthouse", CASA: "Casa", VILLA: "Villa",
-  PROYECTO: "Proyecto", LOCAL: "Local Comercial", OFICINA: "Oficina", TERRENO: "Terreno", NAVE: "Nave Industrial", OTRO: "Propiedad",
-};
-
-const opLabel: Record<string, string> = {
-  VENTA: "En Venta", ALQUILER: "En Alquiler", VENTA_Y_ALQUILER: "Venta / Alquiler",
-};
-
 const BROKER = {
   phone: "50763183113",
   phoneDisplay: "+507 6318-3113",
@@ -65,15 +52,16 @@ const BROKER = {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
+  const t = tr(await getLang());
   const p = (await getPublicProperty(id)) as unknown as Property | null;
-  if (!p) return { title: "Propiedad no encontrada" };
+  if (!p) return { title: t.detail.notFound };
   const loc = [p.sector, p.city].filter(Boolean).join(", ");
-  const price = p.salePrice ? formatCurrency(p.salePrice, p.currency) : p.rentPrice ? `${formatCurrency(p.rentPrice, p.currency)}/mes` : "";
+  const price = p.salePrice ? formatCurrency(p.salePrice, p.currency) : p.rentPrice ? `${formatCurrency(p.rentPrice, p.currency)}${t.common.perMonth}` : "";
   let firstPhoto: string | undefined;
   if (p.photos) { try { const arr = JSON.parse(p.photos); firstPhoto = arr[0]; } catch { /* ignore */ } }
   return {
     title: `${p.title} — PanamaInmo`,
-    description: `${typeLabel[p.propertyType] || "Propiedad"} ${opLabel[p.operationType] || ""} · ${loc} · ${price}`,
+    description: `${t.types[p.propertyType] || t.common.property} · ${p.operationType === "ALQUILER" ? t.detail.forRent : p.operationType === "VENTA" ? t.detail.forSale : `${t.detail.forSale} / ${t.detail.forRent}`} · ${loc} · ${price}`,
     openGraph: {
       title: p.title,
       description: `${loc} · ${price}`,
@@ -98,6 +86,8 @@ const IconCheck = () => <svg className="w-4 h-4" fill="none" stroke="currentColo
 export default async function PublicPropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const portal = await isPortalRequest();
+  const lang = await getLang();
+  const t = tr(lang);
   const p = (await getPublicProperty(id)) as unknown as Property | null;
   if (!p) notFound();
 
@@ -111,7 +101,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
     if (ag.length) publisher = ag[0];
   }
 
-  const activeAmenities = Object.entries(amenityLabels).filter(([k]) => (p as unknown as Record<string, unknown>)[k]);
+  const activeAmenities = Object.entries(t.amenities).filter(([k]) => (p as unknown as Record<string, unknown>)[k]);
   // Barrio, corregimiento, distrito, provincia — without repeating a name (e.g. "Chame, Chame")
   const loc = [p.sector, p.mlsId ? null : p.corregimiento, p.city, p.state]
     .filter((x, i, a): x is string => !!x && a.findIndex((y) => y?.toLowerCase() === x.toLowerCase()) === i).join(", ");
@@ -126,19 +116,17 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
   const isVenta = p.operationType === "VENTA" || p.operationType === "VENTA_Y_ALQUILER";
   const isAlquiler = p.operationType === "ALQUILER" || p.operationType === "VENTA_Y_ALQUILER";
 
-  const waText = encodeURIComponent(
-    `Hola, me interesa la propiedad: ${p.title}${loc ? ` en ${loc}` : ""}\nhttps://panamainmo.com/p/${p.id}`
-  );
+  const waText = encodeURIComponent(t.common.waProperty(p.title, loc, `https://panamainmo.com/p/${p.id}`));
 
   return (
     <div className="min-h-screen bg-[#FBF8F3]" style={{ fontFamily: "'Josefin Sans', sans-serif", color: "#1E1A15" }}>
 
-      <PortalHeader portal={portal} />
+      <PortalHeader portal={portal} lang={lang} />
 
       {/* ─── Breadcrumb ─── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
         <Link href={portalHref("/propiedades", portal)} className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6155] hover:text-[#1E1A15] transition-colors uppercase tracking-[0.15em]">
-          <IconArrow /> Volver a propiedades
+          <IconArrow /> {t.detail.back}
         </Link>
       </div>
 
@@ -151,17 +139,17 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Gallery */}
           {photos.length > 0 && (
             <div className="bg-white rounded-2xl overflow-hidden border border-[#E9E0D0]">
-              <PhotoGallery photos={photos} title={p.title} />
+              <PhotoGallery photos={photos} title={p.title} countLabel={t.detail.photos(photos.length)} />
             </div>
           )}
 
           {/* Title + badges */}
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              {isVenta && <span className="bg-[#1E1A15] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">En Venta</span>}
-              {isAlquiler && <span className="bg-[#8A6A3A] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">En Alquiler</span>}
+              {isVenta && <span className="bg-[#1E1A15] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">{t.detail.forSale}</span>}
+              {isAlquiler && <span className="bg-[#8A6A3A] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">{t.detail.forRent}</span>}
               <span className="text-[10px] text-[#9C9182] font-semibold uppercase tracking-[0.2em] border border-[#E4D9C6] px-3 py-1 rounded-full">
-                {typeLabel[p.propertyType] || "Propiedad"}
+                {t.types[p.propertyType] || t.common.property}
               </span>
               <span className="text-[10px] text-[#9C9182] font-semibold uppercase tracking-[0.2em]">{refCode}</span>
             </div>
@@ -182,15 +170,15 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Specs grid */}
           {(p.area || p.landArea || p.bedrooms || p.bathrooms || p.parkingSpots || p.floors || p.yearBuilt) && (
             <div className="bg-[#F3ECDF] rounded-2xl border border-[#E9E0D0] p-6">
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-5">Características</p>
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-5">{t.detail.specs}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                {p.area != null && <SpecItem value={p.area} unit="m² área" />}
-                {p.landArea != null && <SpecItem value={p.landArea} unit="m² terreno" />}
-                {p.bedrooms != null && <SpecItem value={p.bedrooms} unit="habitaciones" />}
-                {p.bathrooms != null && <SpecItem value={p.bathrooms} unit="baños" />}
-                {p.parkingSpots != null && <SpecItem value={p.parkingSpots} unit="parqueos" />}
-                {p.floors != null && <SpecItem value={p.floors} unit="niveles" />}
-                {p.yearBuilt != null && <SpecItem value={p.yearBuilt} unit="año const." />}
+                {p.area != null && <SpecItem value={p.area} unit={t.detail.area} />}
+                {p.landArea != null && <SpecItem value={p.landArea} unit={t.detail.land} />}
+                {p.bedrooms != null && <SpecItem value={p.bedrooms} unit={t.detail.beds} />}
+                {p.bathrooms != null && <SpecItem value={p.bathrooms} unit={t.detail.baths} />}
+                {p.parkingSpots != null && <SpecItem value={p.parkingSpots} unit={t.detail.parking} />}
+                {p.floors != null && <SpecItem value={p.floors} unit={t.detail.levels} />}
+                {p.yearBuilt != null && <SpecItem value={p.yearBuilt} unit={t.detail.year} />}
               </div>
             </div>
           )}
@@ -198,7 +186,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Description */}
           {p.description && (
             <div>
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Descripción</p>
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.description}</p>
               <p className="text-sm text-[#4A4238] whitespace-pre-wrap leading-relaxed">{p.description}</p>
             </div>
           )}
@@ -206,7 +194,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Amenities */}
           {activeAmenities.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Amenidades</p>
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.amenities}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {activeAmenities.map(([, label]) => (
                   <div key={label} className="flex items-center gap-2 text-sm text-[#4A4238] py-2 border-b border-[#EFE6D6]">
@@ -221,7 +209,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Extra features */}
           {features.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Más características</p>
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.moreFeatures}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
                 {features.map((f) => (
                   <div key={f} className="flex items-center gap-2 text-sm text-[#4A4238] py-2 border-b border-[#EFE6D6]">
@@ -236,7 +224,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Video */}
           {videoEmbed && (
             <div>
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Video</p>
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.video}</p>
               <div className="aspect-video rounded-2xl overflow-hidden border border-[#E9E0D0] bg-[#EDE3D2]">
                 <iframe src={videoEmbed} title={`Video ${p.title}`} className="w-full h-full" loading="lazy"
                   allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
@@ -247,19 +235,19 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Map */}
           {(p.sector || p.city || p.address) && (
             <div>
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Ubicación</p>
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.location}</p>
               <div className="h-72 rounded-2xl overflow-hidden border border-[#E9E0D0] bg-[#EDE3D2]">
                 <iframe src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`}
                   title="Mapa" className="w-full h-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
               </div>
-              <p className="text-[11px] text-[#9C9182] mt-2">Ubicación aproximada.</p>
+              <p className="text-[11px] text-[#9C9182] mt-2">{t.detail.approx}</p>
             </div>
           )}
 
           {/* Notes */}
           {p.notes && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-              <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-[0.3em] mb-2">Detalles adicionales</p>
+              <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-[0.3em] mb-2">{t.detail.notes}</p>
               <p className="text-sm text-amber-900 whitespace-pre-wrap leading-relaxed">{p.notes}</p>
             </div>
           )}
@@ -271,11 +259,11 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
 
             {/* Prices card */}
             <div className="bg-white border border-[#E9E0D0] rounded-2xl p-6">
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">Precio</p>
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.price}</p>
               <div className="space-y-3">
                 {p.salePrice != null && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">Venta</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">{t.common.sale}</p>
                     <p className="text-3xl font-semibold text-[#1E1A15]" style={{ fontFamily: "'Cinzel', serif" }}>
                       {formatCurrency(p.salePrice, p.currency)}
                     </p>
@@ -283,24 +271,24 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
                 )}
                 {p.rentPrice != null && (
                   <div className={p.salePrice != null ? "pt-3 border-t border-[#EFE6D6]" : ""}>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">Alquiler</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">{t.common.rent}</p>
                     <p className="text-3xl font-semibold text-[#8A6A3A]" style={{ fontFamily: "'Cinzel', serif" }}>
-                      {formatCurrency(p.rentPrice, p.currency)}<span className="text-base text-[#6B6155] font-normal">/mes</span>
+                      {formatCurrency(p.rentPrice, p.currency)}<span className="text-base text-[#6B6155] font-normal">{t.common.perMonth}</span>
                     </p>
                   </div>
                 )}
                 {p.maintenanceFee != null && (
                   <div className="pt-3 border-t border-[#EFE6D6]">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">Mantenimiento</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">{t.detail.maintenance}</p>
                     <p className="text-base font-semibold text-[#4A4238]">
-                      {formatCurrency(p.maintenanceFee, p.currency)}<span className="text-xs text-[#6B6155] font-normal">/mes</span>
+                      {formatCurrency(p.maintenanceFee, p.currency)}<span className="text-xs text-[#6B6155] font-normal">{t.common.perMonth}</span>
                     </p>
                   </div>
                 )}
               </div>
             </div>
 
-            <LeadForm propertyId={p.id} waHref={`https://wa.me/${BROKER.phone}?text=${waText}`} />
+            <LeadForm lang={lang} propertyId={p.id} waHref={`https://wa.me/${BROKER.phone}?text=${waText}`} />
 
             {/* Contact CTA */}
             <div className="bg-[#1E1A15] text-white rounded-2xl p-6">
@@ -313,20 +301,20 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
                 </div>
               </div>
               <p className="text-[#CFC4B2] text-sm leading-relaxed mb-5">
-                ¿Te interesa esta propiedad? Estamos disponibles para responder tus preguntas o coordinar una visita.
+                {t.detail.interested}
               </p>
               <a href={`https://wa.me/${BROKER.phone}?text=${waText}`} target="_blank" rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-semibold w-full py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors duration-200 cursor-pointer mb-2">
                 <IconWA /> WhatsApp
               </a>
-              <a href={`mailto:${BROKER.email}?subject=${encodeURIComponent(`Consulta: ${p.title}`)}&body=${encodeURIComponent(`Hola PanamaInmo,\n\nMe interesa la propiedad "${p.title}" — https://panamainmo.com/p/${p.id}\n\nGracias.`)}`}
+              <a href={`mailto:${BROKER.email}?subject=${encodeURIComponent(t.detail.emailSubject(p.title))}&body=${encodeURIComponent(t.detail.emailBody(p.title, `https://panamainmo.com/p/${p.id}`))}`}
                 className="flex items-center justify-center gap-2 bg-transparent border border-white/25 hover:border-[#D9BE8F] text-white font-semibold w-full py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors duration-200 cursor-pointer">
                 <IconMail /> Email
               </a>
               <div className="border-t border-white/15 pt-4 mt-5 space-y-2 text-xs">
                 <a href={`tel:+${BROKER.phone}`} className="flex items-center gap-2 text-[#CFC4B2] hover:text-white transition-colors"><IconPhone />{BROKER.phoneDisplay}</a>
                 <a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#CFC4B2] hover:text-white transition-colors"><IconInstagram />@{BROKER.instagram}</a>
-                <p className="flex items-center gap-2 text-[#9C9182]"><IconBadge />Licencia {BROKER.license}</p>
+                <p className="flex items-center gap-2 text-[#9C9182]"><IconBadge />{t.detail.license} {BROKER.license}</p>
               </div>
             </div>
           </div>
@@ -344,13 +332,13 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
               </div>
             )}
             <div>
-              <p className="text-[10px] text-[#8A6A3A] uppercase tracking-[0.2em]">Publicado por</p>
+              <p className="text-[10px] text-[#8A6A3A] uppercase tracking-[0.2em]">{t.detail.publishedBy}</p>
               <p className="text-sm text-[#1E1A15] font-medium">{publisher.fullName}</p>
             </div>
           </div>
         )}
 
-      <PortalFooter portal={portal} />
+      <PortalFooter portal={portal} lang={lang} />
     </div>
   );
 }

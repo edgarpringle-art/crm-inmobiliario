@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { BROKER, portalHref, waLink } from "./brand";
 import { IconInstagram, IconMail, IconPhone, IconWA } from "./icons";
+import { tr, type Lang } from "./i18n";
 
-export default function PortalFooter({ portal = false }: { portal?: boolean }) {
+export default function PortalFooter({ portal = false, lang = "es" }: { portal?: boolean; lang?: Lang }) {
+  const t = tr(lang);
   const h = (path: string) => portalHref(path, portal);
   return (
     <footer className="bg-[#1E1A15] text-[#B5AA98] pt-16 pb-6 px-4 sm:px-6">
@@ -11,35 +13,35 @@ export default function PortalFooter({ portal = false }: { portal?: boolean }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/panamainmo-logo-blanco.png" alt="PanamaInmo" className="h-10 w-auto mb-5" />
           <p className="text-sm leading-relaxed max-w-md mb-4">
-            Real Estate & Legal Advisory en Panamá. Compra, venta, alquiler y asesoría legal inmobiliaria con transparencia y respaldo profesional.
+            {t.footer.tagline}
           </p>
           <p className="text-xs">
-            <span className="uppercase tracking-[0.15em]">Licencia</span> <span className="text-[#D9BE8F] font-semibold ml-1">{BROKER.license}</span>
+            <span className="uppercase tracking-[0.15em]">{t.footer.license}</span> <span className="text-[#D9BE8F] font-semibold ml-1">{BROKER.license}</span>
           </p>
         </div>
 
         <div>
-          <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">Explorar</p>
+          <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">{t.footer.explore}</p>
           <ul className="space-y-3 text-sm">
-            <li><Link href={h("/propiedades")} className="hover:text-white transition-colors">Todas las propiedades</Link></li>
-            <li><Link href={h("/propiedades?op=VENTA")} className="hover:text-white transition-colors">En venta</Link></li>
-            <li><Link href={h("/propiedades?op=ALQUILER")} className="hover:text-white transition-colors">En alquiler</Link></li>
-            <li><Link href={h("/propiedades?type=APARTAMENTO")} className="hover:text-white transition-colors">Apartamentos</Link></li>
-            <li><Link href={h("/propiedades?type=CASA")} className="hover:text-white transition-colors">Casas</Link></li>
+            <li><Link href={h("/propiedades")} className="hover:text-white transition-colors">{t.footer.all}</Link></li>
+            <li><Link href={h("/propiedades?op=VENTA")} className="hover:text-white transition-colors">{t.footer.sale}</Link></li>
+            <li><Link href={h("/propiedades?op=ALQUILER")} className="hover:text-white transition-colors">{t.footer.rent}</Link></li>
+            <li><Link href={h("/propiedades?type=APARTAMENTO")} className="hover:text-white transition-colors">{t.footer.apartments}</Link></li>
+            <li><Link href={h("/propiedades?type=CASA")} className="hover:text-white transition-colors">{t.footer.houses}</Link></li>
           </ul>
         </div>
 
         <div>
-          <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">Empresa</p>
+          <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">{t.footer.company}</p>
           <ul className="space-y-3 text-sm">
-            <li><Link href={h("/servicios")} className="hover:text-white transition-colors">Servicios</Link></li>
-            <li><Link href={h("/nosotros")} className="hover:text-white transition-colors">Nosotros</Link></li>
-            <li><Link href={h("/contacto")} className="hover:text-white transition-colors">Contacto</Link></li>
+            <li><Link href={h("/servicios")} className="hover:text-white transition-colors">{t.nav.services}</Link></li>
+            <li><Link href={h("/nosotros")} className="hover:text-white transition-colors">{t.nav.about}</Link></li>
+            <li><Link href={h("/contacto")} className="hover:text-white transition-colors">{t.nav.contact}</Link></li>
           </ul>
         </div>
 
         <div>
-          <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">Contacto</p>
+          <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">{t.footer.contact}</p>
           <ul className="space-y-3 text-sm">
             <li><a href={`tel:+${BROKER.phone}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconPhone />{BROKER.phoneDisplay}</a></li>
             <li><a href={`mailto:${BROKER.email}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconMail /><span className="break-all">{BROKER.email}</span></a></li>
@@ -50,8 +52,8 @@ export default function PortalFooter({ portal = false }: { portal?: boolean }) {
       </div>
 
       <div className="max-w-7xl mx-auto pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#8C826F]">
-        <p>© {new Date().getFullYear()} PanamaInmo. Todos los derechos reservados.</p>
-        <p className="tracking-[0.2em] uppercase">Panamá · Lic. {BROKER.license}</p>
+        <p>© {new Date().getFullYear()} PanamaInmo. {t.footer.rights}</p>
+        <p className="tracking-[0.2em] uppercase">Panamá · {t.footer.license} {BROKER.license}</p>
       </div>
     </footer>
   );

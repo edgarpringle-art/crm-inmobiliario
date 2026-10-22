@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { isPortalRequest } from "@/components/portal/portalHost";
+import { getLang, isPortalRequest } from "@/components/portal/portalHost";
+import { tr } from "@/components/portal/i18n";
 import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
 import PageHero from "@/components/portal/PageHero";
@@ -7,31 +8,33 @@ import LeadForm from "@/components/portal/LeadForm";
 import { BROKER, SANS, SERIF, waLink } from "@/components/portal/brand";
 import { IconBadge, IconInstagram, IconMail, IconPhone, IconWA } from "@/components/portal/icons";
 
-export const metadata: Metadata = {
-  title: "Contacto · PanamaInmo",
-  description: "Escríbenos para comprar, vender o alquilar tu propiedad en Panamá.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = tr(await getLang()).contactPage;
+  return { title: t.metaTitle, description: t.metaDesc };
+}
 
 export default async function ContactoPage() {
   const portal = await isPortalRequest();
+  const lang = await getLang();
+  const t = tr(lang).contactPage;
   const items = [
-    { icon: IconWA, label: "WhatsApp", value: BROKER.phoneDisplay, href: waLink("Hola PanamaInmo") },
-    { icon: IconPhone, label: "Teléfono", value: BROKER.phoneDisplay, href: `tel:+${BROKER.phone}` },
+    { icon: IconWA, label: "WhatsApp", value: BROKER.phoneDisplay, href: waLink(t.waMsg) },
+    { icon: IconPhone, label: t.phone, value: BROKER.phoneDisplay, href: `tel:+${BROKER.phone}` },
     { icon: IconMail, label: "Email", value: BROKER.email, href: `mailto:${BROKER.email}` },
     { icon: IconInstagram, label: "Instagram", value: `@${BROKER.instagram}`, href: BROKER.instagramUrl },
   ];
 
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#1E1A15]" style={SANS}>
-      <PortalHeader portal={portal} />
-      <PageHero eyebrow="Contacto" title="Hablemos de tu próxima propiedad"
-        subtitle="Déjanos tus datos y te respondemos a la brevedad, o escríbenos directo por WhatsApp."
+      <PortalHeader portal={portal} lang={lang} />
+      <PageHero eyebrow={t.heroEyebrow} title={t.heroTitle}
+        subtitle={t.heroSub}
         image="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2000&q=75" />
 
       <section className="py-16 sm:py-20 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-5 gap-10">
           <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-2xl mb-2" style={SERIF}>Datos de contacto</h2>
+            <h2 className="text-2xl mb-2" style={SERIF}>{t.dataTitle}</h2>
             {items.map(({ icon: I, label, value, href }) => (
               <a key={label} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
                 className="flex items-center gap-4 bg-white rounded-2xl border border-[#E9E0D0] p-4 hover:border-[#B8945F] transition-colors">
@@ -42,14 +45,14 @@ export default async function ContactoPage() {
                 </span>
               </a>
             ))}
-            <p className="flex items-center gap-2 text-xs text-[#6B6155] pt-2"><IconBadge /> Licencia {BROKER.license} · Panamá</p>
+            <p className="flex items-center gap-2 text-xs text-[#6B6155] pt-2"><IconBadge /> {t.license} {BROKER.license} · Panamá</p>
           </div>
           <div className="lg:col-span-3">
-            <LeadForm waHref={waLink("Hola PanamaInmo")} title="Envíanos un mensaje" cta="Enviar mensaje" />
+            <LeadForm lang={lang} waHref={waLink(t.waMsg)} title={t.formTitle} cta={t.formCta} />
           </div>
         </div>
       </section>
-      <PortalFooter portal={portal} />
+      <PortalFooter portal={portal} lang={lang} />
     </div>
   );
 }

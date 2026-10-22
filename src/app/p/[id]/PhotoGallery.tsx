@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-export default function PhotoGallery({ photos, title }: { photos: string[]; title: string }) {
+export default function PhotoGallery({ photos, title, countLabel }: { photos: string[]; title: string; countLabel?: string }) {
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState(0);
 
@@ -61,7 +61,7 @@ export default function PhotoGallery({ photos, title }: { photos: string[]; titl
         )}
         {/* "Ver todas" hint */}
         <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-lg pointer-events-none">
-          {photos.length} foto{photos.length !== 1 ? "s" : ""}
+          {countLabel || `${photos.length} foto${photos.length !== 1 ? "s" : ""}`}
         </div>
       </div>
 
