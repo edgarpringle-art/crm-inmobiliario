@@ -6,7 +6,7 @@ import { verifySession, COOKIE_SESSION } from "@/lib/auth";
 const PUBLIC_PREFIXES = ["/login", "/p/", "/catalogo", "/ver/", "/api/auth/", "/api/catalogo", "/api/leads", "/api/cron/", "/api/propuestas/public", "/api/propuestas/respond"];
 
 // Public site pages served at clean URLs on panamainmo.com (files live in /catalogo/*)
-const PORTAL_PAGES = ["/propiedades", "/buscar", "/servicios", "/nosotros", "/contacto"];
+const PORTAL_PAGES = ["/propiedades", "/servicios", "/nosotros", "/contacto"];
 
 // Routes blocked for "agent" role (only broker + admin can access)
 const ADMIN_PREFIXES = ["/contabilidad", "/api/gastos"];
@@ -30,6 +30,12 @@ export async function middleware(request: NextRequest) {
     if (pathname === "/catalogo" || pathname.startsWith("/catalogo/")) {
       const url = request.nextUrl.clone();
       url.pathname = pathname.slice("/catalogo".length) || "/";
+      return NextResponse.redirect(url, 301);
+    }
+    // The old MLS search page was replaced by the merged catalog
+    if (pathname === "/buscar") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/propiedades";
       return NextResponse.redirect(url, 301);
     }
     if (pathname === "/" || pathname === "" || PORTAL_PAGES.includes(pathname)) {
