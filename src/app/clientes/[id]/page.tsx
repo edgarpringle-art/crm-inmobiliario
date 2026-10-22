@@ -26,6 +26,25 @@ const PROP_STATUS: Record<string, { label: string; color: string }> = {
   DESCARTADO: { label: "Descartada", color: "bg-gray-100 text-gray-500" },
 };
 
+interface MlsMatch {
+  id: string; mlsId: string; title: string; propertyType: string; operationType: string;
+  salePrice: number | null; rentPrice: number | null; currency: string;
+  area: number | null; landArea: number | null; bedrooms: number | null; bathrooms: number | null;
+  sector: string | null; city: string | null; photo: string | null; score: number; reasons: string[];
+}
+
+const SITE = "https://panamainmo.com";
+
+function mlsPriceText(m: MlsMatch) {
+  return [m.salePrice != null ? formatCurrency(m.salePrice, m.currency) : null, m.rentPrice != null ? `${formatCurrency(m.rentPrice, m.currency)}/mes` : null]
+    .filter(Boolean).join(" · ");
+}
+
+function mlsSpecs(m: MlsMatch) {
+  return [m.bedrooms != null && `${m.bedrooms} rec`, m.bathrooms != null && `${m.bathrooms} baños`, (m.area ?? m.landArea) != null && `${m.area ?? m.landArea} m²`]
+    .filter(Boolean).join(" · ");
+}
+
 const emptyPropForm = { title: "", zona: "", price: "", currency: "USD", description: "", link: "", photos: [] as string[] };
 
 interface Activity {
@@ -69,6 +88,8 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
   const [showPropForm, setShowPropForm] = useState(false);
   const [savingProp, setSavingProp] = useState(false);
   const [propForm, setPropForm] = useState(emptyPropForm);
+  const [mls, setMls] = useState<{ criteria: boolean; total: number; items: MlsMatch[] } | null>(null);
+  const [addingMls, setAddingMls] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -76,6 +97,7 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
       fetch(`/api/activities?clientId=${id}`).then((r) => r.json()).catch(() => []),
       fetch(`/api/propuestas?clientId=${id}`).then((r) => r.json()).catch(() => []),
     ]).then(([c, a, p]) => {
+      fetch(`/api/mls/match?clientId=${id}`).then((r) => r.json()).then((d) => setMls(d && Array.isArray(d.items) ? d : null)).catch(() => setMls(null));
       setClient(c);
       setActivities(Array.isArray(a) ? a : []);
       setPropuestas(Array.isArray(p) ? p : []);
@@ -104,6 +126,29 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
     if (!confirm("¿Eliminar esta opción?")) return;
     const res = await fetch(`/api/propuestas/${pid}`, { method: "DELETE" });
     if (res.ok) setPropuestas((prev) => prev.filter((p) => p.id !== pid));
+  }
+
+  async function addMlsToOptions(m: MlsMatch) {
+    setAddingMls(m.id);
+    try {
+      const res = await fetch("/api/propuestas", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: id, title: m.title, zona: [m.sector, m.city].filter(Boolean).join(", "),
+          price: m.salePrice ?? m.rentPrice, currency: m.currency,
+          description: [mlsSpecs(m), `MLS #${m.mlsId}`].filter(Boolean).join(" · "),
+          link: `${SITE}/p/${m.id}`, photos: m.photo ? [m.photo] : [],
+        }),
+      });
+      if (res.ok) { const p = await res.json(); setPropuestas((prev) => [p, ...prev]); toast.success("Agregada a las opciones del cliente"); }
+      else toast.error("Error al agregar");
+    } finally { setAddingMls(""); }
+  }
+
+  function mlsWhatsapp(m: MlsMatch): string {
+    const text = `Hola ${client?.firstName || ""}, encontré esta propiedad que puede interesarte:\n\n🏢 ${m.title}\n📍 ${[m.sector, m.city].filter(Boolean).join(", ")}\n💰 ${mlsPriceText(m)}${mlsSpecs(m) ? `\n✔️ ${mlsSpecs(m)}` : ""}\n\nFotos y detalles: ${SITE}/p/${m.id}`;
+    const phone = client?.phone?.replace(/\D/g, "");
+    return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
   }
 
   function shareLink(): string {
@@ -240,6 +285,54 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Notas de Búsqueda</p>
                 <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{client.searchNotes}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Propiedades del MLS ACOBIR que coinciden con la búsqueda */}
+        {mls && (
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Propiedades del MLS que coinciden</h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {!mls.criteria ? "Completa la búsqueda del cliente (tipo, zona, presupuesto) para ver coincidencias."
+                    : mls.total === 0 ? "Ninguna propiedad publicada del MLS coincide con esta búsqueda."
+                    : `${mls.total} coincidencia${mls.total !== 1 ? "s" : ""} en tu inventario MLS${mls.total > mls.items.length ? ` · mostrando las ${mls.items.length} mejores` : ""}`}
+                </p>
+              </div>
+              <Link href="/inventario-mls" className="text-xs text-blue-600 hover:underline">Inventario MLS →</Link>
+            </div>
+            {mls.items.length > 0 && (
+              <div className="space-y-2 max-h-[560px] overflow-auto pr-1">
+                {mls.items.map((m) => {
+                  const added = propuestas.some((p) => p.link === `${SITE}/p/${m.id}`);
+                  return (
+                    <div key={m.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                      {m.photo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={m.photo} alt="" loading="lazy" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                      ) : <div className="w-16 h-16 rounded-lg bg-gray-100 flex-shrink-0" />}
+                      <div className="flex-1 min-w-0">
+                        <a href={`/p/${m.id}`} target="_blank" rel="noopener noreferrer" className="font-medium text-gray-900 text-sm truncate block hover:text-blue-600">{m.title}</a>
+                        <p className="text-xs text-gray-500 truncate">{[[m.sector, m.city].filter(Boolean).join(", "), mlsPriceText(m), mlsSpecs(m)].filter(Boolean).join(" · ")}</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">MLS #{m.mlsId}</span>
+                          {m.reasons.map((r) => <span key={r} className="text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded">✓ {r}</span>)}
+                        </div>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-1.5 flex-shrink-0">
+                        <a href={mlsWhatsapp(m)} target="_blank" rel="noopener noreferrer"
+                          className="text-center bg-[#25D366] hover:bg-[#1ebe57] text-white px-3 py-1.5 rounded-lg text-xs font-medium">WhatsApp</a>
+                        <button onClick={() => addMlsToOptions(m)} disabled={added || addingMls === m.id}
+                          className="border border-gray-200 hover:bg-gray-100 disabled:opacity-50 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium">
+                          {added ? "En opciones" : addingMls === m.id ? "..." : "+ Opciones"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
