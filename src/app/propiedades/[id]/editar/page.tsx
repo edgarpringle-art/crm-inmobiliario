@@ -9,6 +9,7 @@ import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "
 import { getProvinces, getDistricts, getSectors } from "@/lib/locations";
 import { HiPlus, HiTrash } from "react-icons/hi";
 import PhotoUploader from "@/components/PhotoUploader";
+import SectorInput from "@/components/SectorInput";
 import { parseFeatures } from "@/lib/publicProperty";
 
 interface PortalLink { name: string; url: string; }
@@ -165,10 +166,8 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
               </select>
             </FormField>
             <FormField label="Corregimiento / Sector">
-              <select className={inputClass} value={form.sector} onChange={(e) => update("sector", e.target.value)} disabled={!form.city}>
-                <option value="">Seleccionar...</option>
-                {sectors.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
+              <SectorInput className={inputClass} value={form.sector} onChange={(v) => update("sector", v)}
+                district={form.city} province={form.state} baseSectors={sectors} />
             </FormField>
             <FormField label="País"><input className={inputClass} value={form.country} onChange={(e) => update("country", e.target.value)} disabled /></FormField>
             <FormField label="Referencia"><input className={inputClass} value={form.referencePoint} onChange={(e) => update("referencePoint", e.target.value)} /></FormField>

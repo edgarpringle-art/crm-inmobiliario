@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { ZONAS } from "@/lib/zonas";
+import { useMlsZones } from "@/lib/useMlsZones";
+
+const key = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 
 interface Props {
   value: string[];
@@ -31,10 +34,22 @@ export default function ZoneSelector({
     return () => document.removeEventListener("mousedown", onOutside);
   }, []);
 
-  const q = filter.toLowerCase();
-  const filtered = ZONAS.map((g) => ({
+  // MLS áreas (with their barrios) first, then the classic list minus what the MLS already covers.
+  const mls = useMlsZones();
+  const groups = useMemo(() => {
+    const seen = new Set<string>();
+    const fromMls = mls.map((g) => {
+      const zones = [g.area, ...g.barrios].filter((z) => !seen.has(key(z)) && seen.add(key(z)));
+      return { group: [g.area, g.province].filter(Boolean).join(" · "), zones };
+    }).filter((g) => g.zones.length);
+    const rest = ZONAS.map((g) => ({ group: g.group, zones: g.zones.filter((z) => !seen.has(key(z))) })).filter((g) => g.zones.length);
+    return [...fromMls, ...rest];
+  }, [mls]);
+
+  const q = key(filter);
+  const filtered = groups.map((g) => ({
     ...g,
-    zones: g.zones.filter((z) => !q || z.toLowerCase().includes(q)),
+    zones: q && key(g.group).includes(q) ? g.zones : g.zones.filter((z) => !q || key(z).includes(q)),
   })).filter((g) => g.zones.length > 0);
 
   function toggle(zone: string) {

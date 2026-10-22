@@ -9,6 +9,7 @@ import LocationSelect from "@/components/LocationSelect";
 import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "@/lib/constants";
 import { getProvinces, getDistricts, getSectors } from "@/lib/locations";
 import PhotoUploader from "@/components/PhotoUploader";
+import SectorInput from "@/components/SectorInput";
 import { parseFeatures } from "@/lib/publicProperty";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
@@ -153,10 +154,8 @@ export default function NuevaPropiedadPage() {
               </select>
             </FormField>
             <FormField label="Corregimiento / Sector">
-              <select className={inputClass} value={form.sector} onChange={(e) => update("sector", e.target.value)} disabled={!form.city}>
-                <option value="">Seleccionar...</option>
-                {sectors.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
+              <SectorInput className={inputClass} value={form.sector} onChange={(v) => update("sector", v)}
+                district={form.city} province={form.state} baseSectors={sectors} />
             </FormField>
             <FormField label="País"><input className={inputClass} value={form.country} onChange={(e) => update("country", e.target.value)} disabled /></FormField>
             <FormField label="Punto de Referencia"><input className={inputClass} value={form.referencePoint} onChange={(e) => update("referencePoint", e.target.value)} /></FormField>
