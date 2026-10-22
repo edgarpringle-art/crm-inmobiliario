@@ -42,10 +42,15 @@ const VALUES = [
 export default async function NosotrosPage() {
   const portal = await isPortalRequest();
   const agents = await query<TeamMember>(
-    "SELECT fullName, photoUrl, initials, phone FROM Agent WHERE active = 1 ORDER BY createdAt ASC"
+    "SELECT fullName, photoUrl, initials, phone FROM Agent ORDER BY (photoUrl IS NULL OR photoUrl = ''), active DESC, createdAt ASC"
   ).catch(() => []);
   const team = TEAM.map((t) => {
-    const a = agents.find((x) => samePerson(t.name, x.fullName));
+    // Exact name first; otherwise the only agent sharing the first name (CRM spelling may differ: Velázquez/Velasquez…).
+    const first = norm(t.name).split(/\s+/)[0];
+    const byFirst = agents.filter((x) => norm(x.fullName).split(/\s+/)[0] === first);
+    const withPhoto = byFirst.filter((x) => x.photoUrl);
+    const a = agents.find((x) => samePerson(t.name, x.fullName))
+      || (byFirst.length === 1 ? byFirst[0] : withPhoto.length === 1 ? withPhoto[0] : undefined);
     return {
       ...t,
       photoUrl: a?.photoUrl || null,
