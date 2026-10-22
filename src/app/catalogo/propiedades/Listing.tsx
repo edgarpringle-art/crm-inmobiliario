@@ -6,6 +6,9 @@ import PropertyCard from "@/components/portal/PropertyCard";
 import { PROPERTY_TYPE_OPTIONS, SERIF, waLink, type PortalProperty } from "@/components/portal/brand";
 import { IconChevron, IconHouse, IconSearch, IconWA } from "@/components/portal/icons";
 
+// lowercase + no accents, so "Panama" finds "Panamá"
+const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
 interface Filters { op: string; type: string; zone: string; q: string; beds: string; maxPrice?: string }
 
 const PRICE_STEPS = [
@@ -28,18 +31,19 @@ export default function Listing({ properties, initial, basePath }: { properties:
   };
 
   const filtered = useMemo(() => {
-    const q = f.q.trim().toLowerCase();
+    const q = fold(f.q.trim());
+    const zone = fold(f.zone);
     const max = f.maxPrice ? Number(f.maxPrice) : null;
     return properties.filter((p) => {
       if (f.op && !(p.operationType === f.op || p.operationType === "VENTA_Y_ALQUILER")) return false;
       if (f.type && p.propertyType !== f.type) return false;
-      if (f.zone && p.sector !== f.zone && p.city !== f.zone) return false;
+      if (zone && ![p.sector, p.corregimiento, p.city, p.state, p.title].some((s) => s && fold(s).includes(zone))) return false;
       if (f.beds && (p.bedrooms ?? 0) < Number(f.beds)) return false;
       if (max != null) {
         const price = f.op === "ALQUILER" ? p.rentPrice : f.op === "VENTA" ? p.salePrice : (p.salePrice ?? p.rentPrice);
         if (price == null || price > max) return false;
       }
-      if (q && ![p.title, p.sector, p.city, p.state].some((s) => s?.toLowerCase().includes(q))) return false;
+      if (q && ![p.title, p.sector, p.corregimiento, p.city, p.state].some((s) => s && fold(s).includes(q))) return false;
       return true;
     });
   }, [properties, f]);

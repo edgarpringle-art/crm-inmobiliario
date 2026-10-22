@@ -14,6 +14,7 @@ function toPortal(r: Record<string, unknown>, source: "own" | "mls"): PortalProp
     sector: str(r.sector), city: str(r.city), state: str(r.state),
     salePrice: num(r.salePrice), rentPrice: num(r.rentPrice), currency: String(r.currency || "USD"),
     area: num(r.area ?? r.landArea), bedrooms: num(r.bedrooms), bathrooms: num(r.bathrooms), parkingSpots: num(r.parkingSpots),
+    corregimiento: str(r.corregimiento),
     photos: photos.slice(0, 1), photoCount: r.photoCount != null ? Number(r.photoCount) : photos.length, source,
   };
 }
@@ -26,7 +27,7 @@ function shuffle<T>(arr: T[]): T[] {
   return arr;
 }
 
-// Server-only: own available properties first, then the MLS ACOBIR inventory.
+// Server-only: own available properties and the MLS ACOBIR inventory.
 export async function getAvailableProperties(): Promise<PortalProperty[]> {
   const own = await query<Record<string, unknown>>(
     `SELECT id, title, propertyType, operationType, sector, city, state,
@@ -38,13 +39,13 @@ export async function getAvailableProperties(): Promise<PortalProperty[]> {
   const mls = await ensureMlsTable()
     .then(() => query<Record<string, unknown>>(
       `SELECT id, title, propertyType, operationType, sector, city, state,
-              salePrice, rentPrice, currency, area, landArea, bedrooms, bathrooms, parkingSpots,
+              salePrice, rentPrice, currency, area, landArea, bedrooms, bathrooms, parkingSpots, corregimiento,
               json_extract(photos, '$[0]') AS cover, json_array_length(photos) AS photoCount
        FROM MlsListing WHERE active = 1 AND title IS NOT NULL ORDER BY createdAt DESC`
     ))
     .catch(() => []);
-  // Random order on every visit; own listings stay ahead of the MLS inventory.
-  return [...shuffle(own.map((r) => toPortal(r, "own"))), ...shuffle(mls.map((r) => toPortal(r, "mls")))];
+  // Random order on every visit, own and MLS listings mixed together.
+  return shuffle([...own.map((r) => toPortal(r, "own")), ...mls.map((r) => toPortal(r, "mls"))]);
 }
 
 /** One property for the public detail page: own Property by id, or an MLS listing ("mls26108"). */

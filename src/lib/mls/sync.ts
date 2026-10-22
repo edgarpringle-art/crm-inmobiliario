@@ -32,7 +32,12 @@ async function upsert(r: MlsRecord): Promise<void> {
     const v = r[c as keyof MlsRecord];
     return Array.isArray(v) ? JSON.stringify(v) : (v as string | number | null);
   });
-  const updates = COLS.filter((c) => c !== "id").map((c) => `${c} = excluded.${c}`).join(", ");
+  // The public page only knows the corregimiento; a neighborhood saved from the member search
+  // (corregimiento set) is kept when a later refresh doesn't bring one.
+  const updates = COLS.filter((c) => c !== "id").map((c) =>
+    c === "sector" ? "sector = CASE WHEN excluded.corregimiento IS NULL AND MlsListing.corregimiento IS NOT NULL THEN MlsListing.sector ELSE excluded.sector END"
+    : c === "corregimiento" ? "corregimiento = COALESCE(excluded.corregimiento, MlsListing.corregimiento)"
+    : `${c} = excluded.${c}`).join(", ");
   await getDb().execute({
     sql: `INSERT INTO MlsListing (${COLS.join(", ")}, fetchedAt, createdAt, updatedAt)
           VALUES (${COLS.map(() => "?").join(", ")}, ?, ?, ?)
@@ -54,7 +59,12 @@ export interface ImportResult { input: string; ok: boolean; skipped?: boolean; i
  * Imports Xposure links (max 25 per call). Re-importing a link refreshes it, unless
  * `skipExisting` is set and the listing is already published (used for bulk file imports).
  */
-export async function importMlsLinks(raw: string[], { skipExisting = false } = {}): Promise<ImportResult[]> {
+export interface ZoneHint { barrio?: string | null; area?: string | null }
+
+export async function importMlsLinks(
+  raw: string[],
+  { skipExisting = false, hints = {} as Record<string, ZoneHint> } = {}
+): Promise<ImportResult[]> {
   await ensureMlsTable();
   const seen = new Set<string>();
   const jobs = raw.map((input) => ({ input, norm: normalizeXposureUrl(input) })).slice(0, 25);
@@ -66,10 +76,19 @@ export async function importMlsLinks(raw: string[], { skipExisting = false } = {
     if (!norm) { results.push({ input, ok: false, error: "No es un enlace de propiedades.mlsacobir.com/listing/..." }); return; }
     if (seen.has(norm.code)) return;
     seen.add(norm.code);
-    if (published.has(norm.code)) { results.push({ input, ok: true, skipped: true }); return; }
+    const hint = hints[norm.code];
+    const barrio = hint?.barrio?.trim() || null;
+    const area = hint?.area?.trim() || null;
+    if (published.has(norm.code)) {
+      // Already published: only refresh the neighborhood from the search file (no download).
+      if (barrio) await getDb().execute({ sql: "UPDATE MlsListing SET sector = ?, corregimiento = ? WHERE code = ?", args: [barrio, area || barrio, norm.code] });
+      results.push({ input, ok: true, skipped: true });
+      return;
+    }
     try {
       const rec = await fetchXposure(norm.url, norm.code);
       if (!rec) { results.push({ input, ok: false, error: "La propiedad ya no existe en el MLS" }); return; }
+      if (barrio) { rec.sector = barrio; rec.corregimiento = area || barrio; }
       await upsert(rec);
       results.push({ input, ok: true, id: rec.id, title: rec.title });
     } catch (e) {

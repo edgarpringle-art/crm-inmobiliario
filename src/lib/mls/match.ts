@@ -16,6 +16,7 @@ export interface MatchListing {
   salePrice: number | null; rentPrice: number | null; currency: string;
   area: number | null; landArea: number | null; bedrooms: number | null; bathrooms: number | null;
   sector: string | null; city: string | null; state: string | null; photos: string | null;
+  corregimiento?: string | null;
 }
 
 export const norm = (s: string) =>
@@ -48,9 +49,10 @@ export function scoreListing(c: SearchCriteria, p: MatchListing): { score: numbe
 
   // 3. Zone (hard when given)
   if (c.zonas.length) {
-    const pz = [p.sector, p.city, p.state].filter(Boolean).map((z) => norm(z as string));
+    const pz = [p.sector, p.corregimiento, p.city, p.state].filter(Boolean).map((z) => norm(z as string));
+    const title = norm(p.title);
     const cz = c.zonas.map(norm).filter(Boolean);
-    if (!cz.some((z) => pz.some((x) => x.includes(z) || z.includes(x)))) return null;
+    if (!cz.some((z) => pz.some((x) => x.includes(z) || z.includes(x)) || title.includes(z))) return null;
     score += 35; reasons.push("Zona");
   }
 

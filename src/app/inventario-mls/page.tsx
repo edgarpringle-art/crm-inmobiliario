@@ -37,6 +37,7 @@ export default function InventarioMlsPage() {
   const [importLog, setImportLog] = useState<{ ok: boolean; text: string }[]>([]);
   const [progress, setProgress] = useState<{ done: number; total: number; added: number; skipped: number; failed: number } | null>(null);
   const [fileCodes, setFileCodes] = useState<string[]>([]);
+  const [fileHints, setFileHints] = useState<Record<string, { barrio: string; area: string }>>({});
   const [fileName, setFileName] = useState("");
   const [prune, setPrune] = useState(false);
 
@@ -76,7 +77,7 @@ export default function InventarioMlsPage() {
   }
 
   // Imports in batches of 25 with live progress. Only failures are listed (bulk imports can be 1,000+).
-  async function importUrls(urls: string[], { skipExisting = false, pruneCodes = [] as string[] } = {}) {
+  async function importUrls(urls: string[], { skipExisting = false, pruneCodes = [] as string[], hints = {} as Record<string, { barrio: string; area: string }> } = {}) {
     stopRef.current = false;
     setImporting(true); setImportLog([]);
     const log: { ok: boolean; text: string }[] = [];
@@ -85,7 +86,7 @@ export default function InventarioMlsPage() {
     for (let i = 0; i < urls.length && !stopRef.current; i += 25) {
       const batch = urls.slice(i, i + 25);
       try {
-        const res = await fetch("/api/mls/import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ urls: batch, skipExisting }) });
+        const res = await fetch("/api/mls/import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ urls: batch, skipExisting, hints: Object.fromEntries(batch.map((u) => u.split("/").pop()!).filter((c) => hints[c]).map((c) => [c, hints[c]])) }) });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Error");
         for (const r of data.results as { ok: boolean; skipped?: boolean; title?: string; error?: string; input: string }[]) {
@@ -126,7 +127,20 @@ export default function InventarioMlsPage() {
     if (!file) return;
     const html = await file.text();
     const codes = [...new Set([...html.matchAll(/data-xpid="([a-z0-9]+)"/gi)].map((m) => m[1].toLowerCase()))];
+    // Each result row: … tools cell, photo cell, building, address, neighborhood (barrio), area …
+    const hints: Record<string, { barrio: string; area: string }> = {};
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    doc.querySelectorAll("tr").forEach((tr) => {
+      const tools = tr.querySelector(".xposure-tools[data-xpid]");
+      if (!tools) return;
+      const tds = [...tr.children];
+      const i = tds.findIndex((td) => td.contains(tools));
+      const barrio = tds[i + 4]?.textContent?.trim() || "";
+      const area = tds[i + 5]?.textContent?.trim() || "";
+      if (barrio) hints[(tools.getAttribute("data-xpid") || "").toLowerCase()] = { barrio, area };
+    });
     setFileName(file.name);
+    setFileHints(hints);
     setFileCodes(codes);
     setPrune(codes.length >= 200);
     if (!codes.length) setImportLog([{ ok: false, text: "No encontré propiedades en ese archivo. Debe ser la página de resultados de búsqueda de Xposure guardada como HTML." }]);
@@ -136,7 +150,7 @@ export default function InventarioMlsPage() {
     if (!fileCodes.length) return;
     if (prune && !confirm("Se ocultarán de tu web las propiedades del MLS que no estén en este archivo. Úsalo solo si la búsqueda es de TODO el inventario. ¿Continuar?")) return;
     const urls = fileCodes.map((c) => `https://propiedades.mlsacobir.com/listing/p/p/${c}`);
-    await importUrls(urls, { skipExisting: true, pruneCodes: prune ? fileCodes : [] });
+    await importUrls(urls, { skipExisting: true, pruneCodes: prune ? fileCodes : [], hints: fileHints });
     setFileCodes([]); setFileName("");
   }
 

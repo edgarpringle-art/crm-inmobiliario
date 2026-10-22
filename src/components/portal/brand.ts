@@ -69,6 +69,7 @@ export interface PortalProperty {
   area: number | null; bedrooms: number | null; bathrooms: number | null; parkingSpots: number | null;
   photos: string[];
   photoCount?: number;
+  corregimiento?: string | null;
   source?: "own" | "mls";
 }
 
