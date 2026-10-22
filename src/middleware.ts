@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { verifySession, COOKIE_SESSION } from "@/lib/auth";
 
 // Routes that don't require auth
-const PUBLIC_PREFIXES = ["/login", "/p/", "/catalogo", "/ver/", "/api/auth/", "/api/catalogo", "/api/leads", "/api/propuestas/public", "/api/propuestas/respond"];
+const PUBLIC_PREFIXES = ["/login", "/p/", "/catalogo", "/ver/", "/api/auth/", "/api/catalogo", "/api/leads", "/api/cron/", "/api/propuestas/public", "/api/propuestas/respond"];
 
 // Public site pages served at clean URLs on panamainmo.com (files live in /catalogo/*)
 const PORTAL_PAGES = ["/propiedades", "/buscar", "/servicios", "/nosotros", "/contacto"];

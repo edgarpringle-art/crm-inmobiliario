@@ -72,6 +72,8 @@ export interface PortalProperty {
   salePrice: number | null; rentPrice: number | null; currency: string;
   area: number | null; bedrooms: number | null; bathrooms: number | null; parkingSpots: number | null;
   photos: string[];
+  photoCount?: number;
+  source?: "own" | "mls";
 }
 
 export function parsePhotos(raw: unknown): string[] {

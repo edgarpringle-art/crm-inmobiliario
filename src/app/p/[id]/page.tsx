@@ -10,6 +10,7 @@ import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
 import { optimizePhoto, youtubeEmbedUrl } from "@/lib/publicProperty";
 import { portalHref } from "@/components/portal/brand";
+import { getPublicProperty } from "@/components/portal/data";
 
 interface Property {
   id: string; title: string; propertyType: string; operationType: string; status: string;
@@ -27,6 +28,7 @@ interface Property {
   photos: string | null;
   features: string | null;
   videoUrl: string | null;
+  mlsId?: string | null;
 }
 
 interface PublisherAgent {
@@ -62,9 +64,8 @@ const BROKER = {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const rows = await query<Property>("SELECT * FROM Property WHERE id = ?", [id]).catch(() => []);
-  if (!rows.length) return { title: "Propiedad no encontrada" };
-  const p = rows[0];
+  const p = (await getPublicProperty(id)) as unknown as Property | null;
+  if (!p) return { title: "Propiedad no encontrada" };
   const loc = [p.sector, p.city].filter(Boolean).join(", ");
   const price = p.salePrice ? formatCurrency(p.salePrice, p.currency) : p.rentPrice ? `${formatCurrency(p.rentPrice, p.currency)}/mes` : "";
   let firstPhoto: string | undefined;
@@ -96,9 +97,8 @@ const IconCheck = () => <svg className="w-4 h-4" fill="none" stroke="currentColo
 export default async function PublicPropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const portal = await isPortalRequest();
-  const rows = await query<Property>("SELECT * FROM Property WHERE id = ?", [id]).catch(() => []);
-  if (!rows.length) notFound();
-  const p = rows[0];
+  const p = (await getPublicProperty(id)) as unknown as Property | null;
+  if (!p) notFound();
 
   // Agente que publicó la propiedad (createdBy = nombre completo del agente)
   let publisher: PublisherAgent | null = null;
@@ -118,7 +118,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
   if (p.features) { try { features = JSON.parse(p.features); } catch { /* ignore */ } }
   const videoEmbed = youtubeEmbedUrl(p.videoUrl);
   const mapQuery = [p.address, p.sector, p.city, p.state, "Panamá"].filter(Boolean).join(", ");
-  const refCode = p.id.slice(-6).toUpperCase();
+  const refCode = p.mlsId ? `MLS #${p.mlsId}` : `Ref. ${p.id.slice(-6).toUpperCase()}`;
   const fullAddress = [p.address, loc].filter(Boolean).join(" · ");
   const isVenta = p.operationType === "VENTA" || p.operationType === "VENTA_Y_ALQUILER";
   const isAlquiler = p.operationType === "ALQUILER" || p.operationType === "VENTA_Y_ALQUILER";
@@ -160,7 +160,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
               <span className="text-[10px] text-[#9C9182] font-semibold uppercase tracking-[0.2em] border border-[#E4D9C6] px-3 py-1 rounded-full">
                 {typeLabel[p.propertyType] || "Propiedad"}
               </span>
-              <span className="text-[10px] text-[#9C9182] font-semibold uppercase tracking-[0.2em]">Ref. {refCode}</span>
+              <span className="text-[10px] text-[#9C9182] font-semibold uppercase tracking-[0.2em]">{refCode}</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-medium text-[#1E1A15] leading-tight mb-3" style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.01em" }}>

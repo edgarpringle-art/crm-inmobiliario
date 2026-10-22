@@ -25,9 +25,9 @@ export default function PropertyCard({ p }: { p: PortalProperty }) {
           {isVenta && <span className="bg-[#1E1A15]/85 backdrop-blur text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.15em]">Venta</span>}
           {isAlquiler && <span className="bg-[#B8945F] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.15em]">Alquiler</span>}
         </div>
-        {p.photos.length > 1 && (
+        {(p.photoCount ?? p.photos.length) > 1 && (
           <span className="absolute top-3 right-3 bg-black/50 text-white text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 backdrop-blur-sm">
-            <IconImages /> {p.photos.length}
+            <IconImages /> {p.photoCount ?? p.photos.length}
           </span>
         )}
         <div className="absolute bottom-3 left-4 right-4 text-white">

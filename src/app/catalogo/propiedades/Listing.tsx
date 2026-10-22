@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ZONAS } from "@/lib/zonas";
 import PropertyCard from "@/components/portal/PropertyCard";
 import { PROPERTY_TYPE_OPTIONS, SERIF, waLink, type PortalProperty } from "@/components/portal/brand";
@@ -43,6 +43,11 @@ export default function Listing({ properties, initial, basePath }: { properties:
       return true;
     });
   }, [properties, f]);
+
+  const PAGE = 24;
+  const [shown, setShown] = useState(PAGE);
+  useEffect(() => setShown(PAGE), [f]);
+  const visible = filtered.slice(0, shown);
 
   const hasFilters = f.op || f.type || f.zone || f.q || f.beds || f.maxPrice;
   const field = "w-full appearance-none bg-white border border-[#E4D9C6] text-[#1E1A15] text-sm rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#B8945F] transition-colors";
@@ -122,7 +127,16 @@ export default function Listing({ properties, initial, basePath }: { properties:
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((p) => <PropertyCard key={p.id} p={p} />)}
+            {visible.map((p) => <PropertyCard key={p.id} p={p} />)}
+          </div>
+        )}
+        {filtered.length > shown && (
+          <div className="text-center mt-10">
+            <p className="text-xs text-[#6B6155] mb-3">Mostrando {shown} de {filtered.length}</p>
+            <button onClick={() => setShown((n) => n + PAGE)}
+              className="inline-flex items-center gap-2 border border-[#1E1A15] hover:bg-[#1E1A15] hover:text-white text-[#1E1A15] font-semibold px-8 py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors">
+              Ver más propiedades
+            </button>
           </div>
         )}
       </div>

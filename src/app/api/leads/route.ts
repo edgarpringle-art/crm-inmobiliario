@@ -55,12 +55,24 @@ export async function POST(request: NextRequest) {
     }
 
     let property: PropertyRow | null = null;
+    let mlsUrl: string | null = null;
     if (propertyId) {
       const rows = await query<PropertyRow>(
         "SELECT id, title, operationType, propertyType, sector, city, createdBy FROM Property WHERE id = ?",
         [propertyId]
       );
       property = rows[0] || null;
+      // MLS ACOBIR listing shown on the site as ours ("mls26108")
+      if (!property && /^mls\d+$/.test(propertyId)) {
+        const mls = await query<PropertyRow & { mlsId: string; url: string }>(
+          "SELECT id, title, operationType, propertyType, sector, city, NULL AS createdBy, mlsId, url FROM MlsListing WHERE id = ?",
+          [propertyId]
+        ).catch(() => []);
+        if (mls[0]) {
+          property = { ...mls[0], title: `${mls[0].title} [MLS #${mls[0].mlsId}]` };
+          mlsUrl = mls[0].url;
+        }
+      }
     }
 
     // Agent: whoever published the property, else Edgar.
@@ -73,6 +85,8 @@ export async function POST(request: NextRequest) {
     const propLine = property
       ? `${property.title}${property.sector ? ` (${property.sector})` : ""} — https://panamainmo.com/p/${property.id}`
       : "Consulta general";
+    const mlsLine = mlsUrl ? `
+Ficha MLS: ${mlsUrl}` : "";
     const leadNote = `[Web ${todayPanama()}] ${propLine}${message ? `\n${message}` : ""}`;
 
     // Dedupe: same phone (last 8 digits) or same email.
@@ -125,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     await insert("Task", {
       title: `Contactar lead web: ${name}`,
-      description: `${isNew ? "Cliente nuevo" : "Cliente existente"} pidió información.\n${propLine}\nTel: ${phone || "—"} · Email: ${email || "—"}${message ? `\nMensaje: ${message}` : ""}`,
+      description: `${isNew ? "Cliente nuevo" : "Cliente existente"} pidió información.\n${propLine}${mlsLine}\nTel: ${phone || "—"} · Email: ${email || "—"}${message ? `\nMensaje: ${message}` : ""}`,
       dueDate: todayPanama(),
       priority: "ALTA",
       completed: 0,

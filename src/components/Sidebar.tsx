@@ -18,6 +18,7 @@ import {
   HiLogout,
   HiUserGroup,
   HiGlobe,
+  HiCollection,
   HiSpeakerphone,
 } from "react-icons/hi";
 
@@ -43,6 +44,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/grupos", label: "Grupos WA", icon: HiChat, description: "Feed de grupos WhatsApp", visibleFor: ["broker", "admin", "agent"] },
   { href: "/publicar", label: "Publicar", icon: HiSpeakerphone, description: "Enviar a grupos de WhatsApp", visibleFor: ["broker", "admin", "agent"] },
   { href: "/matches", label: "Matches", icon: HiSparkles, description: "Coincidencias automáticas", visibleFor: ["broker", "admin", "agent"] },
+  { href: "/inventario-mls", label: "Inventario MLS", icon: HiCollection, description: "Red MLS ACOBIR en tu web", visibleFor: ["broker", "admin", "agent"] },
   { href: "/catalogo", label: "Catálogo Público", icon: HiGlobe, description: "Página web de propiedades", visibleFor: ["broker", "admin", "agent"] },
 ];
 
