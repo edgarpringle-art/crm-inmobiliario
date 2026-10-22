@@ -18,6 +18,14 @@ function toPortal(r: Record<string, unknown>, source: "own" | "mls"): PortalProp
   };
 }
 
+function shuffle<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 // Server-only: own available properties first, then the MLS ACOBIR inventory.
 export async function getAvailableProperties(): Promise<PortalProperty[]> {
   const own = await query<Record<string, unknown>>(
@@ -35,7 +43,8 @@ export async function getAvailableProperties(): Promise<PortalProperty[]> {
        FROM MlsListing WHERE active = 1 AND title IS NOT NULL ORDER BY createdAt DESC`
     ))
     .catch(() => []);
-  return [...own.map((r) => toPortal(r, "own")), ...mls.map((r) => toPortal(r, "mls"))];
+  // Random order on every visit; own listings stay ahead of the MLS inventory.
+  return [...shuffle(own.map((r) => toPortal(r, "own"))), ...shuffle(mls.map((r) => toPortal(r, "mls")))];
 }
 
 /** One property for the public detail page: own Property by id, or an MLS listing ("mls26108"). */
