@@ -17,6 +17,21 @@ export const metadata: Metadata = {
 
 interface TeamMember { fullName: string; photoUrl: string | null; initials: string | null; phone: string | null }
 
+// Public team, in display order. Photo and WhatsApp come from the matching CRM agent (by name), if any.
+const TEAM = [
+  { name: "Edgar Pringle", role: "Corredor de Bienes Raíces", detail: `Licencia ${BROKER.license}` },
+  { name: "Ana Lorena Chanis", role: "Abogada", detail: "Asesoría Legal Inmobiliaria" },
+  { name: "Félix Olivares", role: "Asesor Inmobiliario", detail: null },
+  { name: "Valentina Velásquez", role: "Atención al Cliente", detail: "Redes Sociales y Comunicación" },
+];
+
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+// "Edgar Pringle" matches "Edgar Enrique Pringle Vasquez": every word of the public name must appear.
+const samePerson = (publicName: string, agentName: string) => {
+  const words = norm(agentName).split(/\s+/);
+  return norm(publicName).split(/\s+/).every((w) => words.includes(w));
+};
+
 const VALUES = [
   { icon: IconShield, t: "Transparencia", d: "Información clara sobre precios, costos y documentos desde el primer día." },
   { icon: IconScale, t: "Respaldo legal", d: "Cada operación pasa por una revisión legal antes de firmar." },
@@ -26,9 +41,18 @@ const VALUES = [
 
 export default async function NosotrosPage() {
   const portal = await isPortalRequest();
-  const team = await query<TeamMember>(
+  const agents = await query<TeamMember>(
     "SELECT fullName, photoUrl, initials, phone FROM Agent WHERE active = 1 ORDER BY createdAt ASC"
   ).catch(() => []);
+  const team = TEAM.map((t) => {
+    const a = agents.find((x) => samePerson(t.name, x.fullName));
+    return {
+      ...t,
+      photoUrl: a?.photoUrl || null,
+      phone: a?.phone || null,
+      initials: (t.name[0] + t.name.split(" ").pop()![0]).toUpperCase(),
+    };
+  });
 
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#1E1A15]" style={SANS}>
@@ -79,20 +103,21 @@ export default async function NosotrosPage() {
         <section className="py-16 sm:py-20 px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
             <SectionTitle eyebrow="El equipo" title="Personas reales, atención directa" />
-            <div className="mt-10 flex flex-wrap justify-center gap-6">
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-sm sm:max-w-none mx-auto">
               {team.map((m) => (
-                <div key={m.fullName} className="w-64 bg-white rounded-3xl border border-[#E9E0D0] overflow-hidden text-center">
-                  <div className="h-64 bg-gradient-to-br from-[#EDE3D2] to-[#D9BE8F] flex items-center justify-center">
+                <div key={m.name} className="bg-white rounded-3xl border border-[#E9E0D0] overflow-hidden text-center">
+                  <div className="aspect-square bg-gradient-to-br from-[#EDE3D2] to-[#D9BE8F] flex items-center justify-center">
                     {m.photoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={m.photoUrl} alt={m.fullName} className="w-full h-full object-cover" />
+                      <img src={m.photoUrl} alt={m.name} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-5xl text-[#1E1A15]" style={SERIF}>{m.initials || m.fullName.charAt(0)}</span>
+                      <span className="text-5xl text-[#1E1A15]" style={SERIF}>{m.initials}</span>
                     )}
                   </div>
                   <div className="p-5">
-                    <p className="text-lg" style={SERIF}>{m.fullName}</p>
-                    <p className="text-[11px] uppercase tracking-[0.2em] text-[#8A6A3A] mt-1">Asesor inmobiliario</p>
+                    <p className="text-lg" style={SERIF}>{m.name}</p>
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-[#8A6A3A] mt-1">{m.role}</p>
+                    {m.detail && <p className="text-xs text-[#6B6155] mt-1">{m.detail}</p>}
                     {m.phone && (
                       <a href={`https://wa.me/${m.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"
                         className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-[#1E1A15] hover:text-[#8A6A3A]">
