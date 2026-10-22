@@ -35,6 +35,10 @@ export default function InventarioMlsPage() {
   const [links, setLinks] = useState("");
   const [importing, setImporting] = useState(false);
   const [importLog, setImportLog] = useState<{ ok: boolean; text: string }[]>([]);
+  const [progress, setProgress] = useState<{ done: number; total: number; added: number; skipped: number; failed: number } | null>(null);
+  const [fileCodes, setFileCodes] = useState<string[]>([]);
+  const [fileName, setFileName] = useState("");
+  const [prune, setPrune] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -71,26 +75,69 @@ export default function InventarioMlsPage() {
     load();
   }
 
+  // Imports in batches of 25 with live progress. Only failures are listed (bulk imports can be 1,000+).
+  async function importUrls(urls: string[], { skipExisting = false, pruneCodes = [] as string[] } = {}) {
+    stopRef.current = false;
+    setImporting(true); setImportLog([]);
+    const log: { ok: boolean; text: string }[] = [];
+    const prog = { done: 0, total: urls.length, added: 0, skipped: 0, failed: 0 };
+    setProgress({ ...prog });
+    for (let i = 0; i < urls.length && !stopRef.current; i += 25) {
+      const batch = urls.slice(i, i + 25);
+      try {
+        const res = await fetch("/api/mls/import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ urls: batch, skipExisting }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error");
+        for (const r of data.results as { ok: boolean; skipped?: boolean; title?: string; error?: string; input: string }[]) {
+          if (r.skipped) prog.skipped++;
+          else if (r.ok) { prog.added++; if (urls.length <= 25) log.push({ ok: true, text: `✓ ${r.title}` }); }
+          else { prog.failed++; log.push({ ok: false, text: `✗ ${r.error} — ${r.input.slice(0, 90)}` }); }
+        }
+      } catch (e) {
+        prog.failed += batch.length;
+        log.push({ ok: false, text: `✗ ${e instanceof Error ? e.message : "Error"} (lote de ${batch.length})` });
+      }
+      prog.done = Math.min(urls.length, i + batch.length);
+      setProgress({ ...prog }); setImportLog([...log]);
+    }
+    if (pruneCodes.length && !stopRef.current) {
+      try {
+        const res = await fetch("/api/mls/prune", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ codes: pruneCodes }) });
+        const data = await res.json();
+        log.push(res.ok ? { ok: true, text: `Se ocultaron ${data.hidden} propiedades que ya no están en el MLS` } : { ok: false, text: `✗ ${data.error}` });
+        setImportLog([...log]);
+      } catch { /* ignore */ }
+    }
+    setImporting(false);
+    setPage(1); load();
+    return prog;
+  }
+
   async function runImport() {
     const urls = links.split(/\s+/).map((x) => x.trim()).filter((x) => x.startsWith("http"));
     if (!urls.length) { setImportLog([{ ok: false, text: "Pega al menos un enlace de propiedades.mlsacobir.com" }]); return; }
-    setImporting(true); setImportLog([]);
-    const log: { ok: boolean; text: string }[] = [];
-    for (let i = 0; i < urls.length; i += 25) {
-      try {
-        const res = await fetch("/api/mls/import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ urls: urls.slice(i, i + 25) }) });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Error");
-        for (const r of data.results as { ok: boolean; title?: string; error?: string; input: string }[]) {
-          log.push({ ok: r.ok, text: r.ok ? `✓ ${r.title}` : `✗ ${r.error} — ${r.input.slice(0, 80)}` });
-        }
-      } catch (e) {
-        log.push({ ok: false, text: `✗ ${e instanceof Error ? e.message : "Error"}` });
-      }
-      setImportLog([...log]);
-    }
-    setImporting(false);
-    if (log.some((l) => l.ok)) { setLinks(""); setPage(1); load(); }
+    const prog = await importUrls(urls);
+    if (prog.added > 0) setLinks("");
+  }
+
+  // Reads a saved Xposure "Resultados de búsqueda" page: every row carries data-xpid="<code>".
+  async function onFile(file: File | undefined) {
+    setFileCodes([]); setFileName("");
+    if (!file) return;
+    const html = await file.text();
+    const codes = [...new Set([...html.matchAll(/data-xpid="([a-z0-9]+)"/gi)].map((m) => m[1].toLowerCase()))];
+    setFileName(file.name);
+    setFileCodes(codes);
+    setPrune(codes.length >= 200);
+    if (!codes.length) setImportLog([{ ok: false, text: "No encontré propiedades en ese archivo. Debe ser la página de resultados de búsqueda de Xposure guardada como HTML." }]);
+  }
+
+  async function runFileImport() {
+    if (!fileCodes.length) return;
+    if (prune && !confirm("Se ocultarán de tu web las propiedades del MLS que no estén en este archivo. Úsalo solo si la búsqueda es de TODO el inventario. ¿Continuar?")) return;
+    const urls = fileCodes.map((c) => `https://propiedades.mlsacobir.com/listing/p/p/${c}`);
+    await importUrls(urls, { skipExisting: true, pruneCodes: prune ? fileCodes : [] });
+    setFileCodes([]); setFileName("");
   }
 
   async function remove(p: MlsItem) {
@@ -128,8 +175,44 @@ export default function InventarioMlsPage() {
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-medium">
             <HiPlus className="w-4 h-4" /> {importing ? "Importando..." : "Publicar en mi web"}
           </button>
-          {importLog.length > 0 && <span className="text-xs text-gray-500">{importLog.filter((l) => l.ok).length} de {importLog.length} importadas</span>}
         </div>
+        <div className="border-t border-gray-100 mt-5 pt-5">
+          <p className="font-semibold text-gray-900 mb-1">Importar muchas a la vez (archivo de búsqueda)</p>
+          <p className="text-xs text-gray-500 mb-3">
+            En Xposure, con tu sesión, haz la búsqueda en el MLS → clic derecho → <b>Guardar como…</b> → “Página web completa”, y sube aquí el archivo <span className="font-mono">.html</span>.
+            Solo se importan las nuevas; las que ya están se saltan.
+          </p>
+          <input type="file" accept=".html,.htm,text/html" disabled={importing}
+            onChange={(e) => onFile(e.target.files?.[0])}
+            className="block text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-800 file:font-medium hover:file:bg-gray-200" />
+          {fileCodes.length > 0 && (
+            <div className="mt-3 space-y-3">
+              <p className="text-sm text-gray-800"><b>{fileCodes.length}</b> propiedades encontradas en <span className="font-mono text-xs">{fileName}</span></p>
+              <label className="flex items-start gap-2 text-xs text-gray-600">
+                <input type="checkbox" checked={prune} onChange={(e) => setPrune(e.target.checked)} className="mt-0.5" />
+                <span>Ocultar de mi web las propiedades del MLS que <b>no</b> estén en este archivo (vendidas o retiradas). Úsalo solo si la búsqueda es de <b>todo</b> el inventario.</span>
+              </label>
+              <button onClick={runFileImport} disabled={importing}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                <HiPlus className="w-4 h-4" /> Importar {fileCodes.length} propiedades
+              </button>
+            </div>
+          )}
+        </div>
+
+        {progress && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+              <span>{importing ? "Importando..." : "Terminado"} {progress.done} de {progress.total} · nuevas {progress.added} · ya estaban {progress.skipped} · con error {progress.failed}</span>
+              {importing && <button onClick={() => { stopRef.current = true; }} className="text-gray-500 hover:text-gray-800 underline">Pausar</button>}
+            </div>
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-600 transition-all" style={{ width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%` }} />
+            </div>
+            {importing && <p className="text-[11px] text-gray-400 mt-1">Deja esta página abierta hasta que termine (unos 10 minutos para 1,000 propiedades).</p>}
+          </div>
+        )}
+
         {importLog.length > 0 && (
           <ul className="mt-3 space-y-1 text-xs max-h-40 overflow-auto">
             {importLog.map((l, i) => <li key={i} className={l.ok ? "text-emerald-700" : "text-red-600"}>{l.text}</li>)}

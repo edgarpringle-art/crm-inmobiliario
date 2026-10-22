@@ -48,18 +48,25 @@ async function pool<T>(items: T[], concurrency: number, fn: (item: T) => Promise
   }));
 }
 
-export interface ImportResult { input: string; ok: boolean; id?: string; title?: string; error?: string }
+export interface ImportResult { input: string; ok: boolean; skipped?: boolean; id?: string; title?: string; error?: string }
 
-/** Imports pasted Xposure links (max 25 per call). Re-importing a link refreshes it. */
-export async function importMlsLinks(raw: string[]): Promise<ImportResult[]> {
+/**
+ * Imports Xposure links (max 25 per call). Re-importing a link refreshes it, unless
+ * `skipExisting` is set and the listing is already published (used for bulk file imports).
+ */
+export async function importMlsLinks(raw: string[], { skipExisting = false } = {}): Promise<ImportResult[]> {
   await ensureMlsTable();
   const seen = new Set<string>();
   const jobs = raw.map((input) => ({ input, norm: normalizeXposureUrl(input) })).slice(0, 25);
+  const published = new Set(
+    skipExisting ? (await query<{ code: string }>("SELECT code FROM MlsListing WHERE active = 1")).map((r) => r.code) : []
+  );
   const results: ImportResult[] = [];
-  await pool(jobs, 3, async ({ input, norm }) => {
+  await pool(jobs, 4, async ({ input, norm }) => {
     if (!norm) { results.push({ input, ok: false, error: "No es un enlace de propiedades.mlsacobir.com/listing/..." }); return; }
     if (seen.has(norm.code)) return;
     seen.add(norm.code);
+    if (published.has(norm.code)) { results.push({ input, ok: true, skipped: true }); return; }
     try {
       const rec = await fetchXposure(norm.url, norm.code);
       if (!rec) { results.push({ input, ok: false, error: "La propiedad ya no existe en el MLS" }); return; }
@@ -85,7 +92,7 @@ export async function recheckMls({ budgetMs = 45_000 } = {}): Promise<RecheckRes
     "SELECT id, code, url FROM MlsListing WHERE active = 1 ORDER BY fetchedAt ASC"
   );
   let checked = 0, hidden = 0, failed = 0;
-  await pool(rows, 3, async (r) => {
+  await pool(rows, 5, async (r) => {
     try {
       const rec = await fetchXposure(r.url, r.code);
       if (rec && rec.id === r.id) await upsert(rec);
@@ -101,6 +108,22 @@ export async function recheckMls({ budgetMs = 45_000 } = {}): Promise<RecheckRes
   }, deadline);
   const active = Number((await query<{ n: number }>("SELECT COUNT(*) AS n FROM MlsListing WHERE active = 1"))[0]?.n || 0);
   return { checked, hidden, failed, remaining: Math.max(0, rows.length - checked - failed), active };
+}
+
+/**
+ * Hides published listings whose code is not in `codes` (a fresh full MLS search the user
+ * uploaded): those were sold or withdrawn. Returns how many were hidden.
+ */
+export async function pruneMls(codes: string[]): Promise<number> {
+  await ensureMlsTable();
+  const keep = new Set(codes.map((c) => c.toLowerCase()));
+  const active = await query<{ id: string; code: string }>("SELECT id, code FROM MlsListing WHERE active = 1");
+  const gone = active.filter((r) => !keep.has(String(r.code)));
+  const now = new Date().toISOString();
+  for (const r of gone) {
+    await getDb().execute({ sql: "UPDATE MlsListing SET active = 0, mlsStatus = 'Retirada', updatedAt = ? WHERE id = ?", args: [now, r.id] });
+  }
+  return gone.length;
 }
 
 export async function removeMlsListing(id: string): Promise<void> {

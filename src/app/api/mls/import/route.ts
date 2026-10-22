@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const urls: string[] = Array.isArray(body.urls) ? body.urls.filter((u: unknown) => typeof u === "string") : [];
   if (!urls.length) return NextResponse.json({ error: "Pega al menos un enlace" }, { status: 400 });
   try {
-    return NextResponse.json({ results: await importMlsLinks(urls) });
+    return NextResponse.json({ results: await importMlsLinks(urls, { skipExisting: body.skipExisting === true }) });
   } catch (error) {
     console.error("MLS import failed:", error);
     return NextResponse.json({ error: "No se pudo importar" }, { status: 500 });

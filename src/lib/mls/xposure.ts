@@ -115,7 +115,7 @@ export function parseXposure(html: string, url: string, code: string): MlsRecord
   return {
     id: `mls${mlsId}`, code, mlsId, url,
     title, buildingName: get(/edificio|^ph/),
-    propertyType: mapType(get("tipo de propiedad") || title),
+    propertyType: /penthouse/i.test(title) ? "PENTHOUSE" : mapType(get("tipo de propiedad") || title),
     operationType, salePrice, rentPrice, currency: "USD",
     maintenanceFee: num(get(/mantenimiento|cuota/)),
     area: num(get(/constru/)), landArea: num(get(/terreno|lote/)),

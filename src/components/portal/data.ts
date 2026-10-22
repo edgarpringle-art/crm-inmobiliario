@@ -7,13 +7,14 @@ const num = (v: unknown) => (v == null ? null : Number(v));
 
 // Plain objects only — these are passed to client components. Only the cover photo is sent.
 function toPortal(r: Record<string, unknown>, source: "own" | "mls"): PortalProperty {
-  const photos = parsePhotos(r.photos);
+  // Only the cover is selected (cover/photoCount); fall back to parsing a full photos column.
+  const photos = r.cover !== undefined ? (r.cover ? [String(r.cover)] : []) : parsePhotos(r.photos);
   return {
     id: String(r.id), title: String(r.title), propertyType: String(r.propertyType), operationType: String(r.operationType),
     sector: str(r.sector), city: str(r.city), state: str(r.state),
     salePrice: num(r.salePrice), rentPrice: num(r.rentPrice), currency: String(r.currency || "USD"),
     area: num(r.area ?? r.landArea), bedrooms: num(r.bedrooms), bathrooms: num(r.bathrooms), parkingSpots: num(r.parkingSpots),
-    photos: photos.slice(0, 1), photoCount: photos.length, source,
+    photos: photos.slice(0, 1), photoCount: r.photoCount != null ? Number(r.photoCount) : photos.length, source,
   };
 }
 
@@ -21,13 +22,16 @@ function toPortal(r: Record<string, unknown>, source: "own" | "mls"): PortalProp
 export async function getAvailableProperties(): Promise<PortalProperty[]> {
   const own = await query<Record<string, unknown>>(
     `SELECT id, title, propertyType, operationType, sector, city, state,
-            salePrice, rentPrice, currency, area, bedrooms, bathrooms, parkingSpots, photos
+            salePrice, rentPrice, currency, area, bedrooms, bathrooms, parkingSpots,
+            CASE WHEN json_valid(photos) THEN json_extract(photos, '$[0]') END AS cover,
+            CASE WHEN json_valid(photos) THEN json_array_length(photos) ELSE 0 END AS photoCount
      FROM Property WHERE status = 'DISPONIBLE' ORDER BY createdAt DESC LIMIT 300`
   ).catch(() => []);
   const mls = await ensureMlsTable()
     .then(() => query<Record<string, unknown>>(
       `SELECT id, title, propertyType, operationType, sector, city, state,
-              salePrice, rentPrice, currency, area, landArea, bedrooms, bathrooms, parkingSpots, photos
+              salePrice, rentPrice, currency, area, landArea, bedrooms, bathrooms, parkingSpots,
+              json_extract(photos, '$[0]') AS cover, json_array_length(photos) AS photoCount
        FROM MlsListing WHERE active = 1 AND title IS NOT NULL ORDER BY createdAt DESC`
     ))
     .catch(() => []);
