@@ -73,6 +73,35 @@ export interface PortalProperty {
   source?: "own" | "mls";
 }
 
+export interface ZoneGroup { area: string; count: number; barrios: { name: string; count: number }[] }
+
+/**
+ * Zones as the MLS organizes them — Área (corregimiento) → Urb/Barrio — built from the listings
+ * themselves, so every option has results. Own listings without a corregimiento group by district.
+ */
+export function buildZoneGroups(props: PortalProperty[]): ZoneGroup[] {
+  const key = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  const areas = new Map<string, { area: string; count: number; barrios: Map<string, { name: string; count: number }> }>();
+  for (const p of props) {
+    const area = (p.corregimiento || p.city || p.sector || "").trim();
+    if (!area) continue;
+    const a = areas.get(key(area)) || { area, count: 0, barrios: new Map() };
+    a.count++;
+    const barrio = (p.sector || "").trim();
+    if (barrio && key(barrio) !== key(area)) {
+      const b = a.barrios.get(key(barrio)) || { name: barrio, count: 0 };
+      b.count++;
+      a.barrios.set(key(barrio), b);
+    }
+    areas.set(key(area), a);
+  }
+  const byName = (x: { name?: string; area?: string }, y: { name?: string; area?: string }) =>
+    (x.area || x.name || "").localeCompare(y.area || y.name || "", "es");
+  return [...areas.values()]
+    .map((a) => ({ area: a.area, count: a.count, barrios: [...a.barrios.values()].sort(byName) }))
+    .sort(byName);
+}
+
 export function parsePhotos(raw: unknown): string[] {
   if (Array.isArray(raw)) return raw as string[];
   if (typeof raw !== "string" || !raw) return [];

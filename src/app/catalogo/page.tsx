@@ -4,7 +4,7 @@ import PortalFooter from "@/components/portal/PortalFooter";
 import PropertyCard from "@/components/portal/PropertyCard";
 import SectionTitle from "@/components/portal/SectionTitle";
 import { getAvailableProperties } from "@/components/portal/data";
-import { BROKER, CATEGORIES, SANS, SERIF, portalHref, waLink } from "@/components/portal/brand";
+import { BROKER, CATEGORIES, SANS, SERIF, buildZoneGroups, portalHref, waLink } from "@/components/portal/brand";
 import { IconArrow, IconChat, IconKey, IconScale, IconShield, IconWA } from "@/components/portal/icons";
 import { optimizePhoto } from "@/lib/publicProperty";
 import HeroSearch from "./HeroSearch";
@@ -64,7 +64,7 @@ export default async function CatalogoHome() {
           <p className="text-white/80 text-sm sm:text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
             Compra, venta y alquiler de propiedades con asesoría legal integrada en cada paso.
           </p>
-          <HeroSearch portal={portal} />
+          <HeroSearch portal={portal} zones={buildZoneGroups(properties)} />
         </div>
 
         {/* Trust strip */}

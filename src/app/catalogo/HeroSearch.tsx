@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ZONAS } from "@/lib/zonas";
-import { PROPERTY_TYPE_OPTIONS, portalHref } from "@/components/portal/brand";
+import ZoneSelect from "@/components/portal/ZoneSelect";
+import { PROPERTY_TYPE_OPTIONS, portalHref, type ZoneGroup } from "@/components/portal/brand";
 import { IconChevron, IconSearch } from "@/components/portal/icons";
 
-export default function HeroSearch({ portal = false }: { portal?: boolean }) {
+export default function HeroSearch({ portal = false, zones = [] }: { portal?: boolean; zones?: ZoneGroup[] }) {
   const router = useRouter();
   const [op, setOp] = useState("");
   const [q, setQ] = useState("");
@@ -43,14 +43,7 @@ export default function HeroSearch({ portal = false }: { portal?: boolean }) {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nombre, PH o sector..." className={`${field} pl-10`} />
         </div>
         <div className="sm:col-span-3 relative">
-          <select value={zone} onChange={(e) => setZone(e.target.value)} className={`${field} pr-9 cursor-pointer`}>
-            <option value="">Todas las zonas</option>
-            {ZONAS.map((g) => (
-              <optgroup key={g.group} label={g.group}>
-                {g.zones.map((z) => <option key={z} value={z}>{z}</option>)}
-              </optgroup>
-            ))}
-          </select>
+<ZoneSelect groups={zones} value={zone} onChange={setZone} className={`${field} pr-9 cursor-pointer`} />
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
         </div>
         <div className="sm:col-span-3 relative">

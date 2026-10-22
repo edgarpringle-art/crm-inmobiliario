@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ZONAS } from "@/lib/zonas";
+import ZoneSelect from "@/components/portal/ZoneSelect";
 import PropertyCard from "@/components/portal/PropertyCard";
-import { PROPERTY_TYPE_OPTIONS, SERIF, waLink, type PortalProperty } from "@/components/portal/brand";
+import { PROPERTY_TYPE_OPTIONS, SERIF, buildZoneGroups, waLink, type PortalProperty } from "@/components/portal/brand";
 import { IconChevron, IconHouse, IconSearch, IconWA } from "@/components/portal/icons";
 
 // lowercase + no accents, so "Panama" finds "Panamá"
@@ -19,16 +19,15 @@ const PRICE_STEPS = [
 
 export default function Listing({ properties, initial, basePath }: { properties: PortalProperty[]; initial: Filters; basePath: string }) {
   const [f, setF] = useState<Filters>({ ...initial, maxPrice: "" });
-  const set = (k: keyof Filters, v: string) => {
-    setF((prev) => {
-      const next = { ...prev, [k]: v };
-      // Keep the URL shareable without a server round trip.
-      const params = new URLSearchParams();
-      (["op", "type", "zone", "q", "beds"] as const).forEach((key) => next[key] && params.set(key, next[key]));
-      window.history.replaceState(null, "", `${basePath}${params.toString() ? `?${params}` : ""}`);
-      return next;
-    });
-  };
+  const set = (k: keyof Filters, v: string) => setF((prev) => ({ ...prev, [k]: v }));
+
+  // Keep the URL shareable without a server round trip.
+  useEffect(() => {
+    const params = new URLSearchParams();
+    (["op", "type", "zone", "q", "beds"] as const).forEach((key) => f[key] && params.set(key, f[key]));
+    const url = `${basePath}${params.toString() ? `?${params}` : ""}`;
+    if (url !== window.location.pathname + window.location.search) window.history.replaceState(null, "", url);
+  }, [f, basePath]);
 
   const filtered = useMemo(() => {
     const q = fold(f.q.trim());
@@ -52,6 +51,8 @@ export default function Listing({ properties, initial, basePath }: { properties:
   const [shown, setShown] = useState(PAGE);
   useEffect(() => setShown(PAGE), [f]);
   const visible = filtered.slice(0, shown);
+
+  const zoneGroups = useMemo(() => buildZoneGroups(properties), [properties]);
 
   const hasFilters = f.op || f.type || f.zone || f.q || f.beds || f.maxPrice;
   const field = "w-full appearance-none bg-white border border-[#E4D9C6] text-[#1E1A15] text-sm rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#B8945F] transition-colors";
@@ -83,12 +84,7 @@ export default function Listing({ properties, initial, basePath }: { properties:
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
             </div>
             <div className="relative">
-              <select value={f.zone} onChange={(e) => set("zone", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
-                <option value="">Todas las zonas</option>
-                {ZONAS.map((g) => (
-                  <optgroup key={g.group} label={g.group}>{g.zones.map((z) => <option key={z} value={z}>{z}</option>)}</optgroup>
-                ))}
-              </select>
+<ZoneSelect groups={zoneGroups} value={f.zone} onChange={(v) => set("zone", v)} className={`${field} pr-9 cursor-pointer`} />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
             </div>
             <div className="relative">
@@ -112,7 +108,7 @@ export default function Listing({ properties, initial, basePath }: { properties:
             <span className="text-[#1E1A15] font-semibold">{filtered.length}</span> propiedad{filtered.length !== 1 ? "es" : ""}
           </p>
           {hasFilters && (
-            <button onClick={() => { setF({ op: "", type: "", zone: "", q: "", beds: "", maxPrice: "" }); window.history.replaceState(null, "", basePath); }}
+            <button onClick={() => { setF({ op: "", type: "", zone: "", q: "", beds: "", maxPrice: "" }); }}
               className="text-xs text-[#8A6A3A] hover:text-[#1E1A15] underline underline-offset-4">
               Limpiar filtros
             </button>
