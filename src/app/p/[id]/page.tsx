@@ -29,6 +29,7 @@ interface Property {
   features: string | null;
   videoUrl: string | null;
   mlsId?: string | null;
+  corregimiento?: string | null;
 }
 
 interface PublisherAgent {
@@ -111,7 +112,9 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
   }
 
   const activeAmenities = Object.entries(amenityLabels).filter(([k]) => (p as unknown as Record<string, unknown>)[k]);
-  const loc = [p.sector, p.city, p.state].filter(Boolean).join(", ");
+  // Barrio, corregimiento, distrito, provincia — without repeating a name (e.g. "Chame, Chame")
+  const loc = [p.sector, p.mlsId ? null : p.corregimiento, p.city, p.state]
+    .filter((x, i, a): x is string => !!x && a.findIndex((y) => y?.toLowerCase() === x.toLowerCase()) === i).join(", ");
   let photos: string[] = [];
   if (p.photos) { try { photos = (JSON.parse(p.photos) as string[]).map((u) => optimizePhoto(u)); } catch { /* ignore */ } }
   let features: string[] = [];

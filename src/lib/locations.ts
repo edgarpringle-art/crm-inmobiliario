@@ -1,3 +1,5 @@
+import { DIVISION } from "./panamaDivision";
+
 // Base de datos de ubicaciones de Panamá
 // Provincias, distritos y corregimientos
 
@@ -55,7 +57,7 @@ export const PA_LOCATIONS: Location[] = [
   },
   {
     province: "Panamá Oeste",
-    district: "Arraijón",
+    district: "Arraiján",
     sectors: [
       "Centro", "Veracruz", "Oleoducto", "Casco Antiguo",
       "Puerto Caimito", "Bejuco", "Río Abajo",
@@ -188,18 +190,28 @@ export const PA_LOCATIONS: Location[] = [
   },
 ];
 
+// Provinces, districts and corregimientos come from the official division (panamaDivision.ts).
+// PA_LOCATIONS above is kept only as a list of known barrios/sectors per district for suggestions.
+
 export function getProvinces(): string[] {
-  return [...new Set(PA_LOCATIONS.map((l) => l.province))];
+  return Object.keys(DIVISION);
 }
 
 export function getDistricts(province?: string): string[] {
-  const locs = province ? PA_LOCATIONS.filter((l) => l.province === province) : PA_LOCATIONS;
-  return [...new Set(locs.map((l) => l.district))];
+  if (province) return Object.keys(DIVISION[province] || {});
+  return [...new Set(Object.values(DIVISION).flatMap((d) => Object.keys(d)))].sort((a, b) => a.localeCompare(b, "es"));
 }
 
+export function getCorregimientos(district?: string, province?: string): string[] {
+  if (!district) return [];
+  const provs = province && DIVISION[province] ? [DIVISION[province]] : Object.values(DIVISION);
+  return [...new Set(provs.flatMap((d) => d[district] || []))];
+}
+
+/** Known barrios/sectors of a district (legacy list) — suggestions for the barrio field. */
 export function getSectors(district?: string): string[] {
   const locs = district ? PA_LOCATIONS.filter((l) => l.district === district) : PA_LOCATIONS;
-  return locs.flatMap((l) => l.sectors).sort();
+  return [...new Set(locs.flatMap((l) => l.sectors))].sort();
 }
 
 export function searchLocations(query: string): { type: "province" | "district" | "sector"; value: string; parent: string }[] {

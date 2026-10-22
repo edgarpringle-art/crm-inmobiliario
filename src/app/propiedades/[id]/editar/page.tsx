@@ -9,7 +9,7 @@ import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "
 import { getProvinces, getDistricts, getSectors } from "@/lib/locations";
 import { HiPlus, HiTrash } from "react-icons/hi";
 import PhotoUploader from "@/components/PhotoUploader";
-import SectorInput from "@/components/SectorInput";
+import SectorInput, { CorregimientoInput } from "@/components/SectorInput";
 import { parseFeatures } from "@/lib/publicProperty";
 
 interface PortalLink { name: string; url: string; }
@@ -56,7 +56,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
   const [newPortal, setNewPortal] = useState({ name: "Encuentra24", url: "" });
   const [form, setForm] = useState({
     title: "", propertyType: "APARTAMENTO", operationType: "VENTA", status: "DISPONIBLE",
-    address: "", sector: "", city: "", state: "", country: "Panamá", referencePoint: "",
+    address: "", sector: "", corregimiento: "", city: "", state: "", country: "Panamá", referencePoint: "",
     salePrice: "", rentPrice: "", currency: "USD", maintenanceFee: "",
     area: "", landArea: "", bedrooms: "", bathrooms: "", parkingSpots: "", floors: "", yearBuilt: "",
     hasPool: false, hasGym: false, hasElevator: false, hasSecurity: false, hasGenerator: false,
@@ -73,7 +73,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
       setClients(Array.isArray(clientsData) ? clientsData : []);
       setForm({
         title: data.title || "", propertyType: data.propertyType, operationType: data.operationType, status: data.status,
-        address: data.address || "", sector: data.sector || "", city: data.city || "",
+        address: data.address || "", sector: data.sector || "", corregimiento: data.corregimiento || "", city: data.city || "",
         state: data.state || "", country: data.country || "Panamá", referencePoint: data.referencePoint || "",
         salePrice: data.salePrice?.toString() || "", rentPrice: data.rentPrice?.toString() || "",
         currency: data.currency || "USD", maintenanceFee: data.maintenanceFee?.toString() || "",
@@ -106,11 +106,11 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
     if (field === "state" && typeof value === "string") {
       setDistricts(districtsFor(value));
       setSectors([]);
-      setForm((prev) => ({ ...prev, city: "" }));
+      setForm((prev) => ({ ...prev, city: "", corregimiento: "", sector: "" }));
     }
     if (field === "city" && typeof value === "string") {
       setSectors(getSectors(value));
-      setForm((prev) => ({ ...prev, sector: "" }));
+      setForm((prev) => ({ ...prev, sector: "", corregimiento: "" }));
     }
   }
 
@@ -131,7 +131,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         floors: form.floors ? parseInt(form.floors) : null,
         yearBuilt: form.yearBuilt ? parseInt(form.yearBuilt) : null,
         ownerId: form.ownerId || null, ownerName: form.ownerName || null, ownerPhone: form.ownerPhone || null,
-        address: form.address || null, sector: form.sector || null, city: form.city || null,
+        address: form.address || null, sector: form.sector || null, corregimiento: form.corregimiento || null, city: form.city || null,
         state: form.state || null, referencePoint: form.referencePoint || null,
         driveLink: form.driveLink || null, description: form.description || null, notes: form.notes || null,
         portalLinks: portalLinks.length > 0 ? JSON.stringify(portalLinks) : null,
@@ -179,9 +179,13 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
                 {withSaved(districts, form.city).map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </FormField>
-            <FormField label="Corregimiento / Sector">
+            <FormField label="Corregimiento">
+              <CorregimientoInput className={inputClass} value={form.corregimiento} onChange={(v) => update("corregimiento", v)}
+                district={form.city} province={form.state} />
+            </FormField>
+            <FormField label="Barrio / Urbanización">
               <SectorInput className={inputClass} value={form.sector} onChange={(v) => update("sector", v)}
-                district={form.city} province={form.state} baseSectors={sectors} />
+                district={form.city} province={form.state} corregimiento={form.corregimiento} baseSectors={sectors} />
             </FormField>
             <FormField label="País"><input className={inputClass} value={form.country} onChange={(e) => update("country", e.target.value)} disabled /></FormField>
             <FormField label="Referencia"><input className={inputClass} value={form.referencePoint} onChange={(e) => update("referencePoint", e.target.value)} /></FormField>

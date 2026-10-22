@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query, queryOne, update, remove } from "@/lib/db";
+import { query, queryOne, update, remove, ensureColumn } from "@/lib/db";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -42,6 +42,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (!existing) return NextResponse.json({ error: "Propiedad no encontrada" }, { status: 404 });
 
     const body = await request.json();
+    await ensureColumn("Property", "corregimiento");
     await update("Property", id, body);
     const property = await queryOne("SELECT * FROM Property WHERE id = ?", [id]);
     return NextResponse.json(property);

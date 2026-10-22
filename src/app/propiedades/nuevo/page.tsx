@@ -9,7 +9,7 @@ import LocationSelect from "@/components/LocationSelect";
 import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "@/lib/constants";
 import { getProvinces, getDistricts, getSectors } from "@/lib/locations";
 import PhotoUploader from "@/components/PhotoUploader";
-import SectorInput from "@/components/SectorInput";
+import SectorInput, { CorregimientoInput } from "@/components/SectorInput";
 import { parseFeatures } from "@/lib/publicProperty";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
@@ -42,7 +42,7 @@ export default function NuevaPropiedadPage() {
   const [videoUrl, setVideoUrl] = useState("");
   const [form, setForm] = useState({
     title: "", propertyType: "APARTAMENTO", operationType: "VENTA", status: "DISPONIBLE",
-    address: "", sector: "", city: "", state: "", country: "Panamá", referencePoint: "",
+    address: "", sector: "", corregimiento: "", city: "", state: "", country: "Panamá", referencePoint: "",
     salePrice: "", rentPrice: "", currency: "USD", maintenanceFee: "",
     area: "", landArea: "", bedrooms: "", bathrooms: "", parkingSpots: "", floors: "", yearBuilt: "",
     hasPool: false, hasGym: false, hasElevator: false, hasSecurity: false, hasGenerator: false,
@@ -59,14 +59,14 @@ export default function NuevaPropiedadPage() {
   useEffect(() => {
     if (form.state) {
       setDistricts(getDistricts(form.state));
-      setForm((p) => ({ ...p, city: "" }));
+      setForm((p) => ({ ...p, city: "", corregimiento: "", sector: "" }));
     }
   }, [form.state]);
 
   useEffect(() => {
     if (form.city) {
       setSectors(getSectors(form.city));
-      setForm((p) => ({ ...p, sector: "" }));
+      setForm((p) => ({ ...p, sector: "", corregimiento: "" }));
     }
   }, [form.city]);
 
@@ -99,7 +99,7 @@ export default function NuevaPropiedadPage() {
         ownerId: form.ownerId || null,
         ownerName: form.ownerName || null,
         ownerPhone: form.ownerPhone || null,
-        address: form.address || null, sector: form.sector || null, city: form.city || null,
+        address: form.address || null, sector: form.sector || null, corregimiento: form.corregimiento || null, city: form.city || null,
         state: form.state || null, referencePoint: form.referencePoint || null,
         driveLink: form.driveLink || null, description: form.description || null, notes: form.notes || null,
       };
@@ -153,9 +153,13 @@ export default function NuevaPropiedadPage() {
                 {districts.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </FormField>
-            <FormField label="Corregimiento / Sector">
+            <FormField label="Corregimiento">
+              <CorregimientoInput className={inputClass} value={form.corregimiento} onChange={(v) => update("corregimiento", v)}
+                district={form.city} province={form.state} />
+            </FormField>
+            <FormField label="Barrio / Urbanización">
               <SectorInput className={inputClass} value={form.sector} onChange={(v) => update("sector", v)}
-                district={form.city} province={form.state} baseSectors={sectors} />
+                district={form.city} province={form.state} corregimiento={form.corregimiento} baseSectors={sectors} />
             </FormField>
             <FormField label="País"><input className={inputClass} value={form.country} onChange={(e) => update("country", e.target.value)} disabled /></FormField>
             <FormField label="Punto de Referencia"><input className={inputClass} value={form.referencePoint} onChange={(e) => update("referencePoint", e.target.value)} /></FormField>

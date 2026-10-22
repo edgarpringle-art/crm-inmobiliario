@@ -47,6 +47,26 @@ async function getTableColumns(table: string): Promise<Set<string>> {
   return cols;
 }
 
+/**
+ * Adds a column if it doesn't exist yet (local SQLite and Turso), once per process.
+ * Lets new fields ship without a manual migration.
+ */
+const _ensured = new Set<string>();
+export async function ensureColumn(table: string, column: string, type = "TEXT"): Promise<void> {
+  const k = `${table}.${column}`;
+  if (_ensured.has(k)) return;
+  const cols = await getTableColumns(table);
+  if (cols.size && !cols.has(column)) {
+    try {
+      await getDb().execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+    } catch (e) {
+      if (!String(e).includes("duplicate column")) throw e;
+    }
+    _columnsCache.delete(table);
+  }
+  _ensured.add(k);
+}
+
 /** Keeps only entries whose key is a real column in the table. */
 async function filterToColumns(
   table: string,

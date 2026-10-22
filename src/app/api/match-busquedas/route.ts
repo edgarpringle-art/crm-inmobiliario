@@ -31,6 +31,7 @@ interface Property {
   currency: string;
   bedrooms: number | null;
   sector: string | null;
+  corregimiento?: string | null;
   city: string | null;
   state: string | null;
   hasPool: number; hasGym: number; hasElevator: number; hasSecurity: number;
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
     const prop = propRows[0];
 
     // Property locations (normalized)
-    const propZones = [prop.sector, prop.city, prop.state]
+    const propZones = [prop.sector, prop.corregimiento, prop.city, prop.state]
       .filter(Boolean)
       .map((z) => norm(z as string));
 

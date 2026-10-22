@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query, insert } from "@/lib/db";
+import { query, insert, ensureColumn } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const me = await getCurrentUser();
+    await ensureColumn("Property", "corregimiento");
     const id = await insert("Property", { ...body, createdBy: me?.displayName || null });
     const property = await query("SELECT * FROM Property WHERE id = ?", [id]);
     return NextResponse.json(property[0], { status: 201 });

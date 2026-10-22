@@ -1,4 +1,4 @@
-import { query } from "@/lib/db";
+import { ensureColumn, query } from "@/lib/db";
 import { ensureMlsTable } from "@/lib/mls/sync";
 import { parsePhotos, type PortalProperty } from "./brand";
 
@@ -29,8 +29,9 @@ function shuffle<T>(arr: T[]): T[] {
 
 // Server-only: own available properties and the MLS ACOBIR inventory.
 export async function getAvailableProperties(): Promise<PortalProperty[]> {
+  await ensureColumn("Property", "corregimiento").catch(() => {});
   const own = await query<Record<string, unknown>>(
-    `SELECT id, title, propertyType, operationType, sector, city, state,
+    `SELECT id, title, propertyType, operationType, sector, corregimiento, city, state,
             salePrice, rentPrice, currency, area, bedrooms, bathrooms, parkingSpots,
             CASE WHEN json_valid(photos) THEN json_extract(photos, '$[0]') END AS cover,
             CASE WHEN json_valid(photos) THEN json_array_length(photos) ELSE 0 END AS photoCount
