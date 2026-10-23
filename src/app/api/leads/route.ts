@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { insert, query, update } from "@/lib/db";
+import { recordWebEvent } from "@/lib/webEvents";
 
 // Public lead capture from panamainmo.com — no auth required.
 // Creates (or reuses) a Client, logs an Activity and opens a Task for the agent.
@@ -146,6 +147,9 @@ Ficha MLS: ${mlsUrl}` : "";
       assignedAgent: agentCode,
       clientId,
     }).catch((e) => console.error("Lead task error:", e));
+
+    await recordWebEvent({ type: "lead", propertyId: property?.id || null, path: property ? `/p/${property.id}` : "/contacto" })
+      .catch((e) => console.error("Lead event error:", e));
 
     return NextResponse.json({ ok: true });
   } catch (error) {

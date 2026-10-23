@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
+import WebTracker from "@/components/portal/WebTracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://panamainmo.com"),
@@ -16,6 +18,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         rel="stylesheet"
       />
       {children}
+      <WebTracker />
+      <Analytics />
     </>
   );
 }

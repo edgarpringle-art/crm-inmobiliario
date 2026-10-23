@@ -6,6 +6,7 @@ import PropertyCard from "@/components/portal/PropertyCard";
 import { PROPERTY_TYPE_OPTIONS, SERIF, buildPlaceTree, buildZoneGroups, inPlace, placeKey, waLink, type PortalProperty } from "@/components/portal/brand";
 import { IconChevron, IconHouse, IconSearch, IconWA } from "@/components/portal/icons";
 import { tr, type Lang } from "@/components/portal/i18n";
+import { track } from "@/components/portal/WebTracker";
 
 // lowercase + no accents, so "Panama" finds "Panamá"
 const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -30,6 +31,16 @@ export default function Listing({ properties, initial, basePath, lang = "es" }: 
     const url = `${basePath}${params.toString() ? `?${params}` : ""}`;
     if (url !== window.location.pathname + window.location.search) window.history.replaceState(null, "", url);
   }, [f, basePath]);
+
+  // Record what people search for (only once filters have been stable for 2.5s).
+  useEffect(() => {
+    const meta: Record<string, string> = {};
+    (["op", "type", "prov", "dist", "zone", "beds", "maxPrice"] as const).forEach((k) => { if (f[k]) meta[k] = String(f[k]); });
+    if (f.q.trim()) meta.q = f.q.trim().slice(0, 60);
+    if (!Object.keys(meta).length) return;
+    const id = setTimeout(() => track("search", { meta }), 2500);
+    return () => clearTimeout(id);
+  }, [f]);
 
   const filtered = useMemo(() => {
     const q = fold(f.q.trim());

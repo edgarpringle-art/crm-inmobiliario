@@ -6,6 +6,7 @@ import ZoneSelect from "@/components/portal/ZoneSelect";
 import { PROPERTY_TYPE_OPTIONS, buildPlaceTree, buildZoneGroups, inPlace, placeKey, portalHref, type PlaceItem } from "@/components/portal/brand";
 import { tr, type Lang } from "@/components/portal/i18n";
 import { IconChevron, IconSearch } from "@/components/portal/icons";
+import { track } from "@/components/portal/WebTracker";
 
 export default function HeroSearch({ portal = false, places = [], lang = "es" }: { portal?: boolean; places?: PlaceItem[]; lang?: Lang }) {
   const t = tr(lang);
@@ -29,6 +30,8 @@ export default function HeroSearch({ portal = false, places = [], lang = "es" }:
     if (dist) params.set("dist", dist);
     if (zone) params.set("zone", zone);
     if (type) params.set("type", type);
+    const meta = Object.fromEntries([...params.entries()].map(([k, v]) => [k, v.slice(0, 60)]));
+    if (Object.keys(meta).length) track("search", { meta: { ...meta, from: "home" } });
     router.push(`${portalHref("/propiedades", portal)}${params.toString() ? `?${params}` : ""}`);
   }
 
