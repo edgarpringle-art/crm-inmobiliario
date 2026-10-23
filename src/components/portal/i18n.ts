@@ -3,6 +3,9 @@
 export type Lang = "es" | "en";
 export const LANG_COOKIE = "pi_lang";
 
+// "Apartamentos en venta en Costa del Este" → "apartamentos en venta en Costa del Este"
+const lcFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
+
 const es = {
   nav: { home: "Inicio", properties: "Propiedades", services: "Servicios", about: "Nosotros", contact: "Contacto" },
   header: { license: "Licencia", menu: "Menú", home: "PanamaInmo — Inicio", waMsg: "Hola PanamaInmo, me interesa una propiedad." },
@@ -151,6 +154,20 @@ const es = {
       agent: { role: "Asesor Inmobiliario" },
       support: { role: "Atención al Cliente", detail: "Redes Sociales y Comunicación" },
     },
+  },
+  landing: {
+    home: "Inicio", sale: "Venta", rent: "Alquiler", properties: "Propiedades",
+    title: (type: string | null, op: "venta" | "alquiler", zone: string | null) =>
+      `${type || "Propiedades"} en ${op === "venta" ? "venta" : "alquiler"} en ${zone ? `${zone}, Panamá` : "Panamá"}`,
+    intro: (n: number, what: string, from: string | null, to: string | null) =>
+      `Encuentra ${n} ${n === 1 ? "opción" : "opciones"} de ${lcFirst(what)}${from ? `, con precios desde ${from}${to && to !== from ? ` hasta ${to}` : ""}` : ""}. Información verificada, fotos y atención directa de PanamaInmo con respaldo legal en todo el proceso.`,
+    metaDesc: (n: number, what: string, from: string | null) =>
+      `${n} ${lcFirst(what)}${from ? ` desde ${from}` : ""}. Fotos, precios y asesoría legal inmobiliaria con PanamaInmo.`,
+    otherTypes: (zone: string) => `Otros tipos de propiedad en ${zone}`,
+    popularZones: (what: string) => `Zonas populares · ${what}`,
+    page: (n: number) => `Página ${n}`, prev: "← Anterior", next: "Siguiente →",
+    seeAllFilters: "Usar filtros avanzados",
+    popularTitle: "Búsquedas populares", popularEyebrow: "Explora",
   },
   contactPage: {
     metaTitle: "Contacto · PanamaInmo", metaDesc: "Escríbenos para comprar, vender o alquilar tu propiedad en Panamá.",
@@ -309,6 +326,20 @@ const en: typeof es = {
       agent: { role: "Real Estate Advisor" },
       support: { role: "Client Services", detail: "Social Media & Communications" },
     },
+  },
+  landing: {
+    home: "Home", sale: "Sale", rent: "Rent", properties: "Properties",
+    title: (type: string | null, op: "venta" | "alquiler", zone: string | null) =>
+      `${type || "Properties"} for ${op === "venta" ? "sale" : "rent"} in ${zone ? `${zone}, Panama` : "Panama"}`,
+    intro: (n: number, what: string, from: string | null, to: string | null) =>
+      `Browse ${n} ${n === 1 ? "option" : "options"}: ${lcFirst(what)}${from ? `, priced from ${from}${to && to !== from ? ` to ${to}` : ""}` : ""}. Verified information, photos and direct service from PanamaInmo with legal support throughout.`,
+    metaDesc: (n: number, what: string, from: string | null) =>
+      `${n} ${lcFirst(what)}${from ? ` from ${from}` : ""}. Photos, prices and real estate legal advice with PanamaInmo.`,
+    otherTypes: (zone: string) => `Other property types in ${zone}`,
+    popularZones: (what: string) => `Popular areas · ${what}`,
+    page: (n: number) => `Page ${n}`, prev: "← Previous", next: "Next →",
+    seeAllFilters: "Use advanced filters",
+    popularTitle: "Popular searches", popularEyebrow: "Explore",
   },
   contactPage: {
     metaTitle: "Contact · PanamaInmo", metaDesc: "Get in touch to buy, sell or rent property in Panama.",

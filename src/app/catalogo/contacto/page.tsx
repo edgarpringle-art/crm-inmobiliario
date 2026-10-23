@@ -10,7 +10,7 @@ import { IconBadge, IconInstagram, IconMail, IconPhone, IconWA } from "@/compone
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = tr(await getLang()).contactPage;
-  return { title: t.metaTitle, description: t.metaDesc };
+  return { title: t.metaTitle, description: t.metaDesc, alternates: { canonical: `https://panamainmo.com/contacto` } };
 }
 
 export default async function ContactoPage() {

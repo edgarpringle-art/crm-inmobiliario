@@ -12,7 +12,18 @@ import { optimizePhoto, youtubeEmbedUrl } from "@/lib/publicProperty";
 import { portalHref } from "@/components/portal/brand";
 import { getLang } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
-import { getPublicProperty } from "@/components/portal/data";
+import { getAvailableProperties, getPublicProperty } from "@/components/portal/data";
+import { SITE_URL, TYPES, collectLandings, landingPath, slugify, type OpSlug } from "@/components/portal/seo";
+
+// Type slug used by the search pages for this property type (apartamentos, casas…).
+const typeSlugOf = (propertyType: string) => Object.entries(TYPES).find(([, v]) => v.types.includes(propertyType))?.[0] || null;
+const opSlugOf = (operationType: string): OpSlug => (operationType === "ALQUILER" ? "alquiler" : "venta");
+
+// Strip line breaks / extra spaces and cut at a word boundary for meta descriptions.
+const snippet = (text: string | null, max = 150) => {
+  const s = (text || "").replace(/\s+/g, " ").trim();
+  return s.length <= max ? s : s.slice(0, s.lastIndexOf(" ", max)) + "…";
+};
 
 interface Property {
   id: string; title: string; propertyType: string; operationType: string; status: string;
@@ -55,17 +66,24 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const t = tr(await getLang());
   const p = (await getPublicProperty(id)) as unknown as Property | null;
   if (!p) return { title: t.detail.notFound };
-  const loc = [p.sector, p.city].filter(Boolean).join(", ");
+  const loc = [p.sector, p.city].filter((x, i, a): x is string => !!x && a.indexOf(x) === i).join(", ");
   const price = p.salePrice ? formatCurrency(p.salePrice, p.currency) : p.rentPrice ? `${formatCurrency(p.rentPrice, p.currency)}${t.common.perMonth}` : "";
+  const op = p.operationType === "ALQUILER" ? t.detail.forRent : p.operationType === "VENTA" ? t.detail.forSale : `${t.detail.forSale} / ${t.detail.forRent}`;
+  const specs = [p.bedrooms != null && `${p.bedrooms} ${t.detail.beds}`, p.area != null && `${p.area} m²`].filter(Boolean).join(", ");
   let firstPhoto: string | undefined;
   if (p.photos) { try { const arr = JSON.parse(p.photos); firstPhoto = arr[0]; } catch { /* ignore */ } }
+  const description = [`${t.types[p.propertyType] || t.common.property} ${op.toLowerCase()}${loc ? ` · ${loc}` : ""}`, price, specs, snippet(p.description, 110)]
+    .filter(Boolean).join(" · ");
   return {
-    title: `${p.title} — PanamaInmo`,
-    description: `${t.types[p.propertyType] || t.common.property} · ${p.operationType === "ALQUILER" ? t.detail.forRent : p.operationType === "VENTA" ? t.detail.forSale : `${t.detail.forSale} / ${t.detail.forRent}`} · ${loc} · ${price}`,
+    title: `${p.title}${loc ? ` · ${loc}` : ""} | PanamaInmo`,
+    description,
+    alternates: { canonical: `${SITE_URL}/p/${p.id}` },
     openGraph: {
       title: p.title,
-      description: `${loc} · ${price}`,
+      description,
+      url: `${SITE_URL}/p/${p.id}`,
       siteName: "PanamaInmo",
+      type: "website",
       images: firstPhoto ? [{ url: optimizePhoto(firstPhoto, 1200) }] : undefined,
     },
   };
@@ -118,9 +136,57 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
 
   const waText = encodeURIComponent(t.common.waProperty(p.title, loc, `https://panamainmo.com/p/${p.id}`));
 
+  // SEO: breadcrumb + links to the search pages this listing belongs to (only pages that exist).
+  const opSlug = opSlugOf(p.operationType);
+  const typeSlug = typeSlugOf(p.propertyType);
+  const landingSet = new Set(collectLandings(await getAvailableProperties()).map(landingPath));
+  const zoneCandidates = [p.sector, p.corregimiento, p.city].filter((x): x is string => !!x)
+    .map((z) => (slugify(z) === "panama" ? "Ciudad de Panamá" : z));
+  const related = [
+    ...zoneCandidates.flatMap((z) => [
+      typeSlug ? { path: landingPath({ op: opSlug, type: typeSlug, zone: slugify(z) }), label: t.landing.title(TYPES[typeSlug][lang], opSlug, z) } : null,
+      { path: landingPath({ op: opSlug, type: null, zone: slugify(z) }), label: t.landing.title(null, opSlug, z) },
+    ]),
+    typeSlug ? { path: landingPath({ op: opSlug, type: typeSlug, zone: null }), label: t.landing.title(TYPES[typeSlug][lang], opSlug, null) } : null,
+  ].filter((x): x is { path: string; label: string } => !!x && landingSet.has(x.path))
+    .filter((x, i, a) => a.findIndex((y) => y.path === x.path) === i);
+  const crumbs = [
+    { name: t.landing.home, path: "/" },
+    { name: opSlug === "venta" ? t.landing.sale : t.landing.rent, path: `/${opSlug}` },
+    ...(typeSlug && landingSet.has(`/${opSlug}/${typeSlug}`) ? [{ name: TYPES[typeSlug][lang], path: `/${opSlug}/${typeSlug}` }] : []),
+  ];
+  const jsonLd = [
+    {
+      "@context": "https://schema.org", "@type": "BreadcrumbList",
+      itemListElement: [...crumbs.map((c) => ({ name: c.name, item: `${SITE_URL}${c.path}` })), { name: p.title, item: `${SITE_URL}/p/${p.id}` }]
+        .map((c, i) => ({ "@type": "ListItem", position: i + 1, ...c })),
+    },
+    {
+      "@context": "https://schema.org", "@type": "RealEstateListing",
+      name: p.title, url: `${SITE_URL}/p/${p.id}`,
+      description: (p.description || "").slice(0, 500) || undefined,
+      image: photos.slice(0, 6),
+      offers: {
+        "@type": "Offer",
+        price: p.salePrice ?? p.rentPrice ?? undefined,
+        priceCurrency: p.currency || "USD",
+        availability: "https://schema.org/InStock",
+        businessFunction: p.salePrice != null ? "http://purl.org/goodrelations/v1#Sell" : "http://purl.org/goodrelations/v1#LeaseOut",
+      },
+      about: {
+        "@type": p.propertyType === "CASA" || p.propertyType === "VILLA" ? "SingleFamilyResidence" : p.propertyType === "APARTAMENTO" || p.propertyType === "PENTHOUSE" ? "Apartment" : "Place",
+        address: { "@type": "PostalAddress", addressLocality: p.sector || p.city || undefined, addressRegion: p.state || undefined, addressCountry: "PA" },
+        numberOfRooms: p.bedrooms ?? undefined,
+        floorSize: p.area ? { "@type": "QuantitativeValue", value: p.area, unitCode: "MTK" } : undefined,
+      },
+      provider: { "@type": "RealEstateAgent", name: "PanamaInmo", url: SITE_URL, telephone: "+50763183113" },
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[#FBF8F3]" style={{ fontFamily: "'Josefin Sans', sans-serif", color: "#1E1A15" }}>
 
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <PortalHeader portal={portal} lang={lang} />
 
       {/* ─── Breadcrumb ─── */}
@@ -241,6 +307,20 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
                   title="Mapa" className="w-full h-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
               </div>
               <p className="text-[11px] text-[#9C9182] mt-2">{t.detail.approx}</p>
+            </div>
+          )}
+
+          {/* Related search pages (internal links for SEO) */}
+          {related.length > 0 && (
+            <div>
+              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.landing.popularTitle}</p>
+              <div className="flex flex-wrap gap-2">
+                {related.map((l) => (
+                  <Link key={l.path} href={portalHref(l.path, portal)} className="px-4 py-2 rounded-full bg-white border border-[#E9E0D0] text-sm text-[#4A4238] hover:border-[#B8945F]">
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
 

@@ -11,7 +11,7 @@ import { IconBuilding, IconCheck, IconGlobe, IconKey, IconScale, IconTag, IconWA
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = tr(await getLang()).servicesPage;
-  return { title: t.metaTitle, description: t.metaDesc };
+  return { title: t.metaTitle, description: t.metaDesc, alternates: { canonical: `https://panamainmo.com/servicios` } };
 }
 
 // Icon and photo per service, in the same order as the dictionary list.

@@ -33,7 +33,11 @@ const decode = (s: string) =>
       const map: Record<string, string> = { acute: "́", tilde: "̃", uml: "̈" };
       return (c + map[k.toLowerCase()]).normalize("NFC");
     })
-    .replace(/&#(\d+);/g, (_, n: string) => String.fromCharCode(Number(n)));
+    .replace(/&(iexcl|iquest|laquo|raquo|deg|ordm|ordf|middot|hellip|euro|frac12|times|reg|copy|trade|ldquo|rdquo|lsquo|rsquo|ccedil|Ccedil);/g,
+      (_, k: string) => ({ iexcl: "¡", iquest: "¿", laquo: "«", raquo: "»", deg: "°", ordm: "º", ordf: "ª", middot: "·", hellip: "…", euro: "€",
+        frac12: "½", times: "×", reg: "®", copy: "©", trade: "™", ldquo: "“", rdquo: "”", lsquo: "‘", rsquo: "’", ccedil: "ç", Ccedil: "Ç" } as Record<string, string>)[k])
+    .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)));
 
 const stripTags = (s: string) =>
   decode(s.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n\n").replace(/<[^>]+>/g, ""))

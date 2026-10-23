@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = tr(await getLang()).about;
-  return { title: t.metaTitle, description: t.metaDesc };
+  return { title: t.metaTitle, description: t.metaDesc, alternates: { canonical: `https://panamainmo.com/nosotros` } };
 }
 
 interface TeamMember { fullName: string; photoUrl: string | null; initials: string | null; phone: string | null }

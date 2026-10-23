@@ -11,13 +11,18 @@ import HeroSearch from "./HeroSearch";
 import ServicesSection from "./ServicesSection";
 import { getLang, isPortalRequest } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
+import { SITE_URL, TYPES, collectLandings, landingPath, zoneName } from "@/components/portal/seo";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = tr(await getLang()).home;
-  return { title: t.metaTitle, description: t.metaDesc };
+  return {
+    title: t.metaTitle, description: t.metaDesc,
+    alternates: { canonical: SITE_URL },
+    openGraph: { title: t.metaTitle, description: t.metaDesc, url: SITE_URL, siteName: "PanamaInmo", type: "website", images: [{ url: `${SITE_URL}/brand/panamainmo-logo.png` }] },
+  };
 }
 
 const HERO_IMG = "https://images.unsplash.com/photo-1582407947304-fd86f028f716?auto=format&fit=crop&w=2400&q=80";
@@ -41,6 +46,27 @@ export default async function CatalogoHome() {
   const properties = await getAvailableProperties();
   const featured = properties.slice(0, 6);
 
+  // Popular searches: the biggest search pages, split by sale / rent (internal links for SEO).
+  const landings = collectLandings(properties);
+  const popular = (op: "venta" | "alquiler") => [
+    ...landings.filter((l) => l.op === op && !l.zone && l.type).slice(0, 4),
+    ...landings.filter((l) => l.op === op && l.zone).slice(0, 14),
+  ].map((l) => ({ path: landingPath(l), count: l.count, label: t.landing.title(l.type ? TYPES[l.type][lang] : null, l.op, l.zone ? zoneName(properties, l.zone) : null) }));
+  const popularGroups = [
+    { title: t.landing.title(null, "venta", null), items: popular("venta") },
+    { title: t.landing.title(null, "alquiler", null), items: popular("alquiler") },
+  ].filter((g) => g.items.length);
+
+  const orgLd = {
+    "@context": "https://schema.org", "@type": "RealEstateAgent",
+    name: "PanamaInmo", alternateName: "PanamaInmo Real Estate & Legal Advisory",
+    url: SITE_URL, logo: `${SITE_URL}/brand/panamainmo-logo.png`, image: `${SITE_URL}/brand/panamainmo-logo.png`,
+    telephone: "+50763183113", email: BROKER.email,
+    address: { "@type": "PostalAddress", addressLocality: "Ciudad de Panamá", addressCountry: "PA" },
+    areaServed: { "@type": "Country", name: "Panamá" },
+    sameAs: [BROKER.instagramUrl],
+  };
+
   const categories = CATEGORIES
     .map((c) => {
       const ofType = properties.filter((p) => p.propertyType === c.type);
@@ -53,6 +79,7 @@ export default async function CatalogoHome() {
 
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#1E1A15]" style={SANS}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgLd).replace(/</g, "\\u003c") }} />
       <PortalHeader portal={portal} lang={lang} />
 
       {/* ─── Hero ─── */}
@@ -181,6 +208,29 @@ export default async function CatalogoHome() {
 
       {/* ─── Services teaser ─── */}
       <ServicesSection href={h("/servicios")} lang={lang} />
+
+      {/* ─── Popular searches (SEO internal links) ─── */}
+      {popularGroups.length > 0 && (
+        <section className="px-4 sm:px-6 pb-16 sm:pb-20">
+          <div className="max-w-7xl mx-auto">
+            <SectionTitle eyebrow={t.landing.popularEyebrow} title={t.landing.popularTitle} />
+            <div className="mt-10 grid lg:grid-cols-2 gap-8">
+              {popularGroups.map((g) => (
+                <div key={g.title}>
+                  <Link href={h(g.items[0].path.split("/").slice(0, 2).join("/"))} className="text-lg hover:text-[#8A6A3A]" style={SERIF}>{g.title}</Link>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {g.items.map((i) => (
+                      <Link key={i.path} href={h(i.path)} className="px-3.5 py-1.5 rounded-full bg-white border border-[#E9E0D0] text-sm text-[#4A4238] hover:border-[#B8945F]">
+                        {i.label.replace(/, Panamá$|, Panama$/, "")} <span className="text-[#9C9182]">({i.count})</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── CTA ─── */}
       <section className="relative overflow-hidden mx-4 sm:mx-6 mb-16 sm:mb-20 rounded-3xl">

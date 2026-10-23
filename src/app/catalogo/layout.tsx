@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://panamainmo.com"),
   title: "PanamaInmo · Propiedades en Panamá",
   description: "Real Estate & Legal Advisory en Panamá. Compra, venta y alquiler de apartamentos, casas, penthouses y locales.",
   openGraph: {

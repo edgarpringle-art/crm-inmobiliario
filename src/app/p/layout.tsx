@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://panamainmo.com"),
   icons: { icon: "/brand/pi-isotipo.png" },
 };
 

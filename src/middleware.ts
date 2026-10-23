@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { verifySession, COOKIE_SESSION } from "@/lib/auth";
 
 // Routes that don't require auth
-const PUBLIC_PREFIXES = ["/login", "/p/", "/catalogo", "/ver/", "/api/auth/", "/api/catalogo", "/api/leads", "/api/cron/", "/api/propuestas/public", "/api/propuestas/respond"];
+const PUBLIC_PREFIXES = ["/robots.txt", "/sitemap.xml", "/login", "/p/", "/catalogo", "/ver/", "/api/auth/", "/api/catalogo", "/api/leads", "/api/cron/", "/api/propuestas/public", "/api/propuestas/respond"];
 
 // Public site pages served at clean URLs on panamainmo.com (files live in /catalogo/*)
 const PORTAL_PAGES = ["/propiedades", "/servicios", "/nosotros", "/contacto"];
@@ -38,6 +38,14 @@ export async function middleware(request: NextRequest) {
       url.pathname = "/propiedades";
       return NextResponse.redirect(url, 301);
     }
+    // Search landing pages: /venta, /alquiler/casas/boquete … (files in /catalogo/inmuebles/[...slug])
+    if (/^\/(venta|alquiler)(\/|$)/.test(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/catalogo/inmuebles${pathname}`;
+      const headers = new Headers(request.headers);
+      headers.set("x-pathname", url.pathname);
+      return NextResponse.rewrite(url, { request: { headers } });
+    }
     if (pathname === "/" || pathname === "" || PORTAL_PAGES.includes(pathname)) {
       const url = request.nextUrl.clone();
       url.pathname = pathname === "/" || pathname === "" ? "/catalogo" : `/catalogo${pathname}`;
@@ -50,7 +58,8 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith("/p/") ||
       pathname.startsWith("/api/catalogo") ||
       pathname.startsWith("/api/leads") ||
-      pathname.startsWith("/api/cron/") || // Vercel Cron may call the primary domain; the route checks CRON_SECRET
+      pathname.startsWith("/api/cron/") ||
+      pathname === "/robots.txt" || pathname === "/sitemap.xml" || // Vercel Cron may call the primary domain; the route checks CRON_SECRET
       pathname.startsWith("/_next/") ||
       pathname.startsWith("/logo") ||
       pathname.startsWith("/favicon") ||

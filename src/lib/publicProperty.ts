@@ -21,3 +21,19 @@ export function optimizePhoto(url: string, width = 1600): string {
   if (!url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
   return url.replace("/upload/", `/upload/f_auto,q_auto,w_${width},c_limit/`);
 }
+
+const ENTITIES: Record<string, string> = {
+  amp: "&", quot: '"', apos: "'", nbsp: " ", iexcl: "¡", iquest: "¿", laquo: "«", raquo: "»", deg: "°", ordm: "º", ordf: "ª",
+  middot: "·", hellip: "…", bull: "•", ndash: "–", mdash: "—", sup2: "²", euro: "€", ldquo: "“", rdquo: "”", lsquo: "‘", rsquo: "’",
+  aacute: "á", eacute: "é", iacute: "í", oacute: "ó", uacute: "ú", ntilde: "ñ", uuml: "ü",
+  Aacute: "Á", Eacute: "É", Iacute: "Í", Oacute: "Ó", Uacute: "Ú", Ntilde: "Ñ",
+};
+
+/** Decodes HTML entities left in imported texts ("&iexcl;Nuevo!" → "¡Nuevo!"). */
+export function decodeEntities(s: string | null | undefined): string | null {
+  if (!s) return s ?? null;
+  return s
+    .replace(/&([a-zA-Z]+[0-9]?);/g, (m, k: string) => ENTITIES[k] ?? m)
+    .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)));
+}

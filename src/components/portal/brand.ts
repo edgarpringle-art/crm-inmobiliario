@@ -29,6 +29,7 @@ export const NAV = [
 export function portalHref(path: string, portal: boolean): string {
   if (portal) return path;
   const [p, qs] = path.split("?");
+  if (/^\/(venta|alquiler)(\/|$)/.test(p)) return `/catalogo/inmuebles${p}${qs ? `?${qs}` : ""}`;
   return `${p === "/" ? "/catalogo" : `/catalogo${p}`}${qs ? `?${qs}` : ""}`;
 }
 

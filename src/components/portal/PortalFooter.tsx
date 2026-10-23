@@ -24,10 +24,10 @@ export default function PortalFooter({ portal = false, lang = "es" }: { portal?:
           <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">{t.footer.explore}</p>
           <ul className="space-y-3 text-sm">
             <li><Link href={h("/propiedades")} className="hover:text-white transition-colors">{t.footer.all}</Link></li>
-            <li><Link href={h("/propiedades?op=VENTA")} className="hover:text-white transition-colors">{t.footer.sale}</Link></li>
-            <li><Link href={h("/propiedades?op=ALQUILER")} className="hover:text-white transition-colors">{t.footer.rent}</Link></li>
-            <li><Link href={h("/propiedades?type=APARTAMENTO")} className="hover:text-white transition-colors">{t.footer.apartments}</Link></li>
-            <li><Link href={h("/propiedades?type=CASA")} className="hover:text-white transition-colors">{t.footer.houses}</Link></li>
+            <li><Link href={h("/venta")} className="hover:text-white transition-colors">{t.footer.sale}</Link></li>
+            <li><Link href={h("/alquiler")} className="hover:text-white transition-colors">{t.footer.rent}</Link></li>
+            <li><Link href={h("/venta/apartamentos")} className="hover:text-white transition-colors">{t.footer.apartments}</Link></li>
+            <li><Link href={h("/venta/casas")} className="hover:text-white transition-colors">{t.footer.houses}</Link></li>
           </ul>
         </div>
 
