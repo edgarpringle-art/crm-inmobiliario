@@ -50,6 +50,7 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith("/p/") ||
       pathname.startsWith("/api/catalogo") ||
       pathname.startsWith("/api/leads") ||
+      pathname.startsWith("/api/cron/") || // Vercel Cron may call the primary domain; the route checks CRON_SECRET
       pathname.startsWith("/_next/") ||
       pathname.startsWith("/logo") ||
       pathname.startsWith("/favicon") ||
