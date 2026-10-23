@@ -168,6 +168,8 @@ const es = {
     page: (n: number) => `Página ${n}`, prev: "← Anterior", next: "Siguiente →",
     seeAllFilters: "Usar filtros avanzados",
     popularTitle: "Búsquedas populares", popularEyebrow: "Explora",
+    byType: (op: "venta" | "alquiler"): string => (op === "venta" ? "Comprar por tipo" : "Alquilar por tipo"),
+    byZone: (op: "venta" | "alquiler"): string => (op === "venta" ? "Comprar por zona" : "Alquilar por zona"),
   },
   contactPage: {
     metaTitle: "Contacto · PanamaInmo", metaDesc: "Escríbenos para comprar, vender o alquilar tu propiedad en Panamá.",
@@ -340,6 +342,8 @@ const en: typeof es = {
     page: (n: number) => `Page ${n}`, prev: "← Previous", next: "Next →",
     seeAllFilters: "Use advanced filters",
     popularTitle: "Popular searches", popularEyebrow: "Explore",
+    byType: (op: "venta" | "alquiler") => (op === "venta" ? "Buy by property type" : "Rent by property type"),
+    byZone: (op: "venta" | "alquiler") => (op === "venta" ? "Buy by area" : "Rent by area"),
   },
   contactPage: {
     metaTitle: "Contact · PanamaInmo", metaDesc: "Get in touch to buy, sell or rent property in Panama.",

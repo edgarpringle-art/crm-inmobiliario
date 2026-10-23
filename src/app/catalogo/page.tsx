@@ -48,14 +48,16 @@ export default async function CatalogoHome() {
 
   // Popular searches: the biggest search pages, split by sale / rent (internal links for SEO).
   const landings = collectLandings(properties);
-  const popular = (op: "venta" | "alquiler") => [
-    ...landings.filter((l) => l.op === op && !l.zone && l.type).slice(0, 4),
-    ...landings.filter((l) => l.op === op && l.zone).slice(0, 14),
-  ].map((l) => ({ path: landingPath(l), count: l.count, label: t.landing.title(l.type ? TYPES[l.type][lang] : null, l.op, l.zone ? zoneName(properties, l.zone) : null) }));
-  const popularGroups = [
-    { title: t.landing.title(null, "venta", null), items: popular("venta") },
-    { title: t.landing.title(null, "alquiler", null), items: popular("alquiler") },
-  ].filter((g) => g.items.length);
+  // Short chips ("Casas (465)", "Chame (182)"); the full phrase goes in the link title for Google/hover.
+  const chip = (l: (typeof landings)[number]) => ({
+    path: landingPath(l), count: l.count,
+    short: l.zone ? zoneName(properties, l.zone) || l.zone : TYPES[l.type!][lang],
+    full: t.landing.title(l.type ? TYPES[l.type][lang] : null, l.op, l.zone ? zoneName(properties, l.zone) : null),
+  });
+  const popularGroups = (["venta", "alquiler"] as const).flatMap((op) => [
+    { title: t.landing.byType(op), all: `/${op}`, items: landings.filter((l) => l.op === op && !l.zone && l.type).slice(0, 8).map(chip) },
+    { title: t.landing.byZone(op), all: `/${op}`, items: landings.filter((l) => l.op === op && l.zone && !l.type).slice(0, 18).map(chip) },
+  ]).filter((g) => g.items.length);
 
   const orgLd = {
     "@context": "https://schema.org", "@type": "RealEstateAgent",
@@ -209,23 +211,30 @@ export default async function CatalogoHome() {
       {/* ─── Services teaser ─── */}
       <ServicesSection href={h("/servicios")} lang={lang} />
 
-      {/* ─── Popular searches (SEO internal links) ─── */}
+      {/* ─── Popular searches (SEO internal links, collapsed accordions; links stay in the HTML) ─── */}
       {popularGroups.length > 0 && (
         <section className="px-4 sm:px-6 pb-16 sm:pb-20">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <SectionTitle eyebrow={t.landing.popularEyebrow} title={t.landing.popularTitle} />
-            <div className="mt-10 grid lg:grid-cols-2 gap-8">
+            <div className="mt-8 grid md:grid-cols-2 gap-3">
               {popularGroups.map((g) => (
-                <div key={g.title}>
-                  <Link href={h(g.items[0].path.split("/").slice(0, 2).join("/"))} className="text-lg hover:text-[#8A6A3A]" style={SERIF}>{g.title}</Link>
-                  <div className="flex flex-wrap gap-2 mt-4">
+                <details key={g.title} className="group bg-white rounded-2xl border border-[#E9E0D0] open:border-[#B8945F] transition-colors">
+                  <summary className="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                    <span className="text-base" style={SERIF}>{g.title}</span>
+                    <span className="flex items-center gap-3 text-xs text-[#9C9182]">
+                      {g.items.length}
+                      <span className="w-7 h-7 rounded-full bg-[#F3ECDF] text-[#8A6A3A] flex items-center justify-center transition-transform group-open:rotate-45 text-lg leading-none">+</span>
+                    </span>
+                  </summary>
+                  <div className="px-5 pb-5 flex flex-wrap gap-2">
                     {g.items.map((i) => (
-                      <Link key={i.path} href={h(i.path)} className="px-3.5 py-1.5 rounded-full bg-white border border-[#E9E0D0] text-sm text-[#4A4238] hover:border-[#B8945F]">
-                        {i.label.replace(/, Panamá$|, Panama$/, "")} <span className="text-[#9C9182]">({i.count})</span>
+                      <Link key={i.path} href={h(i.path)} title={i.full}
+                        className="px-3 py-1.5 rounded-full bg-[#FBF8F3] border border-[#E9E0D0] text-sm text-[#4A4238] hover:border-[#B8945F] hover:text-[#1E1A15]">
+                        {i.short} <span className="text-[#9C9182]">{i.count}</span>
                       </Link>
                     ))}
                   </div>
-                </div>
+                </details>
               ))}
             </div>
           </div>
