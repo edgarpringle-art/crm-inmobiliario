@@ -4,7 +4,6 @@ import WebTracker from "@/components/portal/WebTracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://panamainmo.com"),
-  icons: { icon: "/brand/pi-isotipo.png" },
 };
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {

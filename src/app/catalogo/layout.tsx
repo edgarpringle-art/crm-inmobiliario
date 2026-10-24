@@ -12,9 +12,6 @@ export const metadata: Metadata = {
     siteName: "PanamaInmo",
     type: "website",
   },
-  icons: {
-    icon: "/brand/pi-isotipo.png",
-  },
 };
 
 export default function CatalogoLayout({ children }: { children: React.ReactNode }) {
