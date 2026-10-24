@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query, queryOne, update, remove } from "@/lib/db";
 import { syncBusquedaFromClient } from "@/lib/syncBusqueda";
+import { ensurePublicSearchColumns } from "@/lib/publicSearches";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
+    await ensurePublicSearchColumns();
     const client = await queryOne("SELECT * FROM Client WHERE id = ?", [id]);
     if (!client) return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
 
@@ -36,6 +38,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (!existing) return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 });
 
     const body = await request.json();
+    await ensurePublicSearchColumns(); // publicSearch / publicSearchAt (web "Buscamos" page)
     await update("Client", id, body);
     const client = await queryOne<Record<string, unknown>>("SELECT * FROM Client WHERE id = ?", [id]);
 

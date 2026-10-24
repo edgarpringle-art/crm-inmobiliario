@@ -22,6 +22,7 @@ export const NAV = [
   { href: "/propiedades", key: "properties" },
   { href: "/servicios", key: "services" },
   { href: "/nosotros", key: "about" },
+  { href: "/buscamos", key: "wanted" },
   { href: "/contacto", key: "contact" },
 ] as const;
 

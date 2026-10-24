@@ -20,6 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages: MetadataRoute.Sitemap = [
     { url: SITE_URL, lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/propiedades`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: `${SITE_URL}/buscamos`, lastModified: now, changeFrequency: "daily", priority: 0.6 },
     ...["servicios", "nosotros", "contacto"].map((p) => ({ url: `${SITE_URL}/${p}`, changeFrequency: "monthly" as const, priority: 0.5 })),
   ];
   const landings: MetadataRoute.Sitemap = collectLandings(props).map((l) => ({

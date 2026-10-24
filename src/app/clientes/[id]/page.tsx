@@ -71,6 +71,7 @@ interface ClientDetail {
   address: string | null; city: string | null; notes: string | null; driveLink: string | null;
   createdAt: string; updatedAt: string; createdBy: string | null;
   lastActivityBy: string | null; lastActivityAt: string | null;
+  publicSearch: number | null; publicSearchAt: string | null;
   ownedProperties: Array<{ id: string; title: string; propertyType: string; operationType: string; status: string; salePrice: number | null; rentPrice: number | null; currency: string }>;
   deals: Array<{ id: string; dealType: string; status: string; agreedPrice: number | null; currency: string; property: { id: string; title: string } | null }>;
 }
@@ -90,6 +91,7 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
   const [propForm, setPropForm] = useState(emptyPropForm);
   const [mls, setMls] = useState<{ criteria: boolean; total: number; items: MlsMatch[] } | null>(null);
   const [addingMls, setAddingMls] = useState("");
+  const [savingPublic, setSavingPublic] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -103,6 +105,23 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
       setPropuestas(Array.isArray(p) ? p : []);
     }).finally(() => setLoading(false));
   }, [id]);
+
+  // Publish / hide the search on panamainmo.com/buscamos (criteria only, client stays anonymous).
+  async function togglePublicSearch() {
+    if (!client) return;
+    const on = !client.publicSearch;
+    setSavingPublic(true);
+    try {
+      const res = await fetch(`/api/clients/${id}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publicSearch: on ? 1 : 0, ...(on ? { publicSearchAt: new Date().toISOString() } : {}) }),
+      });
+      if (!res.ok) { toast.error("No se pudo actualizar"); return; }
+      const c = await res.json();
+      setClient((prev) => prev && { ...prev, publicSearch: c.publicSearch, publicSearchAt: c.publicSearchAt });
+      toast.success(on ? "Búsqueda publicada en la web" : "Búsqueda retirada de la web");
+    } finally { setSavingPublic(false); }
+  }
 
   async function addPropuesta() {
     if (!propForm.title.trim()) { toast.error("Ponle un título a la opción"); return; }
@@ -272,7 +291,26 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
         {/* Búsqueda */}
         {searchInfo.some((i) => i.value) && (
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Búsqueda</h2>
+            <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+              <h2 className="text-lg font-semibold text-gray-900">Búsqueda</h2>
+              {client.searchType && (
+                <div className="flex items-center gap-3">
+                  {client.publicSearch ? (
+                    <a href={`${SITE}/buscamos`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1">
+                      Ver en la web <HiExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  ) : null}
+                  <button onClick={togglePublicSearch} disabled={savingPublic} role="switch" aria-checked={!!client.publicSearch}
+                    title="Muestra el tipo, zona y presupuesto (sin datos del cliente) para que otros corredores te ofrezcan propiedades"
+                    className="flex items-center gap-2 text-sm text-gray-700 disabled:opacity-60 cursor-pointer">
+                    <span className={`relative w-9 h-5 rounded-full transition-colors ${client.publicSearch ? "bg-emerald-500" : "bg-gray-300"}`}>
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${client.publicSearch ? "translate-x-4" : ""}`} />
+                    </span>
+                    Publicar en la web
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {searchInfo.map((item) => item.value && (
                 <div key={item.label}>

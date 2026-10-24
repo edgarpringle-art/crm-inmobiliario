@@ -7,7 +7,7 @@ export const LANG_COOKIE = "pi_lang";
 const lcFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
 const es = {
-  nav: { home: "Inicio", properties: "Propiedades", services: "Servicios", about: "Nosotros", contact: "Contacto" },
+  nav: { home: "Inicio", properties: "Propiedades", services: "Servicios", about: "Nosotros", wanted: "Buscamos", contact: "Contacto" },
   header: { license: "Licencia", menu: "Menú", home: "PanamaInmo — Inicio", waMsg: "Hola PanamaInmo, me interesa una propiedad." },
   footer: {
     tagline: "Real Estate & Legal Advisory en Panamá. Compra, venta, alquiler y asesoría legal inmobiliaria con transparencia y respaldo profesional.",
@@ -171,6 +171,32 @@ const es = {
     byType: (op: "venta" | "alquiler"): string => (op === "venta" ? "Comprar por tipo" : "Alquilar por tipo"),
     byZone: (op: "venta" | "alquiler"): string => (op === "venta" ? "Comprar por zona" : "Alquilar por zona"),
   },
+  wanted: {
+    metaTitle: "Buscamos propiedades para nuestros clientes · PanamaInmo",
+    metaDesc: "Clientes reales buscando comprar o alquilar en Panamá. ¿Eres corredor o propietario? Envíanos tu propiedad.",
+    heroEyebrow: "Para corredores y propietarios", heroTitle: "Lo que buscan nuestros clientes",
+    heroSub: "Compradores e inquilinos reales que estamos atendiendo ahora. Si tienes una propiedad que encaje, envíanosla.",
+    howTitle: "¿Cómo funciona?",
+    how: ["Revisa las búsquedas activas.", "Envíanos tu propiedad por WhatsApp o con el formulario.", "Si encaja, te contactamos para coordinar."],
+    count: (n: number): string => `${n} búsqueda${n !== 1 ? "s" : ""} activa${n !== 1 ? "s" : ""}`,
+    op: { COMPRA: "Compra", ALQUILER: "Alquiler", COMPRA_Y_ALQUILER: "Compra o alquiler" } as Record<string, string>,
+    anyType: "Propiedad", anyZone: "Zona flexible",
+    upTo: (v: string): string => `Hasta ${v}`, from: (v: string): string => `Desde ${v}`, perMonth: "/mes",
+    beds: (n: number): string => `${n}+ rec.`, baths: (n: number): string => `${n}+ baños`,
+    published: (d: string): string => `Publicada ${d}`,
+    wa: "Tengo una propiedad", form: "Enviar por formulario",
+    waMsg: (code: string, what: string): string => `Hola PanamaInmo, tengo una propiedad para su búsqueda ${code} (${what}):
+`,
+    empty: "En este momento no tenemos búsquedas publicadas.", emptySub: "Si tienes una propiedad para vender o alquilar, igual nos encantaría conocerla.",
+    emptyCta: "Contáctanos",
+    f: {
+      name: "Tu nombre", company: "Inmobiliaria (opcional)", phone: "Teléfono / WhatsApp", email: "Email",
+      link: "Enlace de la propiedad (web, MLS, Drive…)", message: "Precio, ubicación, detalles…",
+      send: "Enviar propiedad", sending: "Enviando…", required: "Pon tu nombre y un teléfono o email.",
+      needProp: "Comparte el enlace o los detalles de la propiedad.", failed: "No se pudo enviar. Intenta por WhatsApp.",
+      thanks: "¡Gracias! Recibimos tu propiedad y te contactaremos si encaja.",
+    },
+  },
   contactPage: {
     metaTitle: "Contacto · PanamaInmo", metaDesc: "Escríbenos para comprar, vender o alquilar tu propiedad en Panamá.",
     heroEyebrow: "Contacto", heroTitle: "Hablemos de tu próxima propiedad",
@@ -181,7 +207,7 @@ const es = {
 };
 
 const en: typeof es = {
-  nav: { home: "Home", properties: "Properties", services: "Services", about: "About us", contact: "Contact" },
+  nav: { home: "Home", properties: "Properties", services: "Services", about: "About us", wanted: "Wanted", contact: "Contact" },
   header: { license: "License", menu: "Menu", home: "PanamaInmo — Home", waMsg: "Hi PanamaInmo, I'm interested in a property." },
   footer: {
     tagline: "Real Estate & Legal Advisory in Panama. Buying, selling, renting and real estate legal advice with transparency and professional support.",
@@ -344,6 +370,32 @@ const en: typeof es = {
     popularTitle: "Popular searches", popularEyebrow: "Explore",
     byType: (op: "venta" | "alquiler") => (op === "venta" ? "Buy by property type" : "Rent by property type"),
     byZone: (op: "venta" | "alquiler") => (op === "venta" ? "Buy by area" : "Rent by area"),
+  },
+  wanted: {
+    metaTitle: "Properties wanted for our clients · PanamaInmo",
+    metaDesc: "Real buyers and tenants looking for property in Panama. Broker or owner? Send us your listing.",
+    heroEyebrow: "For brokers and owners", heroTitle: "What our clients are looking for",
+    heroSub: "Real buyers and tenants we are working with right now. If you have a property that fits, send it to us.",
+    howTitle: "How it works",
+    how: ["Browse the active searches.", "Send us your property via WhatsApp or the form.", "If it fits, we'll contact you to coordinate."],
+    count: (n: number): string => `${n} active search${n !== 1 ? "es" : ""}`,
+    op: { COMPRA: "Buy", ALQUILER: "Rent", COMPRA_Y_ALQUILER: "Buy or rent" } as Record<string, string>,
+    anyType: "Property", anyZone: "Flexible area",
+    upTo: (v: string): string => `Up to ${v}`, from: (v: string): string => `From ${v}`, perMonth: "/mo",
+    beds: (n: number): string => `${n}+ bed`, baths: (n: number): string => `${n}+ bath`,
+    published: (d: string): string => `Posted ${d}`,
+    wa: "I have a property", form: "Send via form",
+    waMsg: (code: string, what: string): string => `Hi PanamaInmo, I have a property for your search ${code} (${what}):
+`,
+    empty: "We have no published searches right now.", emptySub: "If you have a property to sell or rent, we'd still love to hear about it.",
+    emptyCta: "Contact us",
+    f: {
+      name: "Your name", company: "Agency (optional)", phone: "Phone / WhatsApp", email: "Email",
+      link: "Property link (website, MLS, Drive…)", message: "Price, location, details…",
+      send: "Send property", sending: "Sending…", required: "Enter your name and a phone or email.",
+      needProp: "Share the property link or details.", failed: "Could not send. Please try WhatsApp.",
+      thanks: "Thank you! We received your property and will contact you if it fits.",
+    },
   },
   contactPage: {
     metaTitle: "Contact · PanamaInmo", metaDesc: "Get in touch to buy, sell or rent property in Panama.",

@@ -36,6 +36,7 @@ export default function PortalFooter({ portal = false, lang = "es" }: { portal?:
           <ul className="space-y-3 text-sm">
             <li><Link href={h("/servicios")} className="hover:text-white transition-colors">{t.nav.services}</Link></li>
             <li><Link href={h("/nosotros")} className="hover:text-white transition-colors">{t.nav.about}</Link></li>
+            <li><Link href={h("/buscamos")} className="hover:text-white transition-colors">{t.nav.wanted}</Link></li>
             <li><Link href={h("/contacto")} className="hover:text-white transition-colors">{t.nav.contact}</Link></li>
           </ul>
         </div>
