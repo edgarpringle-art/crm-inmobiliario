@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BROKER, portalHref, waLink } from "./brand";
-import { IconInstagram, IconMail, IconPhone, IconWA } from "./icons";
+import { IconInstagram, IconMail, IconPhone, IconPin, IconWA } from "./icons";
 import { tr, type Lang } from "./i18n";
 
 export default function PortalFooter({ portal = false, lang = "es" }: { portal?: boolean; lang?: Lang }) {
@@ -48,6 +48,7 @@ export default function PortalFooter({ portal = false, lang = "es" }: { portal?:
             <li><a href={`mailto:${BROKER.email}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconMail /><span className="break-all">{BROKER.email}</span></a></li>
             <li><a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors"><IconInstagram />@{BROKER.instagram}</a></li>
             <li><a href={waLink()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors"><IconWA className="w-3.5 h-3.5" />WhatsApp</a></li>
+            <li><a href={BROKER.mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 hover:text-white transition-colors"><IconPin className="w-3.5 h-3.5 mt-1 shrink-0" /><span>{BROKER.office}<br />{BROKER.address}</span></a></li>
           </ul>
         </div>
       </div>

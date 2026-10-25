@@ -4,9 +4,12 @@ export const BROKER = {
   phone: "50763183113",
   phoneDisplay: "+507 6318-3113",
   email: "edgar@panamainmo.com",
-  instagram: "epringle.realestate",
-  instagramUrl: "https://www.instagram.com/epringle.realestate",
+  instagram: "panamainmo.realestate",
+  instagramUrl: "https://www.instagram.com/panamainmo.realestate",
   license: "PN5016",
+  office: "PanamaInmo Real Estate & Legal Advisory",
+  address: "P.H. Atrium, Calle 53 Este, Obarrio, Piso 27, Oficina 24",
+  mapsUrl: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("P.H. Atrium, Calle 53 Este, Obarrio, Panamá"),
 };
 
 export const waLink = (text?: string) =>

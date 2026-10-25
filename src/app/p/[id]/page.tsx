@@ -9,7 +9,7 @@ import { isPortalRequest } from "@/components/portal/portalHost";
 import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
 import { optimizePhoto, youtubeEmbedUrl } from "@/lib/publicProperty";
-import { portalHref } from "@/components/portal/brand";
+import { BROKER, portalHref } from "@/components/portal/brand";
 import { getLang } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
 import { getAvailableProperties, getPublicProperty } from "@/components/portal/data";
@@ -51,15 +51,6 @@ interface PublisherAgent {
   initials: string | null;
   color: string | null;
 }
-
-const BROKER = {
-  phone: "50763183113",
-  phoneDisplay: "+507 6318-3113",
-  email: "edgar@panamainmo.com",
-  instagram: "epringle.realestate",
-  instagramUrl: "https://www.instagram.com/epringle.realestate",
-  license: "PN5016",
-};
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -394,6 +385,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
               <div className="border-t border-white/15 pt-4 mt-5 space-y-2 text-xs">
                 <a href={`tel:+${BROKER.phone}`} className="flex items-center gap-2 text-[#CFC4B2] hover:text-white transition-colors"><IconPhone />{BROKER.phoneDisplay}</a>
                 <a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#CFC4B2] hover:text-white transition-colors"><IconInstagram />@{BROKER.instagram}</a>
+                <a href={BROKER.mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-[#CFC4B2] hover:text-white transition-colors"><span className="mt-0.5 shrink-0"><IconPin /></span>{BROKER.address}</a>
                 <p className="flex items-center gap-2 text-[#9C9182]"><IconBadge />{t.detail.license} {BROKER.license}</p>
               </div>
             </div>

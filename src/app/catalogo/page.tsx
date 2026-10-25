@@ -65,7 +65,7 @@ export default async function CatalogoHome() {
     name: "PanamaInmo", alternateName: "PanamaInmo Real Estate & Legal Advisory",
     url: SITE_URL, logo: `${SITE_URL}/brand/panamainmo-logo.png`, image: `${SITE_URL}/brand/panamainmo-logo.png`,
     telephone: "+50763183113", email: BROKER.email,
-    address: { "@type": "PostalAddress", addressLocality: "Ciudad de Panamá", addressCountry: "PA" },
+    address: { "@type": "PostalAddress", streetAddress: BROKER.address, addressLocality: "Ciudad de Panamá", addressCountry: "PA" },
     areaServed: { "@type": "Country", name: "Panamá" },
     sameAs: [BROKER.instagramUrl],
   };

@@ -6,7 +6,7 @@ import PortalFooter from "@/components/portal/PortalFooter";
 import PageHero from "@/components/portal/PageHero";
 import LeadForm from "@/components/portal/LeadForm";
 import { BROKER, SANS, SERIF, waLink } from "@/components/portal/brand";
-import { IconBadge, IconInstagram, IconMail, IconPhone, IconWA } from "@/components/portal/icons";
+import { IconBadge, IconInstagram, IconMail, IconPhone, IconPin, IconWA } from "@/components/portal/icons";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = tr(await getLang()).contactPage;
@@ -22,6 +22,7 @@ export default async function ContactoPage() {
     { icon: IconPhone, label: t.phone, value: BROKER.phoneDisplay, href: `tel:+${BROKER.phone}` },
     { icon: IconMail, label: "Email", value: BROKER.email, href: `mailto:${BROKER.email}` },
     { icon: IconInstagram, label: "Instagram", value: `@${BROKER.instagram}`, href: BROKER.instagramUrl },
+    { icon: IconPin, label: t.office, value: `${BROKER.office} · ${BROKER.address}`, href: BROKER.mapsUrl },
   ];
 
   return (
@@ -41,7 +42,7 @@ export default async function ContactoPage() {
                 <span className="w-12 h-12 rounded-full bg-[#F3ECDF] text-[#8A6A3A] flex items-center justify-center shrink-0"><I className="w-5 h-5" /></span>
                 <span>
                   <span className="block text-[11px] uppercase tracking-[0.2em] text-[#8A6A3A]">{label}</span>
-                  <span className="block text-sm text-[#1E1A15] break-all">{value}</span>
+                  <span className="block text-sm text-[#1E1A15] [overflow-wrap:anywhere]">{value}</span>
                 </span>
               </a>
             ))}

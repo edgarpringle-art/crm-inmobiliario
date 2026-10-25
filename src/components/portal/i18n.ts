@@ -201,7 +201,7 @@ const es = {
     metaTitle: "Contacto · PanamaInmo", metaDesc: "Escríbenos para comprar, vender o alquilar tu propiedad en Panamá.",
     heroEyebrow: "Contacto", heroTitle: "Hablemos de tu próxima propiedad",
     heroSub: "Déjanos tus datos y te respondemos a la brevedad, o escríbenos directo por WhatsApp.",
-    dataTitle: "Datos de contacto", phone: "Teléfono", license: "Licencia", formTitle: "Envíanos un mensaje",
+    dataTitle: "Datos de contacto", phone: "Teléfono", office: "Oficina", license: "Licencia", formTitle: "Envíanos un mensaje",
     formCta: "Enviar mensaje", waMsg: "Hola PanamaInmo",
   },
   waGate: {
@@ -406,7 +406,7 @@ const en: typeof es = {
     metaTitle: "Contact · PanamaInmo", metaDesc: "Get in touch to buy, sell or rent property in Panama.",
     heroEyebrow: "Contact", heroTitle: "Let's talk about your next property",
     heroSub: "Leave your details and we'll get back to you shortly, or message us directly on WhatsApp.",
-    dataTitle: "Contact details", phone: "Phone", license: "License", formTitle: "Send us a message",
+    dataTitle: "Contact details", phone: "Phone", office: "Office", license: "License", formTitle: "Send us a message",
     formCta: "Send message", waMsg: "Hi PanamaInmo",
   },
   waGate: {
