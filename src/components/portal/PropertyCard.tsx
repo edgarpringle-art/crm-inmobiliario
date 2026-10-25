@@ -13,7 +13,8 @@ export default function PropertyCard({ p, lang = "es" }: { p: PortalProperty; la
   const isAlquiler = p.operationType === "ALQUILER" || p.operationType === "VENTA_Y_ALQUILER";
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-[#E9E0D0] hover:shadow-[0_20px_40px_-20px_rgba(30,26,21,0.35)] hover:-translate-y-1 transition-all duration-300 group flex flex-col">
+    <div data-reveal className="h-full">
+    <div className="h-full bg-white rounded-2xl overflow-hidden border border-[#E9E0D0] hover:shadow-[0_20px_40px_-20px_rgba(30,26,21,0.35)] hover:-translate-y-1 transition-all duration-300 group flex flex-col">
       <Link href={`/p/${p.id}`} className="block relative overflow-hidden bg-[#EDE3D2]" style={{ aspectRatio: "4/3" }}>
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -70,6 +71,7 @@ export default function PropertyCard({ p, lang = "es" }: { p: PortalProperty; la
           </a>
         </div>
       </div>
+    </div>
     </div>
   );
 }

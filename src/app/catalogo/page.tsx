@@ -9,6 +9,7 @@ import { IconArrow, IconChat, IconKey, IconScale, IconShield, IconWA } from "@/c
 import { optimizePhoto } from "@/lib/publicProperty";
 import HeroSearch from "./HeroSearch";
 import ServicesSection from "./ServicesSection";
+import { CountUp } from "@/components/portal/Motion";
 import { getLang, isPortalRequest } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
 import { SITE_URL, TYPES, collectLandings, landingPath, zoneName } from "@/components/portal/seo";
@@ -86,30 +87,32 @@ export default async function CatalogoHome() {
 
       {/* ─── Hero ─── */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url('${HERO_IMG}')` }} />
+        <div className="absolute inset-0 bg-cover bg-center pi-kenburns" style={{ backgroundImage: `url('${HERO_IMG}')` }} />
         <div className="absolute inset-0 bg-gradient-to-b from-[#1E1A15]/75 via-[#2A2118]/55 to-[#1E1A15]/90" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(184,148,95,0.25),transparent_60%)]" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-16 sm:pt-28 sm:pb-24 lg:pt-32 lg:pb-28 text-center">
-          <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="flex items-center justify-center gap-3 mb-6 pi-enter">
             <span className="h-px w-10 bg-[#D9BE8F]" />
             <p className="text-[#D9BE8F] text-[11px] font-semibold uppercase tracking-[0.4em]">Real Estate & Legal Advisory</p>
             <span className="h-px w-10 bg-[#D9BE8F]" />
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-white leading-[1.1] mb-6" style={SERIF}>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-white leading-[1.1] mb-6 pi-enter" style={{ ...SERIF, animationDelay: "150ms" }}>
             {t.home.heroTitle1}<br /><span className="text-[#D9BE8F]">{t.home.heroTitle2}</span>
           </h1>
-          <p className="text-white/80 text-sm sm:text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-white/80 text-sm sm:text-lg mb-10 max-w-2xl mx-auto leading-relaxed pi-enter" style={{ animationDelay: "300ms" }}>
             {t.home.heroSub}
           </p>
-          <HeroSearch portal={portal} lang={lang} places={summarizePlaces(properties)} />
+          <div className="pi-enter relative z-10" style={{ animationDelay: "450ms" }}>
+            <HeroSearch portal={portal} lang={lang} places={summarizePlaces(properties)} />
+          </div>
         </div>
 
         {/* Trust strip */}
-        <div className="relative border-t border-white/10 bg-[#1E1A15]/60 backdrop-blur">
+        <div className="relative border-t border-white/10 bg-[#1E1A15]/60 backdrop-blur pi-enter" style={{ animationDelay: "650ms" }}>
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 grid grid-cols-3 gap-4 text-center text-white">
             <div>
-              <p className="text-2xl sm:text-3xl text-[#D9BE8F]" style={SERIF}>{properties.length}</p>
+              <p className="text-2xl sm:text-3xl text-[#D9BE8F]" style={SERIF}><CountUp value={properties.length} /></p>
               <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-white/70 mt-1">{t.home.statProps}</p>
             </div>
             <div className="border-x border-white/10">
@@ -131,7 +134,7 @@ export default async function CatalogoHome() {
             <SectionTitle eyebrow={t.home.catEyebrow} title={t.home.catTitle} subtitle={t.home.catSub} />
             <div className="mt-10 grid grid-cols-2 md:grid-cols-4 auto-rows-[170px] sm:auto-rows-[210px] gap-3 sm:gap-4">
               {categories.map((c, i) => (
-                <Link key={c.type} href={h(`/propiedades?type=${c.type}`)}
+                <Link key={c.type} href={h(`/propiedades?type=${c.type}`)} data-reveal="zoom"
                   className={`group relative overflow-hidden rounded-2xl ${bentoSpan(i, categories.length)}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={c.img} alt={c.label} loading="lazy"
@@ -184,8 +187,8 @@ export default async function CatalogoHome() {
             </p>
             <div className="mt-10 grid sm:grid-cols-2 gap-6">
               {t.home.why.map((w, i) => ({ ...w, icon: [IconShield, IconChat, IconKey, IconScale][i] })).map(({ icon: I, t: title, d }) => (
-                <div key={title} className="flex gap-4">
-                  <span className="w-12 h-12 rounded-full border border-[#B8945F]/50 text-[#D9BE8F] flex items-center justify-center shrink-0"><I className="w-6 h-6" /></span>
+                <div key={title} data-reveal className="flex gap-4 group/why">
+                  <span className="w-12 h-12 rounded-full border border-[#B8945F]/50 text-[#D9BE8F] flex items-center justify-center shrink-0 transition-colors duration-300 group-hover/why:bg-[#B8945F] group-hover/why:text-white group-hover/why:border-[#B8945F]"><I className="w-6 h-6" /></span>
                   <div>
                     <p className="font-medium text-white mb-1" style={SERIF}>{title}</p>
                     <p className="text-sm text-[#B5AA98] leading-relaxed">{d}</p>
@@ -198,12 +201,12 @@ export default async function CatalogoHome() {
               {t.home.meetTeam} <IconArrow />
             </Link>
           </div>
-          <div className="relative min-h-[320px] lg:min-h-full">
+          <div data-reveal="right" className="relative min-h-[320px] lg:min-h-full overflow-hidden group/img">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={WHY_IMG} alt={t.home.whyImgAlt} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={WHY_IMG} alt={t.home.whyImgAlt} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1500ms] group-hover/img:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#1E1A15] via-[#1E1A15]/20 to-transparent lg:via-transparent" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/pi-isotipo-blanco.png" alt="" className="absolute bottom-8 right-8 h-20 w-auto opacity-80" />
+            <img src="/brand/pi-isotipo-blanco.png" alt="" className="absolute bottom-8 right-8 h-20 w-auto opacity-80 pi-float" />
           </div>
         </div>
       </section>
@@ -218,7 +221,7 @@ export default async function CatalogoHome() {
             <SectionTitle eyebrow={t.landing.popularEyebrow} title={t.landing.popularTitle} />
             <div className="mt-8 grid md:grid-cols-2 gap-3">
               {popularGroups.map((g) => (
-                <details key={g.title} className="group bg-white rounded-2xl border border-[#E9E0D0] open:border-[#B8945F] transition-colors">
+                <details key={g.title} data-reveal className="group bg-white rounded-2xl border border-[#E9E0D0] open:border-[#B8945F] transition-colors">
                   <summary className="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                     <span className="text-base" style={SERIF}>{g.title}</span>
                     <span className="flex items-center gap-3 text-xs text-[#9C9182]">
@@ -242,15 +245,15 @@ export default async function CatalogoHome() {
       )}
 
       {/* ─── CTA ─── */}
-      <section className="relative overflow-hidden mx-4 sm:mx-6 mb-16 sm:mb-20 rounded-3xl">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${CTA_IMG}')` }} />
+      <section data-reveal="zoom" className="relative overflow-hidden mx-4 sm:mx-6 mb-16 sm:mb-20 rounded-3xl group/cta">
+        <div className="absolute inset-0 bg-cover bg-center transition-transform duration-[2000ms] group-hover/cta:scale-105" style={{ backgroundImage: `url('${CTA_IMG}')` }} />
         <div className="absolute inset-0 bg-gradient-to-r from-[#1E1A15]/90 via-[#3A2C1C]/80 to-[#B8945F]/60" />
         <div className="relative max-w-5xl mx-auto px-6 py-14 sm:py-20 text-center text-white">
           <h2 className="text-3xl sm:text-4xl font-medium mb-4" style={SERIF}>{t.home.ctaTitle}</h2>
           <p className="text-white/80 max-w-xl mx-auto mb-8">{t.home.ctaText}</p>
           <div className="flex flex-wrap justify-center gap-3">
             <a href={waLink(t.home.ctaWaMsg)} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-semibold px-7 py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-colors">
+              className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-semibold px-7 py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-colors pi-wa-ring">
               <IconWA /> {t.home.ctaWa}
             </a>
             <Link href={h("/contacto")}

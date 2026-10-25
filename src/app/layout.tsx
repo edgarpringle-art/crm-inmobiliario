@@ -43,6 +43,7 @@ export default async function RootLayout({
     <html
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning // public pages add "pi-js" before hydration (portal/motionBoot.ts)
     >
       <body className="min-h-screen flex bg-background">
         {showShell && <Sidebar />}

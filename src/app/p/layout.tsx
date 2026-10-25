@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import WebTracker from "@/components/portal/WebTracker";
+import { ScrollReveal } from "@/components/portal/Motion";
+import { MOTION_BOOT } from "@/components/portal/motionBoot";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://panamainmo.com"),
@@ -16,7 +18,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Josefin+Sans:wght@300;400;500;600;700&display=swap"
         rel="stylesheet"
       />
+      <script dangerouslySetInnerHTML={{ __html: MOTION_BOOT }} />
       {children}
+      <ScrollReveal />
       <WebTracker />
       <Analytics />
     </>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BROKER, NAV, portalHref, waLink } from "./brand";
@@ -12,6 +12,13 @@ export default function PortalHeader({ portal = false, lang = "es" }: { portal?:
   const t = tr(lang);
   const pathname = usePathname() || "";
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 40);
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
   const h = (path: string) => portalHref(path, portal);
   const isActive = (path: string) => {
     const href = h(path);
@@ -38,21 +45,21 @@ export default function PortalHeader({ portal = false, lang = "es" }: { portal?:
         </div>
       </div>
 
-      <header className="sticky top-0 z-40 bg-[#FBF8F3]/95 backdrop-blur-md border-b border-[#E4D9C6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+      <header className={`sticky top-0 z-40 bg-[#FBF8F3]/95 backdrop-blur-md border-b border-[#E4D9C6] transition-shadow duration-300 ${scrolled ? "shadow-[0_8px_30px_-12px_rgba(30,26,21,0.25)]" : ""}`}>
+        <div className={`max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4 transition-[padding] duration-300 ${scrolled ? "py-2" : "py-3.5"}`}>
           <Link href={h("/")} className="shrink-0" aria-label={t.header.home}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/panamainmo-logo.png" alt="PanamaInmo — Real Estate & Legal Advisory" className="h-9 sm:h-11 w-auto" />
+            <img src="/brand/panamainmo-logo.png" alt="PanamaInmo — Real Estate & Legal Advisory" className={`w-auto transition-all duration-300 ${scrolled ? "h-8 sm:h-9" : "h-9 sm:h-11"}`} />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-5 xl:gap-8">
             {NAV.map((n) => (
               <Link key={n.href} href={h(n.href)}
-                className={`relative text-[12px] xl:text-[13px] font-medium uppercase tracking-[0.16em] transition-colors py-1 ${
+                className={`group/nav relative text-[12px] xl:text-[13px] font-medium uppercase tracking-[0.16em] transition-colors py-1 ${
                   isActive(n.href) ? "text-[#1E1A15]" : "text-[#6B6155] hover:text-[#1E1A15]"
                 }`}>
                 {t.nav[n.key]}
-                {isActive(n.href) && <span className="absolute -bottom-1 left-0 right-0 h-px bg-[#B8945F]" />}
+                <span className={`absolute -bottom-1 left-0 right-0 h-px bg-[#B8945F] origin-left transition-transform duration-300 ${isActive(n.href) ? "scale-x-100" : "scale-x-0 group-hover/nav:scale-x-100"}`} />
               </Link>
             ))}
           </nav>
@@ -60,7 +67,7 @@ export default function PortalHeader({ portal = false, lang = "es" }: { portal?:
           <div className="flex items-center gap-2">
             <LangToggle lang={lang} className="md:hidden text-[#1E1A15]" />
             <a href={waLink(t.header.waMsg)} target="_blank" rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-2 bg-[#B8945F] hover:bg-[#A4824F] text-white px-3.5 xl:px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors">
+              className="hidden sm:flex items-center gap-2 bg-[#B8945F] hover:bg-[#A4824F] text-white px-3.5 xl:px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors pi-shine">
               <IconWA /> <span className="hidden xl:inline">WhatsApp</span>
             </a>
             <button onClick={() => setOpen(!open)} className="lg:hidden p-2 text-[#1E1A15]" aria-label={t.header.menu}>
