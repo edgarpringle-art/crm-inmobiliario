@@ -41,7 +41,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="es"
+      lang={headersList.get("x-pi-lang") === "en" ? "en" : "es"}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning // public pages add "pi-js" before hydration (portal/motionBoot.ts)
     >

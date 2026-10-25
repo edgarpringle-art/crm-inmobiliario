@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PhotoGallery from "./PhotoGallery";
 import LeadForm from "@/components/portal/LeadForm";
+import MortgageCalc from "@/components/portal/MortgageCalc";
 import { isPortalRequest } from "@/components/portal/portalHost";
 import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
@@ -13,7 +14,7 @@ import { BROKER, portalHref } from "@/components/portal/brand";
 import { getLang } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
 import { getAvailableProperties, getPublicProperty } from "@/components/portal/data";
-import { SITE_URL, TYPES, collectLandings, landingPath, slugify, type OpSlug } from "@/components/portal/seo";
+import { SITE_URL, TYPES, collectLandings, landingPath, pageAlternates, slugify, type OpSlug } from "@/components/portal/seo";
 
 // Type slug used by the search pages for this property type (apartamentos, casas…).
 const typeSlugOf = (propertyType: string) => Object.entries(TYPES).find(([, v]) => v.types.includes(propertyType))?.[0] || null;
@@ -54,7 +55,8 @@ interface PublisherAgent {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const t = tr(await getLang());
+  const lang = await getLang();
+  const t = tr(lang);
   const p = (await getPublicProperty(id)) as unknown as Property | null;
   if (!p) return { title: t.detail.notFound };
   const loc = [p.sector, p.city].filter((x, i, a): x is string => !!x && a.indexOf(x) === i).join(", ");
@@ -68,7 +70,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${p.title}${loc ? ` · ${loc}` : ""} | PanamaInmo`,
     description,
-    alternates: { canonical: `${SITE_URL}/p/${p.id}` },
+    alternates: pageAlternates(`/p/${p.id}`, lang),
     openGraph: {
       title: p.title,
       description,
@@ -182,7 +184,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
 
       {/* ─── Breadcrumb ─── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        <Link href={portalHref("/propiedades", portal)} className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6155] hover:text-[#1E1A15] transition-colors uppercase tracking-[0.15em]">
+        <Link href={portalHref("/propiedades", portal, lang)} className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6155] hover:text-[#1E1A15] transition-colors uppercase tracking-[0.15em]">
           <IconArrow /> {t.detail.back}
         </Link>
       </div>
@@ -301,13 +303,15 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
             </div>
           )}
 
+          {p.salePrice != null && p.salePrice > 0 && <MortgageCalc price={p.salePrice} lang={lang} />}
+
           {/* Related search pages (internal links for SEO) */}
           {related.length > 0 && (
             <div>
               <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.landing.popularTitle}</p>
               <div className="flex flex-wrap gap-2">
                 {related.map((l) => (
-                  <Link key={l.path} href={portalHref(l.path, portal)} className="px-4 py-2 rounded-full bg-white border border-[#E9E0D0] text-sm text-[#4A4238] hover:border-[#B8945F]">
+                  <Link key={l.path} href={portalHref(l.path, portal, lang)} className="px-4 py-2 rounded-full bg-white border border-[#E9E0D0] text-sm text-[#4A4238] hover:border-[#B8945F]">
                     {l.label}
                   </Link>
                 ))}

@@ -7,6 +7,7 @@ import { PROPERTY_TYPE_OPTIONS, SERIF, buildPlaceTree, buildZoneGroups, inPlace,
 import { IconChevron, IconHouse, IconSearch, IconWA } from "@/components/portal/icons";
 import { tr, type Lang } from "@/components/portal/i18n";
 import { track } from "@/components/portal/WebTracker";
+import AlertForm from "@/components/portal/AlertForm";
 
 // lowercase + no accents, so "Panama" finds "Panamá"
 const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -175,6 +176,12 @@ export default function Listing({ properties, initial, basePath, lang = "es" }: 
             </button>
           </div>
         )}
+        <div className="mt-12">
+          <AlertForm lang={lang} prefill={{
+            op: f.op === "ALQUILER" ? "ALQUILER" : "COMPRA", type: f.type, beds: f.beds, maxPrice: f.maxPrice,
+            zone: [f.zone, f.dist, f.prov].find(Boolean) || "",
+          }} />
+        </div>
       </div>
     </section>
   );

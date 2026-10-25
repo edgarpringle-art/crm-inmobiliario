@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageAlternates } from "@/components/portal/seo";
 import Link from "next/link";
 import { getLang, isPortalRequest } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
@@ -13,8 +14,9 @@ import OfferForm from "./OfferForm";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = tr(await getLang()).wanted;
-  return { title: t.metaTitle, description: t.metaDesc, alternates: { canonical: "https://panamainmo.com/buscamos" } };
+  const lang = await getLang();
+  const t = tr(lang).wanted;
+  return { title: t.metaTitle, description: t.metaDesc, alternates: pageAlternates("/buscamos", lang) };
 }
 
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
@@ -62,7 +64,7 @@ export default async function BuscamosPage() {
             <div className="text-center bg-white rounded-2xl border border-[#E9E0D0] px-6 py-14">
               <p className="text-xl mb-2" style={SERIF}>{t.empty}</p>
               <p className="text-sm text-[#6B6155] mb-6">{t.emptySub}</p>
-              <Link href={portalHref("/contacto", portal)}
+              <Link href={portalHref("/contacto", portal, lang)}
                 className="inline-flex bg-[#1E1A15] hover:bg-[#B8945F] text-white px-6 py-3 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors">
                 {t.emptyCta}
               </Link>

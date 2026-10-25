@@ -8,7 +8,9 @@ export async function isPortalRequest(): Promise<boolean> {
   return host === "panamainmo.com" || host === "www.panamainmo.com";
 }
 
-/** Site language chosen with the ES | EN switch (cookie); Spanish by default. */
+/** Site language: the URL decides (/en/... → English, set by the middleware as x-pi-lang). */
 export async function getLang(): Promise<Lang> {
+  const h = (await headers()).get("x-pi-lang");
+  if (h === "en" || h === "es") return h;
   return (await cookies()).get(LANG_COOKIE)?.value === "en" ? "en" : "es";
 }

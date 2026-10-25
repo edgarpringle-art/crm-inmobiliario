@@ -1,3 +1,4 @@
+import type { Lang } from "./i18n";
 // Shared brand data for the public portal (panamainmo.com).
 
 export const BROKER = {
@@ -25,17 +26,25 @@ export const NAV = [
   { href: "/propiedades", key: "properties" },
   { href: "/servicios", key: "services" },
   { href: "/nosotros", key: "about" },
+  { href: "/vender", key: "sell" },
   { href: "/buscamos", key: "wanted" },
+  { href: "/guias", key: "guides" },
   { href: "/contacto", key: "contact" },
 ] as const;
 
+/** English pages live under /en (same paths); Spanish has no prefix. */
+const withLang = (href: string, lang: Lang) => (lang === "en" ? (href === "/" ? "/en" : `/en${href}`) : href);
+
 /** Clean path ("/servicios") → real href. On panamainmo.com it stays clean; on the CRM domain it lives under /catalogo. */
-export function portalHref(path: string, portal: boolean): string {
-  if (portal) return path;
+export function portalHref(path: string, portal: boolean, lang: Lang = "es"): string {
+  if (portal) return withLang(path, lang);
   const [p, qs] = path.split("?");
-  if (/^\/(venta|alquiler)(\/|$)/.test(p)) return `/catalogo/inmuebles${p}${qs ? `?${qs}` : ""}`;
-  return `${p === "/" ? "/catalogo" : `/catalogo${p}`}${qs ? `?${qs}` : ""}`;
+  if (/^\/(venta|alquiler)(\/|$)/.test(p)) return withLang(`/catalogo/inmuebles${p}${qs ? `?${qs}` : ""}`, lang);
+  return withLang(`${p === "/" ? "/catalogo" : `/catalogo${p}`}${qs ? `?${qs}` : ""}`, lang);
 }
+
+/** Public detail page of a listing in the given language. */
+export const propertyHref = (id: string, lang: Lang = "es") => withLang(`/p/${id}`, lang);
 
 export const typeLabel: Record<string, string> = {
   APARTAMENTO: "Apartamento", PENTHOUSE: "Penthouse", CASA: "Casa", VILLA: "Villa",

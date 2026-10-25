@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageAlternates } from "@/components/portal/seo";
 import Link from "next/link";
 import { getLang, isPortalRequest } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
@@ -10,8 +11,9 @@ import { SANS, SERIF, portalHref, waLink } from "@/components/portal/brand";
 import { IconBuilding, IconCheck, IconGlobe, IconKey, IconScale, IconTag, IconWA } from "@/components/portal/icons";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = tr(await getLang()).servicesPage;
-  return { title: t.metaTitle, description: t.metaDesc, alternates: { canonical: `https://panamainmo.com/servicios` } };
+  const lang = await getLang();
+  const t = tr(lang).servicesPage;
+  return { title: t.metaTitle, description: t.metaDesc, alternates: pageAlternates("/servicios", lang) };
 }
 
 // Icon and photo per service, in the same order as the dictionary list.
@@ -28,7 +30,7 @@ export default async function ServiciosPage() {
   const portal = await isPortalRequest();
   const lang = await getLang();
   const t = tr(lang).servicesPage;
-  const h = (path: string) => portalHref(path, portal);
+  const h = (path: string) => portalHref(path, portal, lang);
   const services = t.list.map((s, i) => ({ ...s, ...SERVICE_MEDIA[i] }));
   const steps = t.steps.map((s, i) => ({ ...s, n: String(i + 1).padStart(2, "0") }));
   return (

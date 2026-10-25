@@ -57,6 +57,51 @@ function RankList({ title, items, empty, label = (s: string) => s }: { title: st
   );
 }
 
+interface Channels { sources: { source: string; clients: number; withDeal: number; closed: number }[]; web: { name: string; count: number }[] }
+
+// New clients per source and how many turned into deals, plus which web form brought them.
+function ChannelReport({ days }: { days: number }) {
+  const [c, setC] = useState<Channels | null>(null);
+  useEffect(() => {
+    fetch(`/api/channel-stats?days=${days}`).then((r) => r.json()).then((d) => setC(Array.isArray(d?.sources) ? d : null)).catch(() => setC(null));
+  }, [days]);
+  if (!c) return null;
+  const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : "—");
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-5 overflow-x-auto">
+        <p className="font-semibold text-gray-900 mb-1">Clientes nuevos por canal</p>
+        <p className="text-xs text-gray-400 mb-3">Clientes creados en el periodo según su origen, y cuántos llegaron a un negocio.</p>
+        {c.sources.length === 0 ? <p className="text-sm text-gray-400">No hay clientes nuevos en este periodo.</p> : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-gray-500 border-b border-gray-100">
+                <th className="py-2 pr-3 font-medium">Canal</th>
+                <th className="py-2 px-3 font-medium text-right">Clientes</th>
+                <th className="py-2 px-3 font-medium text-right">Con negocio</th>
+                <th className="py-2 px-3 font-medium text-right">Cerrados</th>
+                <th className="py-2 pl-3 font-medium text-right">Conversión</th>
+              </tr>
+            </thead>
+            <tbody>
+              {c.sources.map((r) => (
+                <tr key={r.source} className="border-b border-gray-50 last:border-0">
+                  <td className="py-2.5 pr-3 text-gray-900">{r.source}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums font-medium">{r.clients}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">{r.withDeal}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums">{r.closed}</td>
+                  <td className="py-2.5 pl-3 text-right tabular-nums text-gray-600">{pct(r.closed, r.clients)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      <RankList title="Contactos desde la web por tipo" items={c.web} empty="Sin contactos desde la web todavía." />
+    </div>
+  );
+}
+
 export default function EstadisticasWebPage() {
   const [days, setDays] = useState(30);
   const [data, setData] = useState<Stats | null>(null);
@@ -157,6 +202,8 @@ export default function EstadisticasWebPage() {
             <RankList title="Tipos más buscados" items={[...data.ops, ...data.topTypes]} empty="Sin búsquedas todavía." />
             <RankList title="De dónde llegan" items={data.referrers} empty="Sin visitas todavía." />
           </div>
+          <ChannelReport days={days} />
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <RankList title="Páginas más vistas" items={data.topPages} empty="Sin visitas todavía." label={pageLabel} />
             <RankList title="Idioma de los visitantes" items={data.langs} empty="Sin visitas todavía." />

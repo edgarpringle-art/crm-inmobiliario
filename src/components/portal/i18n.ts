@@ -7,7 +7,7 @@ export const LANG_COOKIE = "pi_lang";
 const lcFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
 const es = {
-  nav: { home: "Inicio", properties: "Propiedades", services: "Servicios", about: "Nosotros", wanted: "Buscamos", contact: "Contacto" },
+  nav: { home: "Inicio", properties: "Propiedades", services: "Servicios", about: "Nosotros", wanted: "Buscamos", sell: "Vender", guides: "Guías", contact: "Contacto" },
   header: { license: "Licencia", menu: "Menú", home: "PanamaInmo — Inicio", waMsg: "Hola PanamaInmo, me interesa una propiedad." },
   footer: {
     tagline: "Real Estate & Legal Advisory en Panamá. Compra, venta, alquiler y asesoría legal inmobiliaria con transparencia y respaldo profesional.",
@@ -209,10 +209,62 @@ const es = {
     name: "Nombre completo", phone: "Teléfono / WhatsApp", cta: "Continuar a WhatsApp", close: "Cerrar",
     errName: "Escribe tu nombre.", errPhone: "Escribe un teléfono válido.", privacy: "Solo usamos tus datos para contactarte sobre tu consulta.",
   },
+  mortgage: {
+    eyebrow: "Calculadora", title: "Calcula tu cuota mensual", down: "Abono inicial", rate: "Tasa de interés anual",
+    years: "Plazo", yearsUnit: "años", monthly: "Cuota mensual estimada", loan: "Monto a financiar", total: "Total a pagar",
+    note: "Estimado de referencia. La cuota final depende de la aprobación del banco, seguros e intereses preferenciales que apliquen.",
+  },
+  sell: {
+    nav: "Vender", footer: "Vende tu propiedad",
+    metaTitle: "¿Cuánto vale tu propiedad? Valoración gratuita · PanamaInmo",
+    metaDesc: "Vende o alquila tu propiedad en Panamá con respaldo legal. Solicita una valoración gratuita basada en comparables reales.",
+    heroEyebrow: "Propietarios", heroTitle: "¿Cuánto vale tu propiedad?",
+    heroSub: "Te damos una valoración gratuita basada en ventas y alquileres reales de tu zona, y te acompañamos con respaldo legal hasta el cierre.",
+    whyEyebrow: "Por qué con nosotros", whyTitle: "Vende o alquila sin sorpresas",
+    points: [
+      { t: "Valoración profesional gratuita", d: "Precio sugerido con comparables reales del mercado y de la red MLS ACOBIR." },
+      { t: "Máxima exposición", d: "Tu propiedad en panamainmo.com, en la red de corredores MLS y en nuestra base de clientes con búsquedas activas." },
+      { t: "Asesoría legal incluida", d: "Revisamos títulos, gravámenes y contratos para que la operación sea segura." },
+      { t: "Informe mensual", d: "Te enviamos cuántas personas vieron tu propiedad y cuántas consultaron por ella." },
+    ],
+    stepsTitle: "Cómo funciona",
+    steps: [
+      { t: "Nos cuentas de tu propiedad", d: "Llena el formulario en un minuto." },
+      { t: "Te llamamos y la visitamos", d: "Revisamos la propiedad y los documentos." },
+      { t: "Recibes tu valoración", d: "Con el precio sugerido y un plan para venderla o alquilarla." },
+    ],
+    form: {
+      title: "Solicita tu valoración gratuita", name: "Nombre completo *", phone: "Teléfono / WhatsApp *", email: "Email (opcional)",
+      op: "Quiero", opSell: "Vender", opRent: "Alquilar", opBoth: "Ambas", type: "Tipo de propiedad", zone: "Zona o barriada",
+      area: "Área (m²)", beds: "Recámaras", expected: "Precio esperado (opcional)", message: "Detalles (opcional)",
+      cta: "Solicitar valoración", sending: "Enviando…", thanks: "¡Gracias!", received: "Te contactaremos en menos de 24 horas para coordinar la valoración.",
+      required: "Nombre y teléfono son obligatorios.", failed: "No se pudo enviar. Intenta por WhatsApp.",
+      privacy: "Tus datos solo se usan para contactarte sobre tu propiedad.",
+    },
+    homeTitle: "¿Tienes una propiedad para vender o alquilar?", homeText: "Te decimos cuánto vale, gratis y sin compromiso.", homeCta: "Valorar mi propiedad",
+  },
+  alert: {
+    title: "¿No encuentras lo que buscas?", sub: "Déjanos tus datos y te avisamos por WhatsApp cuando entre una propiedad que encaje.",
+    name: "Nombre *", phone: "Teléfono / WhatsApp *", email: "Email (opcional)", op: "Busco", buy: "Comprar", rent: "Alquilar",
+    type: "Tipo", anyType: "Cualquier tipo", zones: "Zonas (ej: Costa del Este, San Francisco)", max: "Presupuesto máximo ($)", beds: "Recámaras mín.",
+    cta: "Activar alerta", sending: "Activando…", done: "¡Listo! Tu alerta está activa.", doneSub: "Te escribiremos cuando aparezca algo que encaje con tu búsqueda.",
+    required: "Nombre y teléfono son obligatorios.", failed: "No se pudo activar. Intenta por WhatsApp.",
+    privacy: "Solo te contactaremos sobre propiedades que coincidan con tu búsqueda.", open: "Crear alerta",
+  },
+  guides: {
+    nav: "Guías", metaTitle: "Guías para comprar, vender y alquilar en Panamá · PanamaInmo",
+    metaDesc: "Guías claras sobre impuestos, costos de cierre, compra siendo extranjero, residencia y alquileres en Panamá.",
+    heroEyebrow: "Guías legales", heroTitle: "Lo que necesitas saber antes de firmar",
+    heroSub: "Respuestas claras de nuestro equipo legal a las preguntas más comunes al comprar, vender o alquilar en Panamá.",
+    readMore: "Leer guía", back: "Todas las guías", minutes: (n: number) => `${n} min de lectura`, related: "Otras guías",
+    disclaimer: "Información general con fines orientativos; no constituye asesoría legal. Montos y requisitos pueden cambiar: consulta tu caso con nuestro equipo legal.",
+    ctaTitle: "¿Tienes dudas sobre tu caso?", ctaText: "Nuestra abogada revisa tu situación y te explica los pasos.",
+    ctaWa: "Hablar con un asesor", waMsg: (title: string) => `Hola PanamaInmo, leí la guía "${title}" y tengo una consulta.`,
+  },
 };
 
 const en: typeof es = {
-  nav: { home: "Home", properties: "Properties", services: "Services", about: "About us", wanted: "Wanted", contact: "Contact" },
+  nav: { home: "Home", properties: "Properties", services: "Services", about: "About us", wanted: "Wanted", sell: "Sell", guides: "Guides", contact: "Contact" },
   header: { license: "License", menu: "Menu", home: "PanamaInmo — Home", waMsg: "Hi PanamaInmo, I'm interested in a property." },
   footer: {
     tagline: "Real Estate & Legal Advisory in Panama. Buying, selling, renting and real estate legal advice with transparency and professional support.",
@@ -413,6 +465,58 @@ const en: typeof es = {
     title: "Before opening WhatsApp", sub: "Leave your name and phone so we can assist you better and follow up on your inquiry.",
     name: "Full name", phone: "Phone / WhatsApp", cta: "Continue to WhatsApp", close: "Close",
     errName: "Please enter your name.", errPhone: "Please enter a valid phone number.", privacy: "We only use your details to contact you about your inquiry.",
+  },
+  mortgage: {
+    eyebrow: "Calculator", title: "Estimate your monthly payment", down: "Down payment", rate: "Annual interest rate",
+    years: "Term", yearsUnit: "years", monthly: "Estimated monthly payment", loan: "Loan amount", total: "Total paid",
+    note: "Reference estimate. The final payment depends on bank approval, insurance and any preferential interest that applies.",
+  },
+  sell: {
+    nav: "Sell", footer: "Sell your property",
+    metaTitle: "What is your property worth? Free valuation · PanamaInmo",
+    metaDesc: "Sell or rent your property in Panama with legal support. Request a free valuation based on real comparables.",
+    heroEyebrow: "Owners", heroTitle: "What is your property worth?",
+    heroSub: "We give you a free valuation based on real sales and rentals in your area, and support you legally all the way to closing.",
+    whyEyebrow: "Why us", whyTitle: "Sell or rent with no surprises",
+    points: [
+      { t: "Free professional valuation", d: "Suggested price backed by real market comparables and the MLS ACOBIR network." },
+      { t: "Maximum exposure", d: "Your property on panamainmo.com, across the MLS broker network and to our clients with active searches." },
+      { t: "Legal advice included", d: "We review titles, liens and contracts so the deal is safe." },
+      { t: "Monthly report", d: "We tell you how many people viewed your property and how many asked about it." },
+    ],
+    stepsTitle: "How it works",
+    steps: [
+      { t: "Tell us about your property", d: "Fill in the form in a minute." },
+      { t: "We call and visit", d: "We review the property and its documents." },
+      { t: "Get your valuation", d: "With a suggested price and a plan to sell or rent it." },
+    ],
+    form: {
+      title: "Request your free valuation", name: "Full name *", phone: "Phone / WhatsApp *", email: "Email (optional)",
+      op: "I want to", opSell: "Sell", opRent: "Rent out", opBoth: "Both", type: "Property type", zone: "Area or neighborhood",
+      area: "Area (m²)", beds: "Bedrooms", expected: "Expected price (optional)", message: "Details (optional)",
+      cta: "Request valuation", sending: "Sending…", thanks: "Thank you!", received: "We will contact you within 24 hours to schedule the valuation.",
+      required: "Name and phone are required.", failed: "Could not send. Please try WhatsApp.",
+      privacy: "Your details are only used to contact you about your property.",
+    },
+    homeTitle: "Do you have a property to sell or rent?", homeText: "We will tell you what it is worth, free and with no commitment.", homeCta: "Value my property",
+  },
+  alert: {
+    title: "Can't find what you're looking for?", sub: "Leave your details and we'll message you on WhatsApp when a matching property comes in.",
+    name: "Name *", phone: "Phone / WhatsApp *", email: "Email (optional)", op: "I want to", buy: "Buy", rent: "Rent",
+    type: "Type", anyType: "Any type", zones: "Areas (e.g. Costa del Este, San Francisco)", max: "Max budget ($)", beds: "Min. bedrooms",
+    cta: "Create alert", sending: "Creating…", done: "Done! Your alert is active.", doneSub: "We will message you when something matches your search.",
+    required: "Name and phone are required.", failed: "Could not create the alert. Please try WhatsApp.",
+    privacy: "We will only contact you about properties that match your search.", open: "Create alert",
+  },
+  guides: {
+    nav: "Guides", metaTitle: "Guides to buying, selling and renting in Panama · PanamaInmo",
+    metaDesc: "Clear guides on taxes, closing costs, buying as a foreigner, residency and rentals in Panama.",
+    heroEyebrow: "Legal guides", heroTitle: "What you need to know before you sign",
+    heroSub: "Clear answers from our legal team to the most common questions about buying, selling or renting in Panama.",
+    readMore: "Read guide", back: "All guides", minutes: (n: number) => `${n} min read`, related: "More guides",
+    disclaimer: "General information for guidance only; not legal advice. Amounts and requirements may change: check your case with our legal team.",
+    ctaTitle: "Questions about your case?", ctaText: "Our attorney reviews your situation and explains the steps.",
+    ctaWa: "Talk to an advisor", waMsg: (title: string) => `Hi PanamaInmo, I read the guide "${title}" and have a question.`,
   },
 };
 

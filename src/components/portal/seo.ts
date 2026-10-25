@@ -4,6 +4,16 @@
 import type { PortalProperty } from "./brand";
 
 export const SITE_URL = "https://panamainmo.com";
+
+/** Canonical + hreflang for a public page ("/servicios", "/p/abc"); English lives under /en. */
+export function pageAlternates(path: string, lang: "es" | "en", qs = "") {
+  const es = `${SITE_URL}${path === "/" ? "" : path}`;
+  const en = `${SITE_URL}/en${path === "/" ? "" : path}`;
+  return {
+    canonical: (lang === "en" ? en : es) + qs,
+    languages: { es: es + qs, en: en + qs, "x-default": es + qs },
+  };
+}
 export const MIN_ZONE_LISTINGS = 3; // fewer listings → no zone page (thin content hurts rankings)
 
 export const slugify = (s: string) =>

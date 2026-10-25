@@ -5,7 +5,7 @@ import { tr, type Lang } from "./i18n";
 
 export default function PortalFooter({ portal = false, lang = "es" }: { portal?: boolean; lang?: Lang }) {
   const t = tr(lang);
-  const h = (path: string) => portalHref(path, portal);
+  const h = (path: string) => portalHref(path, portal, lang);
   return (
     <footer className="bg-[#1E1A15] text-[#B5AA98] pt-16 pb-6 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
@@ -36,7 +36,9 @@ export default function PortalFooter({ portal = false, lang = "es" }: { portal?:
           <ul className="space-y-3 text-sm">
             <li><Link href={h("/servicios")} className="hover:text-white transition-colors">{t.nav.services}</Link></li>
             <li><Link href={h("/nosotros")} className="hover:text-white transition-colors">{t.nav.about}</Link></li>
+            <li><Link href={h("/vender")} className="hover:text-white transition-colors">{t.sell.footer}</Link></li>
             <li><Link href={h("/buscamos")} className="hover:text-white transition-colors">{t.nav.wanted}</Link></li>
+            <li><Link href={h("/guias")} className="hover:text-white transition-colors">{t.nav.guides}</Link></li>
             <li><Link href={h("/contacto")} className="hover:text-white transition-colors">{t.nav.contact}</Link></li>
           </ul>
         </div>

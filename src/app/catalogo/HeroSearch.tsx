@@ -32,7 +32,7 @@ export default function HeroSearch({ portal = false, places = [], lang = "es" }:
     if (type) params.set("type", type);
     const meta = Object.fromEntries([...params.entries()].map(([k, v]) => [k, v.slice(0, 60)]));
     if (Object.keys(meta).length) track("search", { meta: { ...meta, from: "home" } });
-    router.push(`${portalHref("/propiedades", portal)}${params.toString() ? `?${params}` : ""}`);
+    router.push(`${portalHref("/propiedades", portal, lang)}${params.toString() ? `?${params}` : ""}`);
   }
 
   const field = "w-full appearance-none bg-[#FBF8F3] border border-[#E4D9C6] text-[#1E1A15] text-sm rounded-lg px-3.5 py-3 focus:outline-none focus:border-[#B8945F] transition-colors";

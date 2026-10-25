@@ -12,16 +12,17 @@ import ServicesSection from "./ServicesSection";
 import { CountUp } from "@/components/portal/Motion";
 import { getLang, isPortalRequest } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
-import { SITE_URL, TYPES, collectLandings, landingPath, zoneName } from "@/components/portal/seo";
+import { SITE_URL, TYPES, collectLandings, landingPath, pageAlternates, zoneName } from "@/components/portal/seo";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = tr(await getLang()).home;
+  const lang = await getLang();
+  const t = tr(lang).home;
   return {
     title: t.metaTitle, description: t.metaDesc,
-    alternates: { canonical: SITE_URL },
+    alternates: pageAlternates("/", lang),
     openGraph: { title: t.metaTitle, description: t.metaDesc, url: SITE_URL, siteName: "PanamaInmo", type: "website", images: [{ url: `${SITE_URL}/brand/panamainmo-logo.png` }] },
   };
 }
@@ -43,7 +44,7 @@ export default async function CatalogoHome() {
   const portal = await isPortalRequest();
   const lang = await getLang();
   const t = tr(lang);
-  const h = (path: string) => portalHref(path, portal);
+  const h = (path: string) => portalHref(path, portal, lang);
   const properties = await getAvailableProperties();
   const featured = properties.slice(0, 6);
 
@@ -243,6 +244,23 @@ export default async function CatalogoHome() {
           </div>
         </section>
       )}
+
+      {/* ─── Owners: free valuation ─── */}
+      <section className="px-4 sm:px-6 pb-16 sm:pb-20">
+        <div data-reveal className="max-w-6xl mx-auto rounded-3xl border border-[#E9E0D0] bg-white p-8 sm:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-5">
+            <span className="hidden sm:flex w-14 h-14 rounded-full bg-[#F3ECDF] text-[#8A6A3A] items-center justify-center shrink-0"><IconKey className="w-7 h-7" /></span>
+            <div>
+              <p className="text-2xl" style={SERIF}>{t.sell.homeTitle}</p>
+              <p className="text-[#6B6155] mt-1">{t.sell.homeText}</p>
+            </div>
+          </div>
+          <Link href={h("/vender")}
+            className="self-start md:self-auto inline-flex items-center gap-2 bg-[#B8945F] hover:bg-[#A4824F] text-white font-semibold px-7 py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-colors pi-shine">
+            {t.sell.homeCta} <IconArrow />
+          </Link>
+        </div>
+      </section>
 
       {/* ─── CTA ─── */}
       <section data-reveal="zoom" className="relative overflow-hidden mx-4 sm:mx-6 mb-16 sm:mb-20 rounded-3xl group/cta">

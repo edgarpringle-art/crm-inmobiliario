@@ -19,11 +19,11 @@ export default function PortalHeader({ portal = false, lang = "es" }: { portal?:
     window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
   }, []);
-  const h = (path: string) => portalHref(path, portal);
+  const h = (path: string) => portalHref(path, portal, lang);
   const isActive = (path: string) => {
     const href = h(path);
     if (path === "/") return pathname === href;
-    return pathname.startsWith(href) || (path === "/propiedades" && pathname.startsWith("/p/"));
+    return pathname.startsWith(href) || (path === "/propiedades" && /^(\/en)?\/p\//.test(pathname));
   };
 
   return (
@@ -52,10 +52,10 @@ export default function PortalHeader({ portal = false, lang = "es" }: { portal?:
             <img src="/brand/panamainmo-logo.png" alt="PanamaInmo — Real Estate & Legal Advisory" className={`w-auto transition-all duration-300 ${scrolled ? "h-8 sm:h-9" : "h-9 sm:h-11"}`} />
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-5 xl:gap-8">
-            {NAV.map((n) => (
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
+            {NAV.filter((n) => n.href !== "/").map((n) => ( /* the logo already links home */
               <Link key={n.href} href={h(n.href)}
-                className={`group/nav relative text-[12px] xl:text-[13px] font-medium uppercase tracking-[0.16em] transition-colors py-1 ${
+                className={`group/nav relative text-[12px] xl:text-[13px] font-medium uppercase tracking-[0.12em] xl:tracking-[0.16em] transition-colors py-1 ${
                   isActive(n.href) ? "text-[#1E1A15]" : "text-[#6B6155] hover:text-[#1E1A15]"
                 }`}>
                 {t.nav[n.key]}

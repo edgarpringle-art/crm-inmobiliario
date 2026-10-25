@@ -21,9 +21,17 @@ import {
   HiCollection,
   HiChartBar,
   HiSpeakerphone,
+  HiBell,
+  HiCalendar,
+  HiDocumentReport,
 } from "react-icons/hi";
 
 type Role = "broker" | "admin" | "agent";
+
+interface Pulse {
+  leads: number; overdue: { id: string; title: string; createdAt: string; clientId: string | null }[];
+  newestLead: string | null; alertsNew: number; visitsToday: number; visitsTomorrowPending: number;
+}
 
 interface NavItem {
   href: string;
@@ -31,6 +39,7 @@ interface NavItem {
   icon: typeof HiHome;
   description: string;
   visibleFor: Role[];
+  badge?: "leads" | "alerts" | "visits";
 }
 
 const ALL_NAV_ITEMS: NavItem[] = [
@@ -38,7 +47,10 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/clientes", label: "Clientes", icon: HiUsers, description: "Embudo de clientes", visibleFor: ["broker", "admin", "agent"] },
   { href: "/propiedades", label: "Propiedades", icon: HiOfficeBuilding, description: "Inventario de propiedades", visibleFor: ["broker", "admin", "agent"] },
   { href: "/negocios", label: "Negocios", icon: HiBriefcase, description: "Ventas y alquileres", visibleFor: ["broker", "admin", "agent"] },
-  { href: "/tareas", label: "Tareas", icon: HiClipboardCheck, description: "Seguimientos y recordatorios", visibleFor: ["broker", "admin", "agent"] },
+  { href: "/tareas", label: "Tareas", icon: HiClipboardCheck, description: "Seguimientos y recordatorios", visibleFor: ["broker", "admin", "agent"], badge: "leads" },
+  { href: "/visitas", label: "Visitas", icon: HiCalendar, description: "Agenda de visitas a propiedades", visibleFor: ["broker", "admin", "agent"], badge: "visits" },
+  { href: "/alertas-web", label: "Alertas Web", icon: HiBell, description: "Avisos de búsqueda desde la web", visibleFor: ["broker", "admin", "agent"], badge: "alerts" },
+  { href: "/informes-propietarios", label: "Informes Propietarios", icon: HiDocumentReport, description: "Visitas y consultas por propiedad", visibleFor: ["broker", "admin", "agent"] },
   { href: "/contabilidad", label: "Contabilidad", icon: HiCurrencyDollar, description: "Empresa: comisiones y gastos", visibleFor: ["broker", "admin"] },
   { href: "/mis-comisiones", label: "Mis Comisiones", icon: HiCurrencyDollar, description: "Tus números personales", visibleFor: ["agent"] },
   { href: "/agentes", label: "Agentes", icon: HiUserGroup, description: "Gestión de usuarios", visibleFor: ["broker"] },
@@ -83,6 +95,28 @@ export default function Sidebar() {
   useEffect(() => {
     setCrmUser(getCrmUserFromCookies());
   }, []);
+
+  // Web leads / alerts / visits counters, refreshed every 3 minutes. A desktop notification fires
+  // when a new web lead arrives (if the browser allowed notifications).
+  const [pulse, setPulse] = useState<Pulse | null>(null);
+  const [notifPerm, setNotifPerm] = useState<string>("granted");
+  useEffect(() => {
+    let last: string | null = null;
+    const load = () => fetch("/api/crm-pulse").then((r) => (r.ok ? r.json() : null)).then((d: Pulse | null) => {
+      if (typeof Notification !== "undefined") setNotifPerm(Notification.permission);
+      if (!d) return;
+      if (last !== null && d.newestLead && d.newestLead > last && typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification("Nuevo lead de la web", { body: "Un cliente pidió información en panamainmo.com. Revisa Tareas." });
+      }
+      last = d.newestLead || last || "";
+      setPulse(d);
+    }).catch(() => {});
+    load();
+    const id = setInterval(load, 3 * 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const badgeOf = (b?: NavItem["badge"]) =>
+    !pulse || !b ? 0 : b === "leads" ? pulse.leads : b === "alerts" ? pulse.alertsNew : pulse.visitsToday;
 
   const role: Role = crmUser?.role ?? "agent";
   const navItems = ALL_NAV_ITEMS.filter((item) => item.visibleFor.includes(role));
@@ -141,6 +175,11 @@ export default function Sidebar() {
                   {item.description}
                 </p>
               </div>
+              {badgeOf(item.badge) > 0 && (
+                <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold flex items-center justify-center flex-shrink-0 ${
+                  item.badge === "leads" && pulse?.overdue.length ? "bg-red-500 text-white animate-pulse-dot" : "bg-amber-400 text-slate-900"
+                }`}>{badgeOf(item.badge)}</span>
+              )}
               {isActive && <HiChevronRight className="w-4 h-4 text-blue-200 flex-shrink-0" />}
             </Link>
           );
@@ -171,6 +210,12 @@ export default function Sidebar() {
             </div>
           </div>
         )}
+        {notifPerm === "default" && (
+          <button onClick={() => Notification.requestPermission().then(setNotifPerm)}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-amber-300 hover:bg-white/5 transition-all text-xs font-medium">
+            <HiBell className="w-4 h-4" /> Activar avisos de leads
+          </button>
+        )}
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-red-900/30 transition-all text-sm font-medium"
@@ -195,6 +240,17 @@ export default function Sidebar() {
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 sidebar-overlay z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
+      )}
+
+      {/* Web leads waiting more than 2 hours */}
+      {pulse && pulse.overdue.length > 0 && !pathname.startsWith("/tareas") && (
+        <Link href="/tareas" className="fixed bottom-4 right-4 z-[55] max-w-xs bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-2xl px-4 py-3 flex items-start gap-3 animate-slide-in">
+          <HiBell className="w-5 h-5 mt-0.5 flex-shrink-0 animate-pulse-dot" />
+          <span className="text-sm">
+            <b>{pulse.overdue.length} lead{pulse.overdue.length !== 1 ? "s" : ""} web sin atender</b> hace más de 2 horas.
+            <span className="block text-red-100 text-xs mt-0.5">Quien responde primero se queda con el cliente →</span>
+          </span>
+        </Link>
       )}
 
       {/* Desktop sidebar */}

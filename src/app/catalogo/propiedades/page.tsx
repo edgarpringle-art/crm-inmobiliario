@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageAlternates } from "@/components/portal/seo";
 import { getLang, isPortalRequest } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
 import PortalHeader from "@/components/portal/PortalHeader";
@@ -11,8 +12,9 @@ import Listing from "./Listing";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = tr(await getLang()).listing;
-  return { title: t.metaTitle, description: t.metaDesc, alternates: { canonical: `https://panamainmo.com/propiedades` } };
+  const lang = await getLang();
+  const t = tr(lang).listing;
+  return { title: t.metaTitle, description: t.metaDesc, alternates: pageAlternates("/propiedades", lang) };
 }
 
 type SP = Promise<Record<string, string | string[] | undefined>>;
@@ -39,7 +41,7 @@ export default async function PropiedadesPage({ searchParams }: { searchParams: 
       <Listing
         properties={properties}
         lang={lang}
-        basePath={portalHref("/propiedades", portal)}
+        basePath={portalHref("/propiedades", portal, lang)}
         initial={{ op: one(sp.op), type: one(sp.type), prov: one(sp.prov), dist: one(sp.dist), zone: one(sp.zone), q: one(sp.q), beds: one(sp.beds) }}
       />
       <section className="px-4 sm:px-6 pb-20">
@@ -55,7 +57,7 @@ export default async function PropiedadesPage({ searchParams }: { searchParams: 
               className="inline-flex items-center justify-center bg-[#25D366] hover:bg-[#1EBE5A] text-white px-7 py-3.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors">
               WhatsApp
             </a>
-            <Link href={portalHref("/contacto", portal)}
+            <Link href={portalHref("/contacto", portal, lang)}
               className="inline-flex items-center justify-center bg-[#B8945F] hover:bg-[#A4824F] text-white px-7 py-3.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors">
               {t.ctaContact}
             </Link>

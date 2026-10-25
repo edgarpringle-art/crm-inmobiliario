@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageAlternates } from "@/components/portal/seo";
 import { getLang, isPortalRequest } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
 import PortalHeader from "@/components/portal/PortalHeader";
@@ -12,8 +13,9 @@ import { query } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = tr(await getLang()).about;
-  return { title: t.metaTitle, description: t.metaDesc, alternates: { canonical: `https://panamainmo.com/nosotros` } };
+  const lang = await getLang();
+  const t = tr(lang).about;
+  return { title: t.metaTitle, description: t.metaDesc, alternates: pageAlternates("/nosotros", lang) };
 }
 
 interface TeamMember { fullName: string; photoUrl: string | null; initials: string | null; phone: string | null }

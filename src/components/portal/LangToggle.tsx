@@ -1,15 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { LANG_COOKIE, type Lang } from "./i18n";
 
-// ES | EN switch: remembers the choice for a year and re-renders the page in that language.
+// ES | EN switch: goes to the same page under /en (or back without it) and remembers the choice.
 export default function LangToggle({ lang, className = "" }: { lang: Lang; className?: string }) {
-  const router = useRouter();
   const pick = (l: Lang) => {
     if (l === lang) return;
     document.cookie = `${LANG_COOKIE}=${l}; path=/; max-age=31536000; samesite=lax`;
-    router.refresh();
+    const { pathname, search, hash } = window.location;
+    const base = pathname.replace(/^\/en(?=\/|$)/, "") || "/";
+    window.location.assign((l === "en" ? (base === "/" ? "/en" : `/en${base}`) : base) + search + hash);
   };
   const btn = (l: Lang) =>
     `px-2 py-0.5 rounded-full transition-colors ${l === lang ? "bg-[#B8945F] text-white" : "hover:text-[#B8945F]"}`;

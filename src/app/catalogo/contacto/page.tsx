@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageAlternates } from "@/components/portal/seo";
 import { getLang, isPortalRequest } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
 import PortalHeader from "@/components/portal/PortalHeader";
@@ -9,8 +10,9 @@ import { BROKER, SANS, SERIF, waLink } from "@/components/portal/brand";
 import { IconBadge, IconInstagram, IconMail, IconPhone, IconPin, IconWA } from "@/components/portal/icons";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = tr(await getLang()).contactPage;
-  return { title: t.metaTitle, description: t.metaDesc, alternates: { canonical: `https://panamainmo.com/contacto` } };
+  const lang = await getLang();
+  const t = tr(lang).contactPage;
+  return { title: t.metaTitle, description: t.metaDesc, alternates: pageAlternates("/contacto", lang) };
 }
 
 export default async function ContactoPage() {

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import PortalHeader from "@/components/portal/PortalHeader";
 import PortalFooter from "@/components/portal/PortalFooter";
 import PropertyCard from "@/components/portal/PropertyCard";
+import AlertForm from "@/components/portal/AlertForm";
 import { getAvailableProperties } from "@/components/portal/data";
 import { getLang, isPortalRequest } from "@/components/portal/portalHost";
 import { tr, type Lang } from "@/components/portal/i18n";
@@ -11,7 +12,7 @@ import { SANS, SERIF, portalHref, type PortalProperty } from "@/components/porta
 import { IconArrow } from "@/components/portal/icons";
 import {
   MIN_ZONE_LISTINGS, SITE_URL, TYPES, collectLandings, landingPath, matchesLanding, parseLanding, zoneName,
-  type Landing,
+  type Landing, pageAlternates,
 } from "@/components/portal/seo";
 import { formatCurrency } from "@/lib/constants";
 
@@ -66,7 +67,7 @@ export async function generateMetadata({ params, searchParams }: { params: Param
   return {
     title: `${r.title}${page > 1 ? ` · ${tr(lang).landing.page(page)}` : ""} | PanamaInmo`,
     description: tr(lang).landing.metaDesc(r.list.length, r.title, r.from),
-    alternates: { canonical: `${SITE_URL}${path}${page > 1 ? `?page=${page}` : ""}` },
+    alternates: pageAlternates(path, lang, page > 1 ? `?page=${page}` : ""),
     robots: r.landing.zone && r.list.length < MIN_ZONE_LISTINGS ? { index: false, follow: true } : undefined,
     openGraph: { title: r.title, url: `${SITE_URL}${path}`, siteName: "PanamaInmo", type: "website" },
   };
@@ -79,7 +80,7 @@ export default async function LandingPage({ params, searchParams }: { params: Pa
   const r = await resolve((await params).slug, lang);
   if (!r) notFound();
   const { landing, list, all, zone, typeLabel, title } = r;
-  const h = (path: string) => portalHref(path, portal);
+  const h = (path: string) => portalHref(path, portal, lang);
 
   const pages = Math.ceil(list.length / PAGE_SIZE);
   const page = Math.min(Math.max(1, Number((await searchParams).page) || 1), pages);
@@ -156,6 +157,13 @@ export default async function LandingPage({ params, searchParams }: { params: Pa
               {page < pages && <Link rel="next" href={pageHref(page + 1)} className="px-4 py-2 rounded-full border border-[#E4D9C6] text-sm hover:border-[#B8945F]">{t.landing.next}</Link>}
             </nav>
           )}
+
+          <div className="mt-12">
+            <AlertForm lang={lang} prefill={{
+              op: landing.op === "alquiler" ? "ALQUILER" : "COMPRA",
+              type: landing.type ? TYPES[landing.type].types[0] : "", zone: zone || "",
+            }} />
+          </div>
 
           {otherTypes.length > 0 && (
             <div className="mt-14">

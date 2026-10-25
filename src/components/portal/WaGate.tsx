@@ -38,7 +38,7 @@ export default function WaGate() {
       const a = (e.target as HTMLElement)?.closest?.("a[href*='wa.me']") as HTMLAnchorElement | null;
       if (!a || a.dataset.waDirect !== undefined || e.defaultPrevented) return;
       const href = a.href;
-      const propertyId = location.pathname.match(/^\/p\/([^/?#]+)/)?.[1] || a.dataset.propertyId || null;
+      const propertyId = location.pathname.match(/^(?:\/en)?\/p\/([^/?#]+)/)?.[1] || a.dataset.propertyId || null;
       let text = "";
       try { text = new URL(href).searchParams.get("text") || ""; } catch { /* keep empty */ }
       const p = { href, propertyId, text };
@@ -50,7 +50,7 @@ export default function WaGate() {
         return;
       }
       e.preventDefault();
-      setLang(document.cookie.match(/(?:^|; )pi_lang=(\w+)/)?.[1] === "en" ? "en" : "es");
+      setLang(document.documentElement.lang === "en" ? "en" : "es");
       setError("");
       setPending(p);
     };
