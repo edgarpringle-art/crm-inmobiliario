@@ -92,7 +92,7 @@ export default async function BuscamosPage() {
                         </div>
                       )}
                       {s.publishedAt && <p className="text-[11px] text-[#9C9182]">{t.published(dateOf(s.publishedAt)!)}</p>}
-                      <a href={waLink(t.waMsg(s.code, what))} target="_blank" rel="noopener noreferrer"
+                      <a href={waLink(t.waMsg(s.code, what))} data-wa-direct target="_blank" rel="noopener noreferrer"
                         className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white py-2.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.15em] transition-colors">
                         <IconWA /> {t.wa}
                       </a>

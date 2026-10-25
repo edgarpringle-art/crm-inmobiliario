@@ -180,6 +180,11 @@ input:focus, select:focus, textarea:focus {
 }
 .pi-shine:hover::after { transform: translateX(120%) skewX(-20deg); }
 
+@keyframes pi-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.pi-fade { animation: pi-fade-in 0.25s ease-out; }
+@keyframes pi-pop-in { from { opacity: 0; transform: translateY(24px) scale(0.97); } to { opacity: 1; transform: none; } }
+.pi-pop { animation: pi-pop-in 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+
 @media (prefers-reduced-motion: reduce) {
   .pi-js [data-reveal], .pi-js [data-reveal] .pi-line { opacity: 1 !important; transform: none !important; transition: none !important; }
   .pi-enter, .pi-kenburns, .pi-float, .pi-wa-ring { animation: none !important; opacity: 1 !important; }

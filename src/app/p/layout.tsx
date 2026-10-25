@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import WebTracker from "@/components/portal/WebTracker";
+import WaGate from "@/components/portal/WaGate";
 import { ScrollReveal } from "@/components/portal/Motion";
 import { MOTION_BOOT } from "@/components/portal/motionBoot";
 
@@ -21,6 +22,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <script dangerouslySetInnerHTML={{ __html: MOTION_BOOT }} />
       {children}
       <ScrollReveal />
+      <WaGate />
       <WebTracker />
       <Analytics />
     </>

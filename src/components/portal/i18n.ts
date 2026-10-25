@@ -204,6 +204,11 @@ const es = {
     dataTitle: "Datos de contacto", phone: "Teléfono", license: "Licencia", formTitle: "Envíanos un mensaje",
     formCta: "Enviar mensaje", waMsg: "Hola PanamaInmo",
   },
+  waGate: {
+    title: "Antes de abrir WhatsApp", sub: "Déjanos tu nombre y teléfono para atenderte mejor y darle seguimiento a tu consulta.",
+    name: "Nombre completo", phone: "Teléfono / WhatsApp", cta: "Continuar a WhatsApp", close: "Cerrar",
+    errName: "Escribe tu nombre.", errPhone: "Escribe un teléfono válido.", privacy: "Solo usamos tus datos para contactarte sobre tu consulta.",
+  },
 };
 
 const en: typeof es = {
@@ -403,6 +408,11 @@ const en: typeof es = {
     heroSub: "Leave your details and we'll get back to you shortly, or message us directly on WhatsApp.",
     dataTitle: "Contact details", phone: "Phone", license: "License", formTitle: "Send us a message",
     formCta: "Send message", waMsg: "Hi PanamaInmo",
+  },
+  waGate: {
+    title: "Before opening WhatsApp", sub: "Leave your name and phone so we can assist you better and follow up on your inquiry.",
+    name: "Full name", phone: "Phone / WhatsApp", cta: "Continue to WhatsApp", close: "Close",
+    errName: "Please enter your name.", errPhone: "Please enter a valid phone number.", privacy: "We only use your details to contact you about your inquiry.",
   },
 };
 

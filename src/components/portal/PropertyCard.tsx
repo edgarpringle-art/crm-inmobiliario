@@ -65,7 +65,7 @@ export default function PropertyCard({ p, lang = "es" }: { p: PortalProperty; la
             {t.common.viewListing}
           </Link>
           <a href={waLink(t.common.waProperty(p.title, loc, `https://panamainmo.com/p/${p.id}`))}
-            target="_blank" rel="noopener noreferrer" aria-label={t.common.whatsappAria}
+            target="_blank" rel="noopener noreferrer" aria-label={t.common.whatsappAria} data-property-id={p.id}
             className="flex items-center justify-center w-11 h-11 bg-[#25D366] hover:bg-[#1EBE5A] text-white rounded-full transition-colors shrink-0">
             <IconWA />
           </a>
