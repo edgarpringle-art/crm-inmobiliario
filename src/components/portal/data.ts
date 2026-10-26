@@ -62,6 +62,7 @@ export async function getPublicProperty(id: string): Promise<Record<string, unkn
       ...m, title: decodeEntities(m.title as string), description: decodeEntities(m.description as string | null), status: "DISPONIBLE", address: null, country: "Panamá", referencePoint: null, floors: null,
       hasPool: 0, hasGym: 0, hasElevator: 0, hasSecurity: 0, hasGenerator: 0, hasFurniture: 0, hasAppliances: 0,
       hasAC: 0, hasBalcony: 0, hasGarden: 0, notes: null, ownerName: null, createdBy: null, videoUrl: null,
+      listingAgent: null, listingAgentPhone: null, listingOffice: null, // internal only
       sector: m.sector, city: [m.corregimiento, m.city].filter((x, i, a) => x && a.indexOf(x) === i).join(", ") || m.city,
     };
   }

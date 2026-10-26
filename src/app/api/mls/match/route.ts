@@ -40,7 +40,8 @@ export async function GET(request: NextRequest) {
 
     const listings = await query<MatchListing>(
       `SELECT id, mlsId, title, propertyType, operationType, salePrice, rentPrice, currency, area, landArea,
-              bedrooms, bathrooms, sector, corregimiento, city, state, json_extract(photos, '$[0]') AS photos
+              bedrooms, bathrooms, sector, corregimiento, city, state, json_extract(photos, '$[0]') AS photos,
+              listingAgent, listingAgentPhone, listingOffice
        FROM MlsListing WHERE active = 1`
     );
     const matches = listings

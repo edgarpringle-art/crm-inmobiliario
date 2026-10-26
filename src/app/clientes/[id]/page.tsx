@@ -31,6 +31,7 @@ interface MlsMatch {
   salePrice: number | null; rentPrice: number | null; currency: string;
   area: number | null; landArea: number | null; bedrooms: number | null; bathrooms: number | null;
   sector: string | null; city: string | null; photo: string | null; score: number; reasons: string[];
+  listingAgent?: string | null; listingAgentPhone?: string | null; listingOffice?: string | null;
 }
 
 const SITE = "https://panamainmo.com";
@@ -91,6 +92,7 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
   const [propForm, setPropForm] = useState(emptyPropForm);
   const [mls, setMls] = useState<{ criteria: boolean; total: number; items: MlsMatch[] } | null>(null);
   const [addingMls, setAddingMls] = useState("");
+  const [loadingAgent, setLoadingAgent] = useState("");
   const [savingPublic, setSavingPublic] = useState(false);
 
   useEffect(() => {
@@ -145,6 +147,18 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
     if (!confirm("¿Eliminar esta opción?")) return;
     const res = await fetch(`/api/propuestas/${pid}`, { method: "DELETE" });
     if (res.ok) setPropuestas((prev) => prev.filter((p) => p.id !== pid));
+  }
+
+  // Listing agent of an MLS match (internal): read from the MLS on demand when not saved yet.
+  async function loadListingAgent(m: MlsMatch) {
+    setLoadingAgent(m.id);
+    try {
+      const res = await fetch(`/api/mls/${m.id}/agent`);
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) { toast.error(d.error || "No se pudo consultar el MLS"); return; }
+      if (!d.listingAgentPhone && !d.listingAgent) toast("El MLS no muestra datos del corredor");
+      setMls((prev) => prev && { ...prev, items: prev.items.map((x) => (x.id === m.id ? { ...x, ...d } : x)) });
+    } finally { setLoadingAgent(""); }
   }
 
   async function addMlsToOptions(m: MlsMatch) {
@@ -358,6 +372,27 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
                         <div className="flex flex-wrap gap-1 mt-1">
                           <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">MLS #{m.mlsId}</span>
                           {m.reasons.map((r) => <span key={r} className="text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded">✓ {r}</span>)}
+                        </div>
+                        {/* Listing agent (internal only) */}
+                        <div className="mt-1 text-xs text-gray-600 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          {m.listingAgentPhone || m.listingAgent ? (
+                            <>
+                              <span className="text-gray-400">Corredor:</span>
+                              <span className="font-medium text-gray-800">{[m.listingAgent, m.listingOffice].filter((x, i, arr) => x && arr.indexOf(x) === i).join(" · ")}</span>
+                              {m.listingAgentPhone && (
+                                <>
+                                  <a href={`tel:+${m.listingAgentPhone.replace(/\D/g, "")}`} className="text-blue-600 hover:underline">{m.listingAgentPhone}</a>
+                                  <a href={`https://wa.me/${m.listingAgentPhone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${m.listingAgent?.split(" ")[0] || ""}, soy de PanamaInmo. Tengo un cliente interesado en su propiedad MLS #${m.mlsId} (${m.title}). ¿Sigue disponible?`)}`}
+                                    target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline">WhatsApp al corredor</a>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <button onClick={() => loadListingAgent(m)} disabled={loadingAgent === m.id}
+                              className="text-blue-600 hover:underline disabled:opacity-50 cursor-pointer">
+                              {loadingAgent === m.id ? "Consultando MLS…" : "Ver teléfono del corredor"}
+                            </button>
+                          )}
                         </div>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-1.5 flex-shrink-0">

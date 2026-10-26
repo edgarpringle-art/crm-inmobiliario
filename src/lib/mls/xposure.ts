@@ -14,6 +14,8 @@ export interface MlsRecord {
   sector: string | null; city: string | null; state: string | null; corregimiento: string | null;
   description: string | null; features: string[]; photos: string[];
   mlsStatus: string | null; active: number;
+  // Listing agent from the public page (internal use in the CRM only, never shown on the web)
+  listingAgent: string | null; listingAgentPhone: string | null; listingOffice: string | null;
 }
 
 /** Validates a pasted link and returns its canonical form (with our agent id) and listing code. */
@@ -133,12 +135,29 @@ export function parseXposure(html: string, url: string, code: string): MlsRecord
     corregimiento: null,
     description, features, photos,
     mlsStatus: "Activo", active: 1,
+    ...parseListingAgent(html),
   };
+}
+
+/** The agent card of a listing page opened without our `u` id shows the listing agent and office. */
+export function parseListingAgent(html: string): Pick<MlsRecord, "listingAgent" | "listingAgentPhone" | "listingOffice"> {
+  const block = html.slice(Math.max(0, html.indexOf('id="col1-agent-info"')));
+  const span = (cls: string) => {
+    const m = block.match(new RegExp(`<span class="${cls}">([\\s\\S]*?)</span>`));
+    return m ? decode(stripTags(m[1])).trim() || null : null;
+  };
+  const name = [span("first-name"), span("last-name")].filter(Boolean).join(" ") || null;
+  const phone = block.match(/href="tel:([^"]+)"/)?.[1]?.trim() || null;
+  const office = span("company-name");
+  return { listingAgent: name, listingAgentPhone: phone, listingOffice: office ? titleCase(office) : null };
 }
 
 /** Downloads and parses one listing. Returns null when the listing no longer exists. */
 export async function fetchXposure(url: string, code: string): Promise<MlsRecord | null> {
-  const res = await fetch(url, { headers: { "User-Agent": UA, "Accept-Language": "es" }, signal: AbortSignal.timeout(25_000), cache: "no-store" });
+  // Read the page without our agent id so it shows the listing agent; the stored url keeps ours.
+  const u = new URL(url);
+  u.searchParams.delete("u");
+  const res = await fetch(u.toString(), { headers: { "User-Agent": UA, "Accept-Language": "es" }, signal: AbortSignal.timeout(25_000), cache: "no-store" });
   if (res.status === 404 || res.status === 410) return null;
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return parseXposure(await res.text(), url, code);

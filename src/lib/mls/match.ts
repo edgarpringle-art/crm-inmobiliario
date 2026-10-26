@@ -17,6 +17,7 @@ export interface MatchListing {
   area: number | null; landArea: number | null; bedrooms: number | null; bathrooms: number | null;
   sector: string | null; city: string | null; state: string | null; photos: string | null;
   corregimiento?: string | null;
+  listingAgent?: string | null; listingAgentPhone?: string | null; listingOffice?: string | null;
 }
 
 export const norm = (s: string) =>

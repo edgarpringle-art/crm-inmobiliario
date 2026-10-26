@@ -1,4 +1,4 @@
-import { getDb, query } from "@/lib/db";
+import { ensureColumn, getDb, query } from "@/lib/db";
 import { fetchXposure, normalizeXposureUrl, type MlsRecord } from "./xposure";
 
 // MLS ACOBIR listings the user chose to publish (imported from their Xposure links).
@@ -16,6 +16,7 @@ export async function ensureMlsTable(): Promise<void> {
     mlsStatus TEXT, active INTEGER DEFAULT 1, fetchedAt TEXT, createdAt TEXT, updatedAt TEXT
   )`);
   await getDb().execute("CREATE INDEX IF NOT EXISTS MlsListing_active ON MlsListing(active)");
+  for (const c of ["listingAgent", "listingAgentPhone", "listingOffice"]) await ensureColumn("MlsListing", c);
   ensured = true;
 }
 
@@ -23,7 +24,7 @@ const COLS = [
   "id", "code", "mlsId", "url", "title", "buildingName", "propertyType", "operationType",
   "salePrice", "rentPrice", "currency", "maintenanceFee", "area", "landArea", "bedrooms", "bathrooms",
   "parkingSpots", "yearBuilt", "sector", "city", "state", "corregimiento", "description", "features",
-  "photos", "mlsStatus", "active",
+  "photos", "mlsStatus", "active", "listingAgent", "listingAgentPhone", "listingOffice",
 ] as const;
 
 async function upsert(r: MlsRecord): Promise<void> {
