@@ -223,7 +223,6 @@ export const GUIDES: Guide[] = [
         { h: "Lo que suelen pedir al inquilino", list: [
           "Cédula o pasaporte.",
           "Carta de trabajo o prueba de ingresos (estados de cuenta, declaración de renta).",
-          "Autorización para consultar el historial de crédito (APC).",
           "Depósito de garantía (comúnmente un mes) y el primer mes por adelantado.",
         ] },
         { h: "Qué debe incluir el contrato", list: [
@@ -249,7 +248,6 @@ export const GUIDES: Guide[] = [
         { h: "What tenants are usually asked for", list: [
           "ID card or passport.",
           "Employment letter or proof of income (bank statements, tax return).",
-          "Authorization to check credit history (APC).",
           "Security deposit (commonly one month) and the first month in advance.",
         ] },
         { h: "What the lease should include", list: [
