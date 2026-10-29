@@ -53,6 +53,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
   const [featuresText, setFeaturesText] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [brochureUrl, setBrochureUrl] = useState("");
+  const [noMortgage, setNoMortgage] = useState(false);
   const [portalLinks, setPortalLinks] = useState<PortalLink[]>([]);
   const [newPortal, setNewPortal] = useState({ name: "Encuentra24", url: "" });
   const [form, setForm] = useState({
@@ -94,6 +95,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
       if (data.features) { try { setFeaturesText((JSON.parse(data.features) as string[]).join(String.fromCharCode(10))); } catch { /* ignore */ } }
       setVideoUrl(data.videoUrl || "");
       setBrochureUrl(data.brochureUrl || "");
+      setNoMortgage(!!data.noMortgage);
       setProvinces(getProvinces());
       // Fill the cascades for the saved location (they used to load only after changing the province).
       if (data.state) setDistricts(districtsFor(data.state));
@@ -141,6 +143,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         features: parseFeatures(featuresText),
         videoUrl: videoUrl.trim() || null,
         brochureUrl: brochureUrl.trim() || null,
+        noMortgage: noMortgage ? 1 : 0,
       };
       const res = await fetch(`/api/properties/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error("Error");
@@ -280,6 +283,10 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
             <FormField label="Características adicionales (una por línea — se muestran en la web)"><textarea className={inputClass} rows={4} value={featuresText} onChange={(e) => setFeaturesText(e.target.value)} placeholder="Ej: Cuarto de servicio, Vista al mar, Acepta mascotas" /></FormField>
             <FormField label="Video (YouTube)"><input className={inputClass} value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." /></FormField>
             <FormField label="Catálogo PDF descargable (link — se muestra en la web)"><input className={inputClass} value={brochureUrl} onChange={(e) => setBrochureUrl(e.target.value)} placeholder="/catalogos/archivo.pdf o https://..." /></FormField>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input type="checkbox" className={checkboxClass} checked={noMortgage} onChange={(e) => setNoMortgage(e.target.checked)} />
+              No aplica para hipoteca (ocultar calculadora en la web)
+            </label>
             <FormField label="Notas adicionales (se muestran en la web)"><textarea className={inputClass} rows={2} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Ej: Remodelado, vista al mar, acepta mascotas." /></FormField>
           </div>
         </div>

@@ -44,6 +44,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     await ensureColumn("Property", "corregimiento");
     for (const c of ["features", "videoUrl", "brochureUrl"]) await ensureColumn("Property", c);
+    await ensureColumn("Property", "noMortgage", "INTEGER");
     await update("Property", id, body);
     const property = await queryOne("SELECT * FROM Property WHERE id = ?", [id]);
     return NextResponse.json(property);

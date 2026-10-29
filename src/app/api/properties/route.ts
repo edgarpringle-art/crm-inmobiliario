@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     const me = await getCurrentUser();
     await ensureColumn("Property", "corregimiento");
     for (const c of ["features", "videoUrl", "brochureUrl"]) await ensureColumn("Property", c);
+    await ensureColumn("Property", "noMortgage", "INTEGER");
     const id = await insert("Property", { ...body, createdBy: me?.displayName || null });
     const property = await query("SELECT * FROM Property WHERE id = ?", [id]);
     return NextResponse.json(property[0], { status: 201 });

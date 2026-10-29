@@ -43,6 +43,7 @@ interface Property {
   features: string | null;
   videoUrl: string | null;
   brochureUrl?: string | null;
+  noMortgage?: number | null;
   mlsId?: string | null;
   corregimiento?: string | null;
 }
@@ -304,7 +305,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
             </div>
           )}
 
-          {p.salePrice != null && p.salePrice > 0 && <MortgageCalc price={p.salePrice} lang={lang} />}
+          {p.salePrice != null && p.salePrice > 0 && !p.noMortgage && <MortgageCalc price={p.salePrice} lang={lang} />}
 
           {/* Related search pages (internal links for SEO) */}
           {related.length > 0 && (
