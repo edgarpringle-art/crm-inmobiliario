@@ -42,6 +42,7 @@ interface Property {
   photos: string | null;
   features: string | null;
   videoUrl: string | null;
+  brochureUrl?: string | null;
   mlsId?: string | null;
   corregimiento?: string | null;
 }
@@ -362,6 +363,14 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
                 )}
               </div>
             </div>
+
+            {p.brochureUrl && (
+              <a href={p.brochureUrl} target="_blank" rel="noopener noreferrer" download
+                className="flex items-center justify-center gap-2 w-full bg-[#B8945F] hover:bg-[#8A6A3A] text-white rounded-2xl px-6 py-4 text-sm font-semibold uppercase tracking-[0.15em] transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" /></svg>
+                {t.detail.brochure}
+              </a>
+            )}
 
             <LeadForm lang={lang} propertyId={p.id} waHref={`https://wa.me/${BROKER.phone}?text=${waText}`} />
 

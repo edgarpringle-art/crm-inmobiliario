@@ -86,7 +86,7 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith("/_next/") ||
       pathname.startsWith("/logo") ||
       pathname.startsWith("/favicon") ||
-      /\.(svg|png|jpg|jpeg|webp|ico|css|js)$/.test(pathname);
+      /\.(svg|png|jpg|jpeg|webp|ico|css|js|pdf)$/.test(pathname);
     if (!allowedOnPortal) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
@@ -155,6 +155,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.svg$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.svg$|.*\\.pdf$).*)",
   ],
 };

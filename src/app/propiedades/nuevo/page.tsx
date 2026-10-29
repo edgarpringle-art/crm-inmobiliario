@@ -40,6 +40,7 @@ export default function NuevaPropiedadPage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [featuresText, setFeaturesText] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [brochureUrl, setBrochureUrl] = useState("");
   const [form, setForm] = useState({
     title: "", propertyType: "APARTAMENTO", operationType: "VENTA", status: "DISPONIBLE",
     address: "", sector: "", corregimiento: "", city: "", state: "", country: "Panamá", referencePoint: "",
@@ -86,6 +87,7 @@ export default function NuevaPropiedadPage() {
         photos: photos.length > 0 ? JSON.stringify(photos) : null,
         features: parseFeatures(featuresText),
         videoUrl: videoUrl.trim() || null,
+        brochureUrl: brochureUrl.trim() || null,
         salePrice: form.salePrice ? parseFloat(form.salePrice) : null,
         rentPrice: form.rentPrice ? parseFloat(form.rentPrice) : null,
         maintenanceFee: form.maintenanceFee ? parseFloat(form.maintenanceFee) : null,
@@ -232,6 +234,7 @@ export default function NuevaPropiedadPage() {
             <FormField label="Descripción"><textarea className={inputClass} rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} /></FormField>
             <FormField label="Características adicionales (una por línea — se muestran en la web)"><textarea className={inputClass} rows={4} value={featuresText} onChange={(e) => setFeaturesText(e.target.value)} placeholder="Ej: Cuarto de servicio, Vista al mar, Acepta mascotas" /></FormField>
             <FormField label="Video (YouTube)"><input className={inputClass} value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." /></FormField>
+            <FormField label="Catálogo PDF descargable (link — se muestra en la web)"><input className={inputClass} value={brochureUrl} onChange={(e) => setBrochureUrl(e.target.value)} placeholder="/catalogos/archivo.pdf o https://..." /></FormField>
             <FormField label="Notas adicionales (se muestran en la web)">
               <textarea className={inputClass} rows={2} value={form.notes} onChange={(e) => update("notes", e.target.value)} placeholder="Ej: Remodelado, vista al mar, acepta mascotas." />
             </FormField>
