@@ -127,7 +127,7 @@ function getCommissionsByMonth(deals: Deal[], month: number, year: number, broke
  * Computes how much of a deal's commission belongs to a given agent.
  * Uses new split fields if present; falls back to legacy logic otherwise.
  */
-function getAgentShareFromDeal(deal: Deal, agent: AgentRow): number {
+function getAgentShareFromDeal(deal: Deal, agent: AgentRow, brokerCode: string): number {
   const hasSplits =
     deal.companyShare != null ||
     deal.internalAgentShare != null ||
@@ -146,8 +146,9 @@ function getAgentShareFromDeal(deal: Deal, agent: AgentRow): number {
       share += deal.internalAgentShare;
     }
 
-    // Broker receives the company share
-    if (agent.role === "broker" && deal.companyShare != null) {
+    // Only the house broker receives the company share — several agents can
+    // hold the broker role, and each one would otherwise get it.
+    if (agent.code.toUpperCase() === brokerCode && deal.companyShare != null) {
       share += deal.companyShare;
     }
 
@@ -284,13 +285,18 @@ export default function ContabilidadPage() {
   }
   const totalIngresosCompany = ingresos.reduce((s, i) => s + i.amount, 0);
 
+  // Broker's code for split attribution (the house). Edgar first, since more
+  // than one agent can hold the broker role.
+  const brokerAgent = agents.find((a) => a.code.toLowerCase() === "edgar") || agents.find((a) => a.role === "broker");
+  const brokerCode = (brokerAgent?.code || "EDGAR").toUpperCase();
+
   const agentSummaries: AgentSummary[] = individualAgents.map((agent) => {
     let totalCommissions = 0, collectedCommissions = 0, pendingCommissions = 0;
     let totalDeals = 0, closedDeals = 0;
     const myDeals: Deal[] = [];
 
     for (const deal of deals) {
-      const share = getAgentShareFromDeal(deal, agent);
+      const share = getAgentShareFromDeal(deal, agent, brokerCode);
       if (share === 0) continue;
       myDeals.push(deal);
       totalDeals++;
@@ -338,10 +344,6 @@ export default function ContabilidadPage() {
   const companyNet = companyTotal.collectedCommissions + totalIngresosCompany - totalGastosCompany;
 
   const unassignedDeals = deals.filter((d) => !d.assignedAgent);
-
-  // Broker's code for split attribution
-  const brokerAgent = agents.find((a) => a.role === "broker");
-  const brokerCode = (brokerAgent?.code || "EDGAR").toUpperCase();
 
   // Monthly commissions — legacy "AMBOS" splits across broker+admin agents
   const rawMonthly = getCommissionsByMonth(deals, selectedMonth, selectedYear, brokerCode);
