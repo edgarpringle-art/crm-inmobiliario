@@ -2,6 +2,8 @@ import { ensureColumn, query } from "@/lib/db";
 import { ensureMlsTable } from "@/lib/mls/sync";
 import { parsePhotos, type PortalProperty } from "./brand";
 import { decodeEntities } from "@/lib/publicProperty";
+import { mlsDescriptionEn } from "@/lib/mls/translate";
+import type { Lang } from "./i18n";
 
 const str = (v: unknown) => (v == null ? null : String(v));
 const num = (v: unknown) => (v == null ? null : Number(v));
@@ -51,15 +53,19 @@ export async function getAvailableProperties(): Promise<PortalProperty[]> {
 }
 
 /** One property for the public detail page: own Property by id, or an MLS listing ("mls26108"). */
-export async function getPublicProperty(id: string): Promise<Record<string, unknown> | null> {
+export async function getPublicProperty(id: string, lang: Lang = "es"): Promise<Record<string, unknown> | null> {
   if (/^mls\d+$/.test(id)) {
     const rows = await ensureMlsTable()
       .then(() => query<Record<string, unknown>>("SELECT * FROM MlsListing WHERE id = ? AND active = 1", [id]))
       .catch(() => []);
     const m = rows[0];
     if (!m) return null;
+    const description = decodeEntities(m.description as string | null);
+    const descriptionEn = lang === "en"
+      ? await mlsDescriptionEn(id, description, str(m.descriptionEn), str(m.descriptionEnSource))
+      : null;
     return {
-      ...m, title: decodeEntities(m.title as string), description: decodeEntities(m.description as string | null), status: "DISPONIBLE", address: null, country: "Panamá", referencePoint: null, floors: null,
+      ...m, title: decodeEntities(m.title as string), description: descriptionEn || description, status: "DISPONIBLE", address: null, country: "Panamá", referencePoint: null, floors: null,
       hasPool: 0, hasGym: 0, hasElevator: 0, hasSecurity: 0, hasGenerator: 0, hasFurniture: 0, hasAppliances: 0,
       hasAC: 0, hasBalcony: 0, hasGarden: 0, notes: null, ownerName: null, createdBy: null, videoUrl: null, brochureUrl: null,
       listingAgent: null, listingAgentPhone: null, listingOffice: null, // internal only

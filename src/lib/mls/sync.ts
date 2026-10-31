@@ -16,7 +16,7 @@ export async function ensureMlsTable(): Promise<void> {
     mlsStatus TEXT, active INTEGER DEFAULT 1, fetchedAt TEXT, createdAt TEXT, updatedAt TEXT
   )`);
   await getDb().execute("CREATE INDEX IF NOT EXISTS MlsListing_active ON MlsListing(active)");
-  for (const c of ["listingAgent", "listingAgentPhone", "listingOffice"]) await ensureColumn("MlsListing", c);
+  for (const c of ["listingAgent", "listingAgentPhone", "listingOffice", "descriptionEn", "descriptionEnSource"]) await ensureColumn("MlsListing", c);
   ensured = true;
 }
 

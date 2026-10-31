@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const lang = await getLang();
   const t = tr(lang);
-  const p = (await getPublicProperty(id)) as unknown as Property | null;
+  const p = (await getPublicProperty(id, lang)) as unknown as Property | null;
   if (!p) return { title: t.detail.notFound };
   const loc = [p.sector, p.city].filter((x, i, a): x is string => !!x && a.indexOf(x) === i).join(", ");
   const price = p.salePrice ? formatCurrency(p.salePrice, p.currency) : p.rentPrice ? `${formatCurrency(p.rentPrice, p.currency)}${t.common.perMonth}` : "";
@@ -101,7 +101,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
   const portal = await isPortalRequest();
   const lang = await getLang();
   const t = tr(lang);
-  const p = (await getPublicProperty(id)) as unknown as Property | null;
+  const p = (await getPublicProperty(id, lang)) as unknown as Property | null;
   if (!p) notFound();
 
   // Agente que publicó la propiedad (createdBy = nombre completo del agente)
