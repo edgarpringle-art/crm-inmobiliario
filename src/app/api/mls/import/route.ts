@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { invalidatePortalProperties } from "@/lib/portalCache";
 import { importMlsLinks } from "@/lib/mls/sync";
 
 export const maxDuration = 60;
@@ -10,7 +11,9 @@ export async function POST(request: NextRequest) {
   if (!urls.length) return NextResponse.json({ error: "Pega al menos un enlace" }, { status: 400 });
   try {
     const hints = body.hints && typeof body.hints === "object" ? body.hints : {};
-    return NextResponse.json({ results: await importMlsLinks(urls, { skipExisting: body.skipExisting === true, hints }) });
+    const results = await importMlsLinks(urls, { skipExisting: body.skipExisting === true, hints });
+    invalidatePortalProperties();
+    return NextResponse.json({ results });
   } catch (error) {
     console.error("MLS import failed:", error);
     return NextResponse.json({ error: "No se pudo importar" }, { status: 500 });

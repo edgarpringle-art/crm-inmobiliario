@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { invalidatePortalProperties } from "@/lib/portalCache";
 import { query, queryOne, update, remove } from "@/lib/db";
 import { getCurrentUser, type SessionUser } from "@/lib/auth";
 
@@ -77,11 +78,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       if (fullDeal.status === "CERRADO") {
         const newPropertyStatus = fullDeal.dealType === "ALQUILER" ? "ALQUILADA" : "VENDIDA";
         await update("Property", fullDeal.propertyId, { status: newPropertyStatus });
+        invalidatePortalProperties();
       } else if (fullDeal.status === "CANCELADO") {
         // Only revert if currently marked as VENDIDA/ALQUILADA — don't touch RESERVADA/NO_DISPONIBLE
         const prop = await queryOne<{ status: string }>("SELECT status FROM Property WHERE id = ?", [fullDeal.propertyId]);
         if (prop && (prop.status === "VENDIDA" || prop.status === "ALQUILADA")) {
           await update("Property", fullDeal.propertyId, { status: "DISPONIBLE" });
+          invalidatePortalProperties();
         }
       }
     }

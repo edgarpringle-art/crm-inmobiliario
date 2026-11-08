@@ -1,4 +1,7 @@
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { ensureColumn, query } from "@/lib/db";
+import { PORTAL_PROPERTIES_TAG } from "@/lib/portalCache";
 import { ensureMlsTable } from "@/lib/mls/sync";
 import { parsePhotos, type PortalProperty } from "./brand";
 import { decodeEntities } from "@/lib/publicProperty";
@@ -31,7 +34,25 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 // Server-only: own available properties and the MLS ACOBIR inventory.
+// Cached for an hour (and refreshed on CRM edits via the tag): search engines crawl thousands of
+// public pages and each one needs this list, so reading ~1,300 rows per visit burned the CPU quota.
+const loadAvailableCached = unstable_cache(() => loadAvailable(true), ["portal-available-properties-v1"], {
+  revalidate: 3600,
+  tags: [PORTAL_PROPERTIES_TAG],
+});
+
+// Page and metadata of the same request share one read.
+const loadAvailableOnce = cache(() => loadAvailableCached());
+
 export async function getAvailableProperties(): Promise<PortalProperty[]> {
+  const list = await loadAvailableOnce().catch(() => loadAvailable(false));
+  // Random order on every visit, own and MLS listings mixed together.
+  return shuffle([...list]);
+}
+
+// strict: a failed read throws instead of returning an empty list, so the cache never keeps a DB hiccup.
+async function loadAvailable(strict: boolean): Promise<PortalProperty[]> {
+  const soft = <T,>(e: unknown): T[] => { if (strict) throw e; return []; };
   await ensureColumn("Property", "corregimiento").catch(() => {});
   const own = await query<Record<string, unknown>>(
     `SELECT id, title, propertyType, operationType, sector, corregimiento, city, state,
@@ -39,7 +60,7 @@ export async function getAvailableProperties(): Promise<PortalProperty[]> {
             CASE WHEN json_valid(photos) THEN json_extract(photos, '$[0]') END AS cover,
             CASE WHEN json_valid(photos) THEN json_array_length(photos) ELSE 0 END AS photoCount
      FROM Property WHERE status = 'DISPONIBLE' ORDER BY createdAt DESC LIMIT 300`
-  ).catch(() => []);
+  ).catch(soft<Record<string, unknown>>);
   const mls = await ensureMlsTable()
     .then(() => query<Record<string, unknown>>(
       `SELECT id, title, propertyType, operationType, sector, city, state,
@@ -47,9 +68,8 @@ export async function getAvailableProperties(): Promise<PortalProperty[]> {
               json_extract(photos, '$[0]') AS cover, json_array_length(photos) AS photoCount
        FROM MlsListing WHERE active = 1 AND title IS NOT NULL ORDER BY createdAt DESC`
     ))
-    .catch(() => []);
-  // Random order on every visit, own and MLS listings mixed together.
-  return shuffle([...own.map((r) => toPortal(r, "own")), ...mls.map((r) => toPortal(r, "mls"))]);
+    .catch(soft<Record<string, unknown>>);
+  return [...own.map((r) => toPortal(r, "own")), ...mls.map((r) => toPortal(r, "mls"))];
 }
 
 /** One property for the public detail page: own Property by id, or an MLS listing ("mls26108"). */

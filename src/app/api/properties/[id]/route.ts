@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { invalidatePortalProperties } from "@/lib/portalCache";
 import { query, queryOne, update, remove, ensureColumn } from "@/lib/db";
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -47,6 +48,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     await ensureColumn("Property", "noMortgage", "INTEGER");
     await update("Property", id, body);
     const property = await queryOne("SELECT * FROM Property WHERE id = ?", [id]);
+    invalidatePortalProperties();
     return NextResponse.json(property);
   } catch (error) {
     console.error("Error updating property:", error);
@@ -61,6 +63,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     if (!existing) return NextResponse.json({ error: "Propiedad no encontrada" }, { status: 404 });
 
     await remove("Property", id);
+    invalidatePortalProperties();
     return NextResponse.json({ message: "Propiedad eliminada exitosamente" });
   } catch (error) {
     console.error("Error deleting property:", error);

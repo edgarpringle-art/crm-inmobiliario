@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { invalidatePortalProperties } from "@/lib/portalCache";
 import { query, insert, update } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
     if (body.status === "CERRADO" && body.propertyId) {
       const newPropertyStatus = body.dealType === "ALQUILER" ? "ALQUILADA" : "VENDIDA";
       await update("Property", body.propertyId, { status: newPropertyStatus });
+      invalidatePortalProperties();
     }
 
     const deal = await query("SELECT * FROM Deal WHERE id = ?", [id]);

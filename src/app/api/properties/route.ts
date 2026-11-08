@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { invalidatePortalProperties } from "@/lib/portalCache";
 import { query, insert, ensureColumn } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
     await ensureColumn("Property", "noMortgage", "INTEGER");
     const id = await insert("Property", { ...body, createdBy: me?.displayName || null });
     const property = await query("SELECT * FROM Property WHERE id = ?", [id]);
+    invalidatePortalProperties();
     return NextResponse.json(property[0], { status: 201 });
   } catch (error) {
     console.error("Error creating property:", error);
