@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { query, queryOne } from "@/lib/db";
+import { query, queryOne, ensureColumn } from "@/lib/db";
+import { daysUntilBirthday } from "@/lib/birthday";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
@@ -65,6 +66,19 @@ export async function GET() {
       ORDER BY d.contractEndDate ASC
     `, [now, thirtyDaysStr, ...filterArgs]);
 
+    // Birthdays today and in the next 7 days (Panamá time)
+    let birthdays: Record<string, unknown>[] = [];
+    try {
+      await ensureColumn("Client", "birthDate");
+      const rows = await query<Record<string, unknown>>(
+        "SELECT id, firstName, lastName, email, phone, birthDate FROM Client WHERE birthDate IS NOT NULL AND birthDate != ''"
+      );
+      birthdays = rows
+        .map((c) => ({ ...c, daysLeft: daysUntilBirthday(String(c.birthDate)) }))
+        .filter((c) => c.daysLeft !== null && c.daysLeft <= 7)
+        .sort((a, b) => (a.daysLeft as number) - (b.daysLeft as number));
+    } catch { /* column may be missing — ignore */ }
+
     const asNum = (row: Record<string, unknown> | null, field: string) => Number((row as Record<string, unknown>)?.[field] ?? 0);
 
     const totalClients = asNum(totalClientsRow, "count");
@@ -81,6 +95,7 @@ export async function GET() {
       closedDeals: asNum(closedDealsRow, "count"),
       totalCommissions: asNum(commissionsRow, "total"),
       dealsByStatus,
+      birthdays,
       isAgent,
       recentDeals: recentDeals.map((d: Record<string, unknown>) => ({
         ...d,

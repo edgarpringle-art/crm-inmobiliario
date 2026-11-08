@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query, insert } from "@/lib/db";
+import { query, insert, ensureColumn } from "@/lib/db";
 import { syncBusquedaFromClient } from "@/lib/syncBusqueda";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "firstName, lastName y clientType son obligatorios" }, { status: 400 });
     }
 
+    await ensureColumn("Client", "birthDate");
     const me = await getCurrentUser();
     const id = await insert("Client", { ...body, createdBy: me?.displayName || null });
     const client = await query<Record<string, unknown>>("SELECT * FROM Client WHERE id = ?", [id]);

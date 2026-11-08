@@ -43,7 +43,7 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
-    firstName: "", lastName: "", email: "", phone: "", phone2: "",
+    firstName: "", lastName: "", email: "", phone: "", phone2: "", birthDate: "",
     clientType: "COMPRADOR", source: "", status: "PROSPECTO",
     searchType: "", searchPropertyType: "",
     searchZones: [] as string[],
@@ -74,6 +74,7 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
           email: data.email || "",
           phone: data.phone || "",
           phone2: data.phone2 || "",
+          birthDate: data.birthDate || "",
           clientType: data.clientType || "COMPRADOR",
           source: data.source || "",
           status: data.status || "PROSPECTO",
@@ -153,6 +154,7 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
         email: form.email || null,
         phone: form.phone || null,
         phone2: form.phone2 || null,
+        birthDate: form.birthDate || null,
         clientType: form.clientType,
         source: form.source || null,
         status: form.status,
@@ -193,6 +195,7 @@ export default function EditarClientePage({ params }: { params: Promise<{ id: st
             <FormField label="Email"><input type="email" className={inputClass} value={form.email} onChange={(e) => update("email", e.target.value)} /></FormField>
             <FormField label="Teléfono"><input className={inputClass} value={form.phone} onChange={(e) => update("phone", e.target.value)} /></FormField>
             <FormField label="Teléfono 2"><input className={inputClass} value={form.phone2} onChange={(e) => update("phone2", e.target.value)} /></FormField>
+            <FormField label="Fecha de cumpleaños"><input type="date" className={inputClass} value={form.birthDate} onChange={(e) => update("birthDate", e.target.value)} /></FormField>
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
+import BirthdayReminders, { type BirthdayClient } from "@/components/BirthdayReminders";
 import {
   formatCurrency,
   formatDate,
@@ -33,6 +34,7 @@ interface DashboardData {
   totalCommissions: number;
   dealsByStatus: Record<string, number>;
   isAgent?: boolean;
+  birthdays?: BirthdayClient[];
   recentDeals: Array<{
     id: string;
     dealType: string;
@@ -209,6 +211,8 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      <BirthdayReminders birthdays={data.birthdays || []} />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">

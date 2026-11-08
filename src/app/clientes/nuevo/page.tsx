@@ -36,7 +36,7 @@ export default function NuevoClientePage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    firstName: "", lastName: "", email: "", phone: "", phone2: "",
+    firstName: "", lastName: "", email: "", phone: "", phone2: "", birthDate: "",
     clientType: "COMPRADOR", source: "", status: "PROSPECTO",
     searchType: "", searchPropertyType: "",
     searchZones: [] as string[],
@@ -106,6 +106,7 @@ export default function NuevoClientePage() {
         email: form.email || null,
         phone: form.phone || null,
         phone2: form.phone2 || null,
+        birthDate: form.birthDate || null,
         clientType: form.clientType,
         source: form.source || null,
         status: form.status,
@@ -154,6 +155,9 @@ export default function NuevoClientePage() {
             </FormField>
             <FormField label="Teléfono 2">
               <input className={inputClass} value={form.phone2} onChange={(e) => update("phone2", e.target.value)} />
+            </FormField>
+            <FormField label="Fecha de cumpleaños">
+              <input type="date" className={inputClass} value={form.birthDate} onChange={(e) => update("birthDate", e.target.value)} />
             </FormField>
           </div>
         </div>

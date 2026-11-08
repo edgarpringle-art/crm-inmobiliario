@@ -8,6 +8,8 @@ import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import PhotoUploader from "@/components/PhotoUploader";
+import { BirthdayEmailButtons } from "@/components/BirthdayReminders";
+import { daysUntilBirthday, formatBirthday } from "@/lib/birthday";
 import {
   CLIENT_TYPES, CLIENT_SOURCES, CLIENT_STATUSES, PROPERTY_TYPES, SEARCH_TYPES, CURRENCIES,
   getLabel, getStatusColor, formatCurrency, formatDate,
@@ -65,7 +67,7 @@ const ACTIVITY_TYPES = [
 interface ClientDetail {
   id: string;
   firstName: string; lastName: string; email: string | null; phone: string | null;
-  phone2: string | null; cedula: string | null; clientType: string; source: string | null;
+  phone2: string | null; birthDate?: string | null; cedula: string | null; clientType: string; source: string | null;
   status: string; searchType: string | null; searchZone: string | null;
   searchPropertyType: string | null; budgetMin: number | null; budgetMax: number | null;
   bedrooms: number | null; bathrooms: number | null; searchNotes: string | null;
@@ -234,6 +236,7 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
     { label: "Email", value: client.email },
     { label: "Teléfono", value: client.phone },
     { label: "Teléfono 2", value: client.phone2 },
+    { label: "Cumpleaños", value: formatBirthday(client.birthDate) },
     { label: "Cédula", value: client.cedula },
     { label: "Dirección", value: client.address },
     { label: "Ciudad", value: client.city },
@@ -279,6 +282,12 @@ export default function ClienteDetailPage({ params }: { params: Promise<{ id: st
       </PageHeader>
 
       <div className="space-y-6 max-w-4xl">
+        {client.birthDate && daysUntilBirthday(client.birthDate) === 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-pink-50 border border-pink-200 rounded-xl p-4">
+            <p className="flex-1 text-sm font-medium text-pink-700">🎂 ¡Hoy es el cumpleaños de {client.firstName}! Envíale el correo de felicitación.</p>
+            <BirthdayEmailButtons firstName={client.firstName} email={client.email} />
+          </div>
+        )}
         {/* Info básica */}
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center gap-3 mb-4">
