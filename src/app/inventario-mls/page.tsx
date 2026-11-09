@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import { PROPERTY_TYPES, formatCurrency, getLabel } from "@/lib/constants";
-import { HiRefresh, HiExternalLink, HiClipboardCopy, HiSearch, HiLocationMarker, HiPlus, HiTrash } from "react-icons/hi";
+import { HiRefresh, HiExternalLink, HiClipboardCopy, HiSearch, HiLocationMarker, HiPlus, HiTrash, HiUserAdd, HiX } from "react-icons/hi";
 
 interface MlsItem {
   id: string; mlsId: string; url: string; title: string; propertyType: string; operationType: string;
@@ -11,6 +11,8 @@ interface MlsItem {
   area: number | null; landArea: number | null; bedrooms: number | null; bathrooms: number | null;
   sector: string | null; city: string | null; photo: string | null;
 }
+
+interface ClientLite { id: string; firstName: string; lastName: string | null; phone: string | null }
 
 interface ListResponse { items: MlsItem[]; total: number; page: number; limit: number; active: number; lastSync: string | null }
 
@@ -40,6 +42,11 @@ export default function InventarioMlsPage() {
   const [fileHints, setFileHints] = useState<Record<string, { barrio: string; area: string }>>({});
   const [fileName, setFileName] = useState("");
   const [prune, setPrune] = useState(false);
+  const [pickFor, setPickFor] = useState<MlsItem | null>(null);
+  const [clientQ, setClientQ] = useState("");
+  const [clients, setClients] = useState<ClientLite[]>([]);
+  const [addingTo, setAddingTo] = useState("");
+  const [addedMsg, setAddedMsg] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -152,6 +159,41 @@ export default function InventarioMlsPage() {
     const urls = fileCodes.map((c) => `https://propiedades.mlsacobir.com/listing/p/p/${c}`);
     await importUrls(urls, { skipExisting: true, pruneCodes: prune ? fileCodes : [], hints: fileHints });
     setFileCodes([]); setFileName("");
+  }
+
+  // "Agregar a cliente": search a client and add this listing to their "Opciones para el cliente".
+  useEffect(() => {
+    if (!pickFor) return;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/clients?search=${encodeURIComponent(clientQ.trim())}`);
+        const rows = res.ok ? await res.json() : [];
+        setClients(Array.isArray(rows) ? rows.slice(0, 8) : []);
+      } catch { setClients([]); }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [pickFor, clientQ]);
+
+  async function addToClient(p: MlsItem, c: ClientLite) {
+    setAddingTo(c.id);
+    try {
+      const specs = [p.bedrooms != null && `${p.bedrooms} rec`, p.bathrooms != null && `${p.bathrooms} baños`, (p.area ?? p.landArea) != null && `${p.area ?? p.landArea} m²`].filter(Boolean).join(" · ");
+      const res = await fetch("/api/propuestas", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: c.id, title: p.title, zona: [p.sector, p.city].filter(Boolean).join(", "),
+          price: p.salePrice ?? p.rentPrice, currency: p.currency,
+          description: [specs, `MLS #${p.mlsId}`].filter(Boolean).join(" · "),
+          link: `${SITE}/p/${p.id}`, photos: p.photo ? [p.photo] : [],
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setAddedMsg(`Agregada a las opciones de ${c.firstName} ${c.lastName || ""}`.trim());
+      setTimeout(() => setAddedMsg(""), 3000);
+      setPickFor(null); setClientQ("");
+    } catch {
+      alert("No se pudo agregar a las opciones del cliente");
+    } finally { setAddingTo(""); }
   }
 
   async function remove(p: MlsItem) {
@@ -310,6 +352,10 @@ export default function InventarioMlsPage() {
                       <HiExternalLink /> Ver
                     </a>
                   </div>
+                  <button onClick={() => { setPickFor(p); setClientQ(""); }}
+                    className="flex items-center justify-center gap-1 mt-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg py-2">
+                    <HiUserAdd className="w-4 h-4" /> Agregar a opciones de un cliente
+                  </button>
                   <div className="flex items-center justify-between mt-2">
                     <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-gray-400 hover:text-gray-600">Ficha en Xposure (con tus datos) ↗</a>
                     <button onClick={() => remove(p)} className="flex items-center gap-1 text-[11px] text-red-500 hover:text-red-700"><HiTrash /> Quitar</button>
@@ -326,6 +372,44 @@ export default function InventarioMlsPage() {
             </div>
           )}
         </>
+      )}
+
+      {addedMsg && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white text-sm px-4 py-2 rounded-lg shadow-lg">✓ {addedMsg}</div>
+      )}
+
+      {pickFor && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setPickFor(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <p className="font-semibold text-gray-900">Agregar a opciones de un cliente</p>
+                <p className="text-xs text-gray-500 line-clamp-1">MLS #{pickFor.mlsId} · {pickFor.title}</p>
+              </div>
+              <button onClick={() => setPickFor(null)} className="text-gray-400 hover:text-gray-700"><HiX className="w-5 h-5" /></button>
+            </div>
+            <div className="relative">
+              <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input autoFocus value={clientQ} onChange={(e) => setClientQ(e.target.value)} placeholder="Buscar cliente por nombre, teléfono o correo..."
+                className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm" />
+            </div>
+            <ul className="mt-3 divide-y divide-gray-100 max-h-72 overflow-auto">
+              {clients.length === 0 && <li className="text-sm text-gray-400 py-4 text-center">Sin resultados</li>}
+              {clients.map((c) => (
+                <li key={c.id}>
+                  <button disabled={!!addingTo} onClick={() => addToClient(pickFor, c)}
+                    className="w-full flex items-center justify-between gap-3 py-2.5 px-1 text-left hover:bg-gray-50 disabled:opacity-60">
+                    <span>
+                      <span className="block text-sm font-medium text-gray-900">{c.firstName} {c.lastName}</span>
+                      {c.phone && <span className="block text-xs text-gray-500">{c.phone}</span>}
+                    </span>
+                    <span className="text-xs font-semibold text-blue-600">{addingTo === c.id ? "..." : "+ Opciones"}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       )}
     </div>
   );
