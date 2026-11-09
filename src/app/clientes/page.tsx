@@ -7,7 +7,12 @@ import PageHeader from "@/components/PageHeader";
 import SearchBar from "@/components/SearchBar";
 import EmptyState from "@/components/EmptyState";
 import { CLIENT_TYPES, CLIENT_STATUSES, getLabel, formatDate } from "@/lib/constants";
-import { HiUsers, HiPhone, HiMail, HiFilter, HiX, HiDotsVertical, HiRefresh, HiSearch, HiHome, HiInformationCircle, HiClock, HiChevronDown, HiChevronRight } from "react-icons/hi";
+import { HiUsers, HiPhone, HiMail, HiFilter, HiX, HiDotsVertical, HiRefresh, HiSearch, HiHome, HiInformationCircle, HiClock, HiChevronDown, HiChevronRight, HiChevronLeft, HiViewList, HiViewBoards } from "react-icons/hi";
+
+const PAGE_SIZE = 25;       // rows per page in list view
+const COLUMN_PAGE = 15;     // cards shown per kanban column before "Ver más"
+
+type SortKey = "RECIENTE" | "NOMBRE" | "NUEVOS";
 
 const ACTIVITY_ICONS: Record<string, string> = {
   LLAMADA: "📞", VISITA: "🏠", EMAIL: "📧", WHATSAPP: "💬", REUNION: "👥", NOTA: "📝",
@@ -82,9 +87,27 @@ export default function ClientesPage() {
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [feed, setFeed] = useState<ActivityFeedItem[]>([]);
-  const [showFeed, setShowFeed] = useState(true);
+  const [showFeed, setShowFeed] = useState(false);
+  const [mode, setMode] = useState<"LISTA" | "EMBUDO">("LISTA");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sort, setSort] = useState<SortKey>("RECIENTE");
+  const [page, setPage] = useState(1);
+  const [colLimit, setColLimit] = useState<Record<string, number>>({});
 
   const activeFilters = typeFilter ? 1 : 0;
+
+  // Remember the last view (list / funnel) on this device
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("clientes_mode");
+      if (saved === "LISTA" || saved === "EMBUDO") setMode(saved);
+    } catch { /* storage blocked */ }
+  }, []);
+
+  function changeMode(next: "LISTA" | "EMBUDO") {
+    setMode(next);
+    try { localStorage.setItem("clientes_mode", next); } catch { /* storage blocked */ }
+  }
 
   useEffect(() => {
     async function fetchClients() {
@@ -139,7 +162,38 @@ export default function ClientesPage() {
     if (next === view) return;
     setView(next);
     setTypeFilter(""); // a stale type filter from the other view would hide everything
+    setPage(1);
   }
+
+  // ── List view: status chips, sorting and pagination ──────────────────────
+  const statusCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const c of filteredClients) {
+      const k = c.status || "PROSPECTO";
+      map[k] = (map[k] || 0) + 1;
+    }
+    return map;
+  }, [filteredClients]);
+
+  const listClients = useMemo(() => {
+    const rows = statusFilter
+      ? filteredClients.filter((c) => (c.status || "PROSPECTO") === statusFilter)
+      : [...filteredClients];
+    const ts = (c: Client) => c.lastActivityAt || c.createdAt || "";
+    if (sort === "NOMBRE") {
+      rows.sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, "es"));
+    } else if (sort === "NUEVOS") {
+      rows.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+    } else {
+      rows.sort((a, b) => ts(b).localeCompare(ts(a)));
+    }
+    return rows;
+  }, [filteredClients, statusFilter, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(listClients.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const pageRows = listClients.slice(pageStart, pageStart + PAGE_SIZE);
 
   const grouped = useMemo(() => {
     const map: Record<string, Client[]> = {};
@@ -217,7 +271,7 @@ export default function ClientesPage() {
 
   return (
     <div>
-      <PageHeader title="Clientes" subtitle={`${filteredClients.length} en el embudo`}>
+      <PageHeader title="Clientes" subtitle={`${filteredClients.length} ${view === "PROPIETARIOS" ? "propietarios" : "buscadores"}`}>
         <div className="flex gap-2">
           <button
             onClick={syncWithBot}
@@ -339,7 +393,25 @@ export default function ClientesPage() {
       {/* Search and filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="flex-1">
-          <SearchBar value={search} onChange={setSearch} placeholder="Buscar por nombre, email, telefono..." />
+          <SearchBar value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Buscar por nombre, email, telefono..." />
+        </div>
+        <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit">
+          <button
+            onClick={() => changeMode("LISTA")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+              mode === "LISTA" ? "bg-white text-blue-700 shadow-sm" : "text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            <HiViewList className="w-4 h-4" /> Lista
+          </button>
+          <button
+            onClick={() => changeMode("EMBUDO")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+              mode === "EMBUDO" ? "bg-white text-blue-700 shadow-sm" : "text-gray-500 hover:text-gray-800"
+            }`}
+          >
+            <HiViewBoards className="w-4 h-4" /> Embudo
+          </button>
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
@@ -371,7 +443,7 @@ export default function ClientesPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setTypeFilter("")}
+              onClick={() => { setTypeFilter(""); setPage(1); }}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all ${
                 !typeFilter ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
               }`}
@@ -381,7 +453,7 @@ export default function ClientesPage() {
             {visibleTypes.map((t) => (
               <button
                 key={t.value}
-                onClick={() => setTypeFilter(t.value)}
+                onClick={() => { setTypeFilter(t.value); setPage(1); }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all ${
                   typeFilter === t.value ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
                 }`}
@@ -404,6 +476,140 @@ export default function ClientesPage() {
           actionLabel="Nuevo Cliente"
           actionHref="/clientes/nuevo"
         />
+      ) : mode === "LISTA" ? (
+        // ── List view ──────────────────────────────────────────────────────
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => { setStatusFilter(""); setPage(1); }}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  !statusFilter ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                }`}
+              >
+                Todos <span className="opacity-70">{filteredClients.length}</span>
+              </button>
+              {CLIENT_STATUSES.map((s) => {
+                const cs = COLUMN_STYLES[s.value] || COLUMN_STYLES.PROSPECTO;
+                const active = statusFilter === s.value;
+                return (
+                  <button
+                    key={s.value}
+                    onClick={() => { setStatusFilter(active ? "" : s.value); setPage(1); }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                      active ? `${cs.bgSoft} ${cs.text} border-current` : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${cs.accent}`} />
+                    {s.label} <span className="opacity-70">{statusCounts[s.value] || 0}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <select
+              value={sort}
+              onChange={(e) => { setSort(e.target.value as SortKey); setPage(1); }}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 focus:border-blue-500 focus:outline-none w-fit"
+            >
+              <option value="RECIENTE">Último contacto</option>
+              <option value="NUEVOS">Más nuevos</option>
+              <option value="NOMBRE">Nombre A–Z</option>
+            </select>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {pageRows.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-10">Sin clientes en esta etapa.</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                    <th className="px-4 py-2.5">Cliente</th>
+                    <th className="px-4 py-2.5 hidden sm:table-cell">Teléfono</th>
+                    <th className="px-4 py-2.5 hidden lg:table-cell">Email</th>
+                    <th className="px-4 py-2.5">Etapa</th>
+                    <th className="px-4 py-2.5 hidden md:table-cell">Últ. contacto</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {pageRows.map((client) => {
+                    const statusColor = CLIENT_STATUSES.find((s) => s.value === (client.status || "PROSPECTO"))?.color || "bg-gray-100 text-gray-700";
+                    const lastDate = client.lastActivityAt || client.createdAt;
+                    return (
+                      <tr key={client.id} className="hover:bg-blue-50/40 transition-colors">
+                        <td className="px-4 py-2.5">
+                          <Link href={`/clientes/${client.id}`} className="flex items-center gap-2.5 min-w-0">
+                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getAvatarColor(client.firstName + client.lastName)} flex items-center justify-center flex-shrink-0`}>
+                              <span className="text-white font-bold text-[11px]">{getInitials(client.firstName, client.lastName)}</span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-gray-900 truncate leading-tight">{client.firstName} {client.lastName}</p>
+                              <p className="text-[11px] text-gray-500 truncate">
+                                {getLabel(CLIENT_TYPES, client.clientType)}
+                                {client.phone && <span className="sm:hidden"> · {client.phone}</span>}
+                              </p>
+                            </div>
+                          </Link>
+                        </td>
+                        <td className="px-4 py-2.5 hidden sm:table-cell text-gray-600 whitespace-nowrap">
+                          {client.phone ? (
+                            <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600">
+                              {client.phone}
+                            </a>
+                          ) : <span className="text-gray-300">—</span>}
+                        </td>
+                        <td className="px-4 py-2.5 hidden lg:table-cell text-gray-500 max-w-[220px] truncate">
+                          {client.email || <span className="text-gray-300">—</span>}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <select
+                            value={client.status || "PROSPECTO"}
+                            onChange={(e) => changeStatus(client, e.target.value)}
+                            title="Cambiar etapa"
+                            className={`${statusColor} text-xs font-semibold rounded-full pl-2.5 pr-1 py-1 border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-300`}
+                          >
+                            {CLIENT_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                          </select>
+                        </td>
+                        <td className="px-4 py-2.5 hidden md:table-cell text-xs text-gray-500 whitespace-nowrap">
+                          {lastDate ? formatDate(lastDate) : "—"}
+                          {(client.lastActivityBy || client.createdBy) && (
+                            <span className="text-gray-400"> · {client.lastActivityBy || client.createdBy}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+
+            {listClients.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 bg-gray-50/60">
+                <p className="text-xs text-gray-500">
+                  {pageStart + 1}–{Math.min(pageStart + PAGE_SIZE, listClients.length)} de {listClients.length}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-medium text-gray-700 hover:border-gray-400 disabled:opacity-40 disabled:hover:border-gray-200"
+                  >
+                    <HiChevronLeft className="w-4 h-4" /> Anterior
+                  </button>
+                  <span className="text-xs text-gray-500">{currentPage} / {totalPages}</span>
+                  <button
+                    onClick={() => setPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-medium text-gray-700 hover:border-gray-400 disabled:opacity-40 disabled:hover:border-gray-200"
+                  >
+                    Siguiente <HiChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       ) : (
         // ── Kanban board ───────────────────────────────────────────────────
         <div className="overflow-x-auto pb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">
@@ -434,11 +640,11 @@ export default function ClientesPage() {
                   </div>
 
                   {/* Cards */}
-                  <div className="p-2 space-y-2 min-h-[120px]">
+                  <div className="p-2 space-y-2 min-h-[120px] max-h-[70vh] overflow-y-auto">
                     {items.length === 0 && (
                       <p className="text-xs text-gray-400 text-center py-6 italic">Sin clientes</p>
                     )}
-                    {items.map((client) => (
+                    {items.slice(0, colLimit[s.value] || COLUMN_PAGE).map((client) => (
                       <ClientCard
                         key={client.id}
                         client={client}
@@ -453,6 +659,14 @@ export default function ClientesPage() {
                         }}
                       />
                     ))}
+                    {items.length > (colLimit[s.value] || COLUMN_PAGE) && (
+                      <button
+                        onClick={() => setColLimit((prev) => ({ ...prev, [s.value]: (prev[s.value] || COLUMN_PAGE) + COLUMN_PAGE }))}
+                        className="w-full py-2 rounded-lg text-xs font-semibold text-gray-500 hover:text-gray-800 hover:bg-white border border-dashed border-gray-300 transition-all"
+                      >
+                        Ver {Math.min(COLUMN_PAGE, items.length - (colLimit[s.value] || COLUMN_PAGE))} más · {items.length - (colLimit[s.value] || COLUMN_PAGE)} ocultos
+                      </button>
+                    )}
                   </div>
                 </div>
               );
