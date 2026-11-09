@@ -19,6 +19,33 @@ function parsePhotos(raw: string | null): string[] {
   try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return []; }
 }
 
+type Lang = "es" | "en";
+
+const T = {
+  es: {
+    invalid: "Este enlace no es válido o expiró.", hello: "Hola",
+    intro: "Estas son las opciones que encontré para ti. Marca las que te interesan y coordino la visita.",
+    empty: "Aún no hay opciones. Te avisaré cuando agregue algunas.",
+    liked: "Te interesan", discarded: "Descartadas", noPhotos: "Sin fotos", photo: "Foto",
+    details: "Ver más detalles →", yes: "Me interesa", noThanks: "No, gracias", no: "No me interesa",
+  },
+  en: {
+    invalid: "This link is invalid or has expired.", hello: "Hi",
+    intro: "Here are the options I found for you. Mark the ones you like and I'll set up the viewing.",
+    empty: "No options yet. I'll let you know when I add some.",
+    liked: "You're interested", discarded: "Dismissed", noPhotos: "No photos", photo: "Photo",
+    details: "See more details →", yes: "I'm interested", noThanks: "No, thanks", no: "Not interested",
+  },
+};
+
+// English: our own site links go to the English page, and the auto-generated MLS specs are translated.
+function enLink(link: string): string {
+  return link.replace(/^(https?:\/\/(?:www\.)?panamainmo\.com)\/(?!en\/)/, "$1/en/");
+}
+function enText(text: string): string {
+  return text.replace(/(\d+) rec/g, "$1 bd").replace(/(\d+) baños/g, "$1 baths");
+}
+
 function money(price: number | null, currency: string | null): string {
   if (price == null) return "";
   const sym = currency === "PAB" ? "B/." : currency === "EUR" ? "€" : "$";
@@ -31,6 +58,18 @@ export default function VerPropuestasPage({ params }: { params: Promise<{ id: st
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  // The first render is the loading spinner (same in both languages), so reading the URL here is hydration-safe.
+  const [lang, setLang] = useState<Lang>(() =>
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("lang") === "en" ? "en" : "es"
+  );
+  const t = T[lang];
+
+  function switchLang(l: Lang) {
+    setLang(l);
+    const u = new URL(window.location.href);
+    if (l === "en") u.searchParams.set("lang", "en"); else u.searchParams.delete("lang");
+    window.history.replaceState(null, "", u.toString());
+  }
 
   useEffect(() => {
     fetch(`/api/propuestas/public?clientId=${id}`)
@@ -66,7 +105,7 @@ export default function VerPropuestasPage({ params }: { params: Promise<{ id: st
   if (notFound) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 px-6 text-center">
-        <p className="text-stone-500">Este enlace no es válido o expiró.</p>
+        <p className="text-stone-500">{t.invalid}</p>
       </div>
     );
   }
@@ -78,7 +117,15 @@ export default function VerPropuestasPage({ params }: { params: Promise<{ id: st
   return (
     <div className="min-h-screen bg-stone-50" style={{ fontFamily: "'Josefin Sans', system-ui, sans-serif" }}>
       {/* Header */}
-      <header className="bg-stone-900 text-white px-5 py-6 text-center">
+      <header className="relative bg-stone-900 text-white px-5 py-6 text-center">
+        <div className="absolute top-3 right-3 flex rounded-full border border-white/30 overflow-hidden text-xs font-semibold">
+          {(["es", "en"] as Lang[]).map((l) => (
+            <button key={l} onClick={() => switchLang(l)} aria-pressed={lang === l}
+              className={`px-3 py-1 ${lang === l ? "bg-white text-stone-900" : "text-white/80 hover:text-white"}`}>
+              {l === "es" ? "ES" : "EN"}
+            </button>
+          ))}
+        </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/brand/panamainmo-logo-blanco.png" alt="PanamaInmo — Real Estate & Legal Advisory" className="h-10 w-auto mx-auto" />
       </header>
@@ -86,32 +133,32 @@ export default function VerPropuestasPage({ params }: { params: Promise<{ id: st
       <div className="max-w-lg mx-auto px-4 py-6">
         <div className="mb-5 text-center">
           <h2 className="text-xl font-semibold text-stone-900">
-            {name ? `Hola ${name} 👋` : "Hola 👋"}
+            {name ? `${t.hello} ${name} 👋` : `${t.hello} 👋`}
           </h2>
           <p className="text-sm text-stone-500 mt-1">
-            Estas son las opciones que encontré para ti. Marca las que te interesan y coordino la visita.
+            {t.intro}
           </p>
         </div>
 
         {propuestas.length === 0 ? (
           <div className="text-center py-16 text-stone-400 text-sm bg-white rounded-2xl border border-stone-100">
-            Aún no hay opciones. Te avisaré cuando agregue algunas.
+            {t.empty}
           </div>
         ) : (
           <div className="space-y-8">
             {/* Pendientes (need decision) */}
             {pendientes.length > 0 && (
               <div className="space-y-4">
-                {pendientes.map((p) => <Card key={p.id} p={p} onRespond={respond} />)}
+                {pendientes.map((p) => <Card key={p.id} p={p} lang={lang} onRespond={respond} />)}
               </div>
             )}
 
             {/* Interesado */}
             {interesado.length > 0 && (
               <div>
-                <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-3">✅ Te interesan ({interesado.length})</p>
+                <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-3">✅ {t.liked} ({interesado.length})</p>
                 <div className="space-y-4">
-                  {interesado.map((p) => <Card key={p.id} p={p} onRespond={respond} />)}
+                  {interesado.map((p) => <Card key={p.id} p={p} lang={lang} onRespond={respond} />)}
                 </div>
               </div>
             )}
@@ -119,9 +166,9 @@ export default function VerPropuestasPage({ params }: { params: Promise<{ id: st
             {/* Descartado */}
             {descartado.length > 0 && (
               <div>
-                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Descartadas ({descartado.length})</p>
+                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">{t.discarded} ({descartado.length})</p>
                 <div className="space-y-4 opacity-60">
-                  {descartado.map((p) => <Card key={p.id} p={p} onRespond={respond} />)}
+                  {descartado.map((p) => <Card key={p.id} p={p} lang={lang} onRespond={respond} />)}
                 </div>
               </div>
             )}
@@ -136,7 +183,7 @@ export default function VerPropuestasPage({ params }: { params: Promise<{ id: st
   );
 }
 
-function PhotoCarousel({ photos }: { photos: string[] }) {
+function PhotoCarousel({ photos, lang }: { photos: string[]; lang: Lang }) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
 
@@ -156,7 +203,7 @@ function PhotoCarousel({ photos }: { photos: string[] }) {
   };
 
   if (photos.length === 0) {
-    return <div className="w-full h-48 bg-stone-100 flex items-center justify-center text-stone-300 text-sm">Sin fotos</div>;
+    return <div className="w-full h-48 bg-stone-100 flex items-center justify-center text-stone-300 text-sm">{T[lang].noPhotos}</div>;
   }
 
   return (
@@ -167,7 +214,7 @@ function PhotoCarousel({ photos }: { photos: string[] }) {
           <img
             key={i}
             src={url}
-            alt={`Foto ${i + 1}`}
+            alt={`${T[lang].photo} ${i + 1}`}
             className="w-full aspect-[4/3] object-cover flex-shrink-0 snap-center"
             style={{ minWidth: "100%" }}
           />
@@ -201,14 +248,17 @@ function PhotoCarousel({ photos }: { photos: string[] }) {
   );
 }
 
-function Card({ p, onRespond }: { p: Propuesta; onRespond: (id: string, status: string) => void }) {
+function Card({ p, lang, onRespond }: { p: Propuesta; lang: Lang; onRespond: (id: string, status: string) => void }) {
   const photos = parsePhotos(p.photos);
+  const t = T[lang];
+  const description = p.description && lang === "en" ? enText(p.description) : p.description;
+  const link = p.link && lang === "en" ? enLink(p.link) : p.link;
   const isYes = p.status === "INTERESADO";
   const isNo = p.status === "DESCARTADO";
 
   return (
     <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-      <PhotoCarousel photos={photos} />
+      <PhotoCarousel photos={photos} lang={lang} />
 
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
@@ -223,13 +273,13 @@ function Card({ p, onRespond }: { p: Propuesta; onRespond: (id: string, status: 
           )}
         </div>
 
-        {p.description && (
-          <p className="text-sm text-stone-600 mt-3 whitespace-pre-wrap leading-relaxed">{p.description}</p>
+        {description && (
+          <p className="text-sm text-stone-600 mt-3 whitespace-pre-wrap leading-relaxed">{description}</p>
         )}
 
-        {p.link && (
-          <a href={p.link} target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-blue-600 underline mt-3">
-            Ver más detalles →
+        {link && (
+          <a href={link} target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-blue-600 underline mt-3">
+            {t.details}
           </a>
         )}
 
@@ -240,7 +290,7 @@ function Card({ p, onRespond }: { p: Propuesta; onRespond: (id: string, status: 
               isYes ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
             }`}
           >
-            {isYes ? "✅ Me interesa" : "👍 Me interesa"}
+            {isYes ? `✅ ${t.yes}` : `👍 ${t.yes}`}
           </button>
           <button
             onClick={() => onRespond(p.id, isNo ? "PENDIENTE" : "DESCARTADO")}
@@ -248,7 +298,7 @@ function Card({ p, onRespond }: { p: Propuesta; onRespond: (id: string, status: 
               isNo ? "bg-stone-700 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200 border border-stone-200"
             }`}
           >
-            {isNo ? "No, gracias" : "👎 No me interesa"}
+            {isNo ? t.noThanks : `👎 ${t.no}`}
           </button>
         </div>
       </div>
