@@ -22,7 +22,9 @@ export default async function ContactoPage() {
   const items = [
     { icon: IconWA, label: "WhatsApp", value: BROKER.phoneDisplay, href: waLink(t.waMsg) },
     { icon: IconPhone, label: t.phone, value: BROKER.phoneDisplay, href: `tel:+${BROKER.phone}` },
+    { icon: IconPhone, label: t.landline, value: BROKER.landlineDisplay, href: `tel:+${BROKER.landline}` },
     { icon: IconMail, label: "Email", value: BROKER.email, href: `mailto:${BROKER.email}` },
+    { icon: IconMail, label: t.legal, value: BROKER.legalEmail, href: `mailto:${BROKER.legalEmail}` },
     { icon: IconInstagram, label: "Instagram", value: `@${BROKER.instagram}`, href: BROKER.instagramUrl },
     { icon: IconPin, label: t.office, value: `${BROKER.office} · ${BROKER.address}`, href: BROKER.mapsUrl },
   ];

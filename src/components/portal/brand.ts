@@ -4,12 +4,15 @@ import type { Lang } from "./i18n";
 export const BROKER = {
   phone: "50763183113",
   phoneDisplay: "+507 6318-3113",
+  landline: "5073090166",
+  landlineDisplay: "+507 309-0166 ext. 323",
   email: "edgar@panamainmo.com",
+  legalEmail: "legal@panamainmo.com",
   instagram: "panamainmo.realestate",
   instagramUrl: "https://www.instagram.com/panamainmo.realestate",
   license: "PN5016",
   office: "PanamaInmo Real Estate & Legal Advisory",
-  address: "P.H. Atrium, Calle 53 Este, Obarrio, Piso 27, Oficina 24",
+  address: "P.H. Atrium, Calle 53 Este, Obarrio, Piso 26, Oficina 24",
   mapsUrl: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("P.H. Atrium, Calle 53 Este, Obarrio, Panamá"),
 };
 

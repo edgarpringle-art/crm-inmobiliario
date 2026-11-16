@@ -47,7 +47,9 @@ export default function PortalFooter({ portal = false, lang = "es" }: { portal?:
           <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">{t.footer.contact}</p>
           <ul className="space-y-3 text-sm">
             <li><a href={`tel:+${BROKER.phone}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconPhone />{BROKER.phoneDisplay}</a></li>
+            <li><a href={`tel:+${BROKER.landline}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconPhone />{BROKER.landlineDisplay}</a></li>
             <li><a href={`mailto:${BROKER.email}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconMail /><span className="break-all">{BROKER.email}</span></a></li>
+            <li><a href={`mailto:${BROKER.legalEmail}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconMail /><span className="break-all">{BROKER.legalEmail}</span></a></li>
             <li><a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors"><IconInstagram />@{BROKER.instagram}</a></li>
             <li><a href={waLink()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors"><IconWA className="w-3.5 h-3.5" />WhatsApp</a></li>
             <li><a href={BROKER.mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 hover:text-white transition-colors"><IconPin className="w-3.5 h-3.5 mt-1 shrink-0" /><span>{BROKER.office}<br />{BROKER.address}</span></a></li>
