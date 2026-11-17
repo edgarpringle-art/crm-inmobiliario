@@ -93,6 +93,11 @@ export default async function LandingPage({ params, searchParams }: { params: Pa
     .filter((l) => l.op === landing.op && l.type === landing.type && l.zone && l.zone !== landing.zone)
     .slice(0, 24);
 
+  // Unique, data-driven FAQ per landing (count, price range, top zones) — adds relevant content
+  // and powers FAQPage rich results. Keeps each page's copy distinct, which helps rankings.
+  const topZoneNames = zones.map((l) => zoneName(all, l.zone!) || titleCase(l.zone!));
+  const faq = t.landing.faq(typeLabel, landing.op, zone, list.length, r.from, r.to, topZoneNames);
+
   const opLabel = landing.op === "venta" ? t.landing.sale : t.landing.rent;
   const crumbs = [
     { name: t.landing.home, path: "/" },
@@ -110,6 +115,12 @@ export default async function LandingPage({ params, searchParams }: { params: Pa
       "@context": "https://schema.org", "@type": "ItemList", name: title, numberOfItems: list.length,
       itemListElement: visible.map((p, i) => ({ "@type": "ListItem", position: (page - 1) * PAGE_SIZE + i + 1, url: `${SITE_URL}/p/${p.id}`, name: p.title })),
     },
+    ...(faq.length
+      ? [{
+          "@context": "https://schema.org", "@type": "FAQPage",
+          mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+        }]
+      : []),
   ];
 
   const filtersHref = h(`/propiedades?op=${landing.op === "venta" ? "VENTA" : "ALQUILER"}${zone ? `&zone=${encodeURIComponent(zone)}` : ""}`);
@@ -192,6 +203,25 @@ export default async function LandingPage({ params, searchParams }: { params: Pa
           )}
         </div>
       </section>
+
+      {faq.length > 0 && (
+        <section className="px-4 sm:px-6 pb-14">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-2xl mb-6" style={SERIF}>{t.landing.faqTitle}</h2>
+            <div className="border-t border-[#E9E0D0]">
+              {faq.map((f, i) => (
+                <details key={i} className="group border-b border-[#E9E0D0] py-4">
+                  <summary className="flex justify-between items-center gap-4 cursor-pointer list-none font-medium text-[#1E1A15]">
+                    {f.q}
+                    <span className="text-[#B8945F] text-2xl leading-none transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 text-[#5C5243] leading-relaxed">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <PortalFooter portal={portal} lang={lang} />
     </div>

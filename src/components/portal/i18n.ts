@@ -170,6 +170,19 @@ const es = {
     popularTitle: "Búsquedas populares", popularEyebrow: "Explora",
     byType: (op: "venta" | "alquiler"): string => (op === "venta" ? "Comprar por tipo" : "Alquilar por tipo"),
     byZone: (op: "venta" | "alquiler"): string => (op === "venta" ? "Comprar por zona" : "Alquilar por zona"),
+    faqTitle: "Preguntas frecuentes",
+    faq: (typeLabel: string | null, op: "venta" | "alquiler", zone: string | null, count: number, from: string | null, to: string | null, zones: string[]): { q: string; a: string }[] => {
+      const what = lcFirst(typeLabel || "Propiedades");
+      const opw = op === "venta" ? "venta" : "alquiler";
+      const place = zone ? zone : "Panamá";
+      const out: { q: string; a: string }[] = [];
+      out.push({ q: `¿Cuántos ${what} en ${opw} hay en ${place}?`, a: `Ahora mismo tenemos ${count} ${count === 1 ? "opción" : "opciones"} de ${what} en ${opw} en ${place}${from ? `, con precios desde ${from}${to && to !== from ? ` hasta ${to}` : ""}` : ""}. El listado se actualiza a diario.` });
+      if (from) out.push({ q: `¿Cuánto cuestan los ${what} en ${opw} en ${place}?`, a: `Los precios van desde ${from}${to && to !== from ? ` hasta ${to}` : ""}, según ubicación, tamaño y características. Cada ficha incluye precio, fotos y detalles verificados.` });
+      if (!zone && zones.length) out.push({ q: `¿En qué zonas hay ${what} en ${opw}?`, a: `Algunas de las zonas más buscadas son ${zones.slice(0, 6).join(", ")}. Puedes filtrar por zona desde el catálogo.` });
+      out.push({ q: `¿PanamaInmo acompaña en el proceso ${op === "venta" ? "de compra" : "de alquiler"}?`, a: `Sí. Somos una inmobiliaria con asesoría legal integrada: te acompañamos en ${op === "venta" ? "la compraventa" : "la firma del contrato"}, la revisión de documentos y todo el proceso, con respaldo legal.` });
+      out.push({ q: "¿Cómo agendo una visita o recibo nuevas opciones?", a: `Escríbenos por WhatsApp o usa el formulario de la página. También puedes crear una alerta y te avisamos en cuanto entren nuevos ${what} en ${opw} en ${place}.` });
+      return out;
+    },
   },
   wanted: {
     metaTitle: "Buscamos propiedades para nuestros clientes · PanamaInmo",
@@ -427,6 +440,19 @@ const en: typeof es = {
     popularTitle: "Popular searches", popularEyebrow: "Explore",
     byType: (op: "venta" | "alquiler") => (op === "venta" ? "Buy by property type" : "Rent by property type"),
     byZone: (op: "venta" | "alquiler") => (op === "venta" ? "Buy by area" : "Rent by area"),
+    faqTitle: "Frequently asked questions",
+    faq: (typeLabel: string | null, op: "venta" | "alquiler", zone: string | null, count: number, from: string | null, to: string | null, zones: string[]): { q: string; a: string }[] => {
+      const what = lcFirst(typeLabel || "Properties");
+      const opw = op === "venta" ? "sale" : "rent";
+      const place = zone ? zone : "Panama";
+      const out: { q: string; a: string }[] = [];
+      out.push({ q: `How many ${what} for ${opw} are there in ${place}?`, a: `We currently have ${count} ${count === 1 ? "listing" : "listings"} of ${what} for ${opw} in ${place}${from ? `, priced from ${from}${to && to !== from ? ` to ${to}` : ""}` : ""}. The list is updated daily.` });
+      if (from) out.push({ q: `How much do ${what} for ${opw} cost in ${place}?`, a: `Prices range from ${from}${to && to !== from ? ` to ${to}` : ""}, depending on location, size and features. Every listing shows the price, photos and verified details.` });
+      if (!zone && zones.length) out.push({ q: `Which areas have ${what} for ${opw}?`, a: `Some of the most searched areas are ${zones.slice(0, 6).join(", ")}. You can filter by area in the catalog.` });
+      out.push({ q: `Does PanamaInmo support the ${op === "venta" ? "buying" : "rental"} process?`, a: `Yes. We are a real estate agency with integrated legal advice: we support you through ${op === "venta" ? "the purchase" : "signing the lease"}, document review and the whole process, with legal backing.` });
+      out.push({ q: "How do I schedule a visit or get new options?", a: `Message us on WhatsApp or use the form on the page. You can also create an alert and we'll notify you as soon as new ${what} for ${opw} in ${place} come in.` });
+      return out;
+    },
   },
   wanted: {
     metaTitle: "Properties wanted for our clients · PanamaInmo",
