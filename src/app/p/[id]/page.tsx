@@ -69,10 +69,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (p.photos) { try { const arr = JSON.parse(p.photos); firstPhoto = arr[0]; } catch { /* ignore */ } }
   const description = [`${t.types[p.propertyType] || t.common.property} ${op.toLowerCase()}${loc ? ` · ${loc}` : ""}`, price, specs, snippet(p.description, 110)]
     .filter(Boolean).join(" · ");
+  // MLS listings are syndicated/duplicate content (ids like "mls26108"). Keep them crawlable
+  // for users and link equity, but tell Google not to index duplicates — own listings stay indexable.
+  const isMls = /^mls\d+$/.test(id);
   return {
     title: `${p.title}${loc ? ` · ${loc}` : ""} | PanamaInmo`,
     description,
     alternates: pageAlternates(`/p/${p.id}`, lang),
+    robots: isMls ? { index: false, follow: true } : undefined,
     openGraph: {
       title: p.title,
       description,

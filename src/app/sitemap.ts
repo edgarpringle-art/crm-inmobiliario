@@ -33,13 +33,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "daily",
     priority: l.zone ? (l.type ? 0.7 : 0.75) : 0.85,
   }));
-  const listings: MetadataRoute.Sitemap = props.map((p) => ({
-    url: `/p/${p.id}`,
-    lastModified: updated.get(p.id) ? new Date(updated.get(p.id)!) : undefined,
-    changeFrequency: "weekly",
-    priority: p.source === "own" ? 0.8 : 0.6,
-    images: p.photos[0] ? [optimizePhoto(p.photos[0], 1200)] : undefined,
-  }));
+  // Only our own listings go in the sitemap. MLS inventory is syndicated/duplicate content
+  // (same listings on ACOBIR/Xposure and other brokers), so Google treats it as "discovered,
+  // not indexed" and it only wastes crawl budget — we don't ask Google to index it.
+  const listings: MetadataRoute.Sitemap = props
+    .filter((p) => p.source === "own")
+    .map((p) => ({
+      url: `/p/${p.id}`,
+      lastModified: updated.get(p.id) ? new Date(updated.get(p.id)!) : undefined,
+      changeFrequency: "weekly",
+      priority: 0.8,
+      images: p.photos[0] ? [optimizePhoto(p.photos[0], 1200)] : undefined,
+    }));
   // Every page in Spanish and under /en, each listing both versions as hreflang alternates.
   return [...pages, ...landings, ...listings].flatMap((e) => {
     const { languages } = pageAlternates(e.url, "es");
