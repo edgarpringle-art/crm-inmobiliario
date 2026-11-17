@@ -46,13 +46,9 @@ export default async function CatalogoHome() {
   const t = tr(lang);
   const h = (path: string) => portalHref(path, portal, lang);
   const properties = await getAvailableProperties();
-  // Feature our OWN listings first (they're unique, indexable content): the homepage is our strongest
-  // page, so its links should pass authority to our own listings, not to syndicated MLS inventory.
-  // `properties` is already shuffled, so this stays varied while always preferring own listings.
-  const featured = [
-    ...properties.filter((p) => p.source === "own"),
-    ...properties.filter((p) => p.source !== "own"),
-  ].slice(0, 6);
+  // Featured block is intentionally random across all inventory (own + MLS): MLS listings convert
+  // real clients here, so we keep the variety rather than filtering to own listings only.
+  const featured = properties.slice(0, 6);
 
   // Popular searches: the biggest search pages, split by sale / rent (internal links for SEO).
   const landings = collectLandings(properties);
