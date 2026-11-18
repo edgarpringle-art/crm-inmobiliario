@@ -24,7 +24,8 @@ export default function PropertyCard({ p, lang = "es" }: { p: PortalProperty; la
           <div className="w-full h-full flex items-center justify-center text-[#B8945F]"><IconHouse /></div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#1E1A15]/60 via-transparent to-transparent" />
-        <div className="absolute top-3 left-3 flex gap-1.5">
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+          {p.isNewProject && <span className="bg-[#B8945F] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.15em] shadow-sm">{t.common.newProject}</span>}
           {isVenta && <span className="bg-[#1E1A15]/85 backdrop-blur text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.15em]">{t.common.sale}</span>}
           {isAlquiler && <span className="bg-[#B8945F] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.15em]">{t.common.rent}</span>}
         </div>
@@ -44,7 +45,7 @@ export default function PropertyCard({ p, lang = "es" }: { p: PortalProperty; la
       </Link>
 
       <div className="p-5 flex flex-col flex-1">
-        <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.2em] mb-2">{t.types[p.propertyType] || t.common.property}</p>
+        <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.2em] mb-2">{p.isNewProject && p.developerName ? p.developerName : (t.types[p.propertyType] || t.common.property)}</p>
         <Link href={propertyHref(p.id, lang)}>
           <h3 className="font-semibold text-[#1E1A15] leading-snug group-hover:text-[#8A6A3A] transition-colors line-clamp-2 mb-1.5 text-base" style={SERIF}>
             {p.title}

@@ -51,8 +51,9 @@ export async function POST(request: NextRequest) {
 
     const me = await getCurrentUser();
     await ensureColumn("Property", "corregimiento");
-    for (const c of ["features", "videoUrl", "brochureUrl"]) await ensureColumn("Property", c);
+    for (const c of ["features", "videoUrl", "brochureUrl", "developerName", "deliveryDate"]) await ensureColumn("Property", c);
     await ensureColumn("Property", "noMortgage", "INTEGER");
+    await ensureColumn("Property", "isNewProject", "INTEGER");
     const id = await insert("Property", { ...body, createdBy: me?.displayName || null });
     const property = await query("SELECT * FROM Property WHERE id = ?", [id]);
     invalidatePortalProperties();

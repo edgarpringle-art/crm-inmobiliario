@@ -7,7 +7,7 @@ export const LANG_COOKIE = "pi_lang";
 const lcFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
 const es = {
-  nav: { home: "Inicio", properties: "Propiedades", services: "Servicios", about: "Nosotros", wanted: "Buscamos", sell: "Vender", guides: "Guías", contact: "Contacto" },
+  nav: { home: "Inicio", properties: "Propiedades", projects: "Proyectos Nuevos", services: "Servicios", about: "Nosotros", wanted: "Buscamos", sell: "Vender", guides: "Guías", contact: "Contacto" },
   header: { license: "Licencia", menu: "Menú", home: "PanamaInmo — Inicio", waMsg: "Hola PanamaInmo, me interesa una propiedad." },
   footer: {
     tagline: "Real Estate & Legal Advisory en Panamá. Compra, venta, alquiler y asesoría legal inmobiliaria con transparencia y respaldo profesional.",
@@ -16,7 +16,7 @@ const es = {
   },
   common: {
     sale: "Venta", rent: "Alquiler", perMonth: "/mes", viewListing: "Ver ficha", whatsappAria: "Contactar por WhatsApp",
-    beds: "hab", baths: "baños", property: "Propiedad",
+    beds: "hab", baths: "baños", property: "Propiedad", newProject: "Proyecto Nuevo", developer: "Promotora", delivery: "Entrega",
     available: (n: number) => `${n} disponible${n !== 1 ? "s" : ""}`,
     waProperty: (title: string, loc: string, url: string) => `Hola, me interesa la propiedad: ${title}${loc ? ` en ${loc}` : ""}\n${url}`,
   },
@@ -82,6 +82,14 @@ const es = {
     ctaEyebrow: "Búsqueda personalizada", ctaTitle: "¿No encontraste lo que buscas?",
     ctaText: "Cuéntanos qué necesitas y te enviamos opciones que se ajusten a tu presupuesto y zona.",
     ctaWaMsg: "Hola PanamaInmo, busco una propiedad y no la encontré en el catálogo.", ctaContact: "Contáctanos",
+  },
+  projects: {
+    metaTitle: "Proyectos nuevos de promotoras en Panamá · PanamaInmo",
+    metaDesc: "Proyectos inmobiliarios en preventa y obra nueva de las principales promotoras de Panamá, con asesoría legal integrada.",
+    heroEyebrow: "Obra nueva", heroTitle: "Proyectos Nuevos",
+    heroSub: "Preventa y proyectos de promotora en Panamá. Reserva en etapas tempranas con respaldo legal en cada paso.",
+    emptyTitle: "Pronto publicaremos proyectos", emptyText: "Cuéntanos qué buscas y te avisamos de nuevos lanzamientos.",
+    waMsg: "Hola PanamaInmo, me interesan los proyectos nuevos en preventa.",
   },
   detail: {
     notFound: "Propiedad no encontrada", back: "Volver a propiedades", forSale: "En Venta", forRent: "En Alquiler",
@@ -277,7 +285,7 @@ const es = {
 };
 
 const en: typeof es = {
-  nav: { home: "Home", properties: "Properties", services: "Services", about: "About us", wanted: "Wanted", sell: "Sell", guides: "Guides", contact: "Contact" },
+  nav: { home: "Home", properties: "Properties", projects: "New Developments", services: "Services", about: "About us", wanted: "Wanted", sell: "Sell", guides: "Guides", contact: "Contact" },
   header: { license: "License", menu: "Menu", home: "PanamaInmo — Home", waMsg: "Hi PanamaInmo, I'm interested in a property." },
   footer: {
     tagline: "Real Estate & Legal Advisory in Panama. Buying, selling, renting and real estate legal advice with transparency and professional support.",
@@ -286,7 +294,7 @@ const en: typeof es = {
   },
   common: {
     sale: "Sale", rent: "Rent", perMonth: "/mo", viewListing: "View listing", whatsappAria: "Contact on WhatsApp",
-    beds: "bd", baths: "ba", property: "Property",
+    beds: "bd", baths: "ba", property: "Property", newProject: "New Development", developer: "Developer", delivery: "Delivery",
     available: (n: number) => `${n} available`,
     waProperty: (title: string, loc: string, url: string) => `Hi, I'm interested in this property: ${title}${loc ? ` in ${loc}` : ""}\n${url}`,
   },
@@ -352,6 +360,14 @@ const en: typeof es = {
     ctaEyebrow: "Personal search", ctaTitle: "Didn't find what you're looking for?",
     ctaText: "Tell us what you need and we'll send you options that fit your budget and area.",
     ctaWaMsg: "Hi PanamaInmo, I'm looking for a property and didn't find it in your listings.", ctaContact: "Contact us",
+  },
+  projects: {
+    metaTitle: "New real estate developments in Panama · PanamaInmo",
+    metaDesc: "Pre-construction and new-development real estate projects from Panama's leading developers, with legal advice built in.",
+    heroEyebrow: "New construction", heroTitle: "New Developments",
+    heroSub: "Pre-sale and developer projects in Panama. Reserve at early stages with legal backing every step of the way.",
+    emptyTitle: "Projects coming soon", emptyText: "Tell us what you're looking for and we'll let you know about new launches.",
+    waMsg: "Hi PanamaInmo, I'm interested in new pre-sale developments.",
   },
   detail: {
     notFound: "Property not found", back: "Back to properties", forSale: "For Sale", forRent: "For Rent",

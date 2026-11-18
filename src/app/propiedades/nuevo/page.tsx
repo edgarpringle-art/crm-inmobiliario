@@ -51,6 +51,7 @@ export default function NuevaPropiedadPage() {
     hasFurniture: false, hasAppliances: false, hasAC: false, hasBalcony: false, hasGarden: false,
     ownerId: "", ownerName: "", ownerPhone: "",
     driveLink: "", description: "", notes: "",
+    isNewProject: false, developerName: "", deliveryDate: "",
   });
 
   useEffect(() => {
@@ -90,6 +91,9 @@ export default function NuevaPropiedadPage() {
         videoUrl: videoUrl.trim() || null,
         brochureUrl: brochureUrl.trim() || null,
         noMortgage: noMortgage ? 1 : 0,
+        isNewProject: form.isNewProject ? 1 : 0,
+        developerName: form.developerName.trim() || null,
+        deliveryDate: form.deliveryDate.trim() || null,
         salePrice: form.salePrice ? parseFloat(form.salePrice) : null,
         rentPrice: form.rentPrice ? parseFloat(form.rentPrice) : null,
         maintenanceFee: form.maintenanceFee ? parseFloat(form.maintenanceFee) : null,
@@ -139,6 +143,20 @@ export default function NuevaPropiedadPage() {
               </select>
             </FormField>
           </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <label className="flex items-center gap-2 cursor-pointer mb-1">
+            <input type="checkbox" className={checkboxClass} checked={form.isNewProject} onChange={(e) => update("isNewProject", e.target.checked)} />
+            <span className="text-base font-semibold text-gray-900">Proyecto nuevo de promotora</span>
+          </label>
+          <p className="text-xs text-gray-500 mb-4">Aparece mezclado con las demás propiedades y también en la categoría &quot;Proyectos Nuevos&quot;.</p>
+          {form.isNewProject && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField label="Promotora / Desarrollador"><input className={inputClass} value={form.developerName} onChange={(e) => update("developerName", e.target.value)} placeholder="Ej: Grupo Los Pueblos" /></FormField>
+              <FormField label="Entrega (texto libre)"><input className={inputClass} value={form.deliveryDate} onChange={(e) => update("deliveryDate", e.target.value)} placeholder="Ej: 2027, Entrega inmediata, Fase 2" /></FormField>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6">

@@ -11,7 +11,7 @@ import {
   formatCurrency, getLabel, getStatusColor,
 } from "@/lib/constants";
 import { PRICE_RANGES_SALE, PRICE_RANGES_RENT } from "@/lib/locations";
-import { HiHome, HiLocationMarker, HiFilter, HiX, HiViewGrid, HiViewList } from "react-icons/hi";
+import { HiHome, HiLocationMarker, HiFilter, HiX, HiViewGrid, HiViewList, HiSparkles } from "react-icons/hi";
 
 interface Property {
   id: string;
@@ -32,6 +32,9 @@ interface Property {
   owner: { id: string; firstName: string; lastName: string } | null;
   ownerName: string | null;
   createdBy: string | null;
+  isNewProject?: number | boolean | null;
+  developerName?: string | null;
+  deliveryDate?: string | null;
 }
 
 export default function PropiedadesPage() {
@@ -43,10 +46,11 @@ export default function PropiedadesPage() {
   const [operationFilter, setOperationFilter] = useState("");
   const [priceRange, setPriceRange] = useState("");
   const [bedroomFilter, setBedroomFilter] = useState("");
+  const [newProjectOnly, setNewProjectOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const activeFilters = [statusFilter, typeFilter, operationFilter, priceRange, bedroomFilter].filter(Boolean).length;
+  const activeFilters = [statusFilter, typeFilter, operationFilter, priceRange, bedroomFilter].filter(Boolean).length + (newProjectOnly ? 1 : 0);
 
   useEffect(() => {
     async function fetchProperties() {
@@ -64,6 +68,7 @@ export default function PropiedadesPage() {
 
   // Client-side filtering for advanced filters
   const filteredProperties = properties.filter((prop) => {
+    if (newProjectOnly && !prop.isNewProject) return false;
     if (typeFilter && prop.propertyType !== typeFilter) return false;
     if (operationFilter && prop.operationType !== operationFilter) return false;
     if (bedroomFilter) {
@@ -85,6 +90,7 @@ export default function PropiedadesPage() {
     setOperationFilter("");
     setPriceRange("");
     setBedroomFilter("");
+    setNewProjectOnly(false);
   }
 
   const priceRanges = operationFilter === "ALQUILER" ? PRICE_RANGES_RENT : PRICE_RANGES_SALE;
@@ -104,6 +110,17 @@ export default function PropiedadesPage() {
           <SearchBar value={search} onChange={setSearch} placeholder="Buscar por titulo, direccion, sector, ciudad..." />
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => setNewProjectOnly((v) => !v)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-medium text-sm transition-all ${
+              newProjectOnly
+                ? "bg-amber-500 border-amber-500 text-white"
+                : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            <HiSparkles className="w-4 h-4" />
+            Proyectos Nuevos
+          </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-medium text-sm transition-all ${
@@ -204,12 +221,14 @@ export default function PropiedadesPage() {
                 <div className="absolute top-3 right-3">
                   <StatusBadge label={getLabel(PROPERTY_STATUSES, prop.status)} colorClass={getStatusColor(PROPERTY_STATUSES, prop.status)} />
                 </div>
-                <div className="absolute top-3 left-3">
+                <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
                   <StatusBadge label={getLabel(OPERATION_TYPES, prop.operationType)} colorClass={prop.operationType === "VENTA" ? "bg-blue-600 text-white" : "bg-teal-600 text-white"} />
+                  {prop.isNewProject ? <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide bg-amber-500 text-white px-2 py-0.5 rounded-full"><HiSparkles className="w-3 h-3" />Proyecto Nuevo</span> : null}
                 </div>
               </div>
               <div className="p-5">
                 <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1">{prop.title}</h3>
+                {prop.isNewProject && prop.developerName ? <p className="text-xs font-medium text-amber-600 mb-1">{prop.developerName}{prop.deliveryDate ? ` · Entrega ${prop.deliveryDate}` : ""}</p> : null}
                 <p className="text-xs text-gray-400 mb-2">{getLabel(PROPERTY_TYPES, prop.propertyType)}</p>
 
                 {(prop.sector || prop.city) && (
@@ -265,6 +284,7 @@ export default function PropiedadesPage() {
                     <Link href={`/propiedades/${prop.id}`} className="font-semibold text-gray-900 hover:text-blue-600 transition-colors">
                       {prop.title}
                     </Link>
+                    {prop.isNewProject ? <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded"><HiSparkles className="w-3 h-3" />Nuevo</span> : null}
                   </td>
                   <td className="px-6 py-4 text-gray-500">
                     {[prop.sector, prop.city].filter(Boolean).join(", ") || "—"}

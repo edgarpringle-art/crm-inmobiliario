@@ -37,6 +37,7 @@ interface Property {
   hasGenerator: number; hasFurniture: number; hasAppliances: number;
   hasAC: number; hasBalcony: number; hasGarden: number;
   description: string | null; notes: string | null;
+  isNewProject?: number | null; developerName?: string | null; deliveryDate?: string | null;
   ownerName: string | null;
   createdBy: string | null;
   photos: string | null;
@@ -211,6 +212,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Title + badges */}
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-3">
+              {p.isNewProject ? <span className="bg-[#B8945F] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">{t.common.newProject}</span> : null}
               {isVenta && <span className="bg-[#1E1A15] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">{t.detail.forSale}</span>}
               {isAlquiler && <span className="bg-[#8A6A3A] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">{t.detail.forRent}</span>}
               <span className="text-[10px] text-[#9C9182] font-semibold uppercase tracking-[0.2em] border border-[#E4D9C6] px-3 py-1 rounded-full">
@@ -230,6 +232,12 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
               </p>
             )}
             {p.referencePoint && <p className="text-[#9C9182] text-xs mt-1 ml-6">{p.referencePoint}</p>}
+            {p.isNewProject && (p.developerName || p.deliveryDate) ? (
+              <p className="mt-3 inline-flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[#5C5347]">
+                {p.developerName ? <span><span className="text-[#9C9182]">{t.common.developer}:</span> <span className="font-medium text-[#1E1A15]">{p.developerName}</span></span> : null}
+                {p.deliveryDate ? <span><span className="text-[#9C9182]">{t.common.delivery}:</span> <span className="font-medium text-[#1E1A15]">{p.deliveryDate}</span></span> : null}
+              </p>
+            ) : null}
           </div>
 
           {/* Specs grid */}

@@ -27,6 +27,7 @@ export const SANS = { fontFamily: "'Josefin Sans', sans-serif" } as const;
 export const NAV = [
   { href: "/", key: "home" },
   { href: "/propiedades", key: "properties" },
+  { href: "/proyectos", key: "projects" },
   { href: "/servicios", key: "services" },
   { href: "/nosotros", key: "about" },
   { href: "/vender", key: "sell" },
@@ -88,6 +89,8 @@ export interface PortalProperty {
   photoCount?: number;
   corregimiento?: string | null;
   source?: "own" | "mls";
+  isNewProject?: boolean;
+  developerName?: string | null;
 }
 
 /** Location fields of a listing; `n` = how many listings share it (for compact summaries). */
