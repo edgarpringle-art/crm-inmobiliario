@@ -30,7 +30,6 @@ export const NAV = [
   { href: "/proyectos", key: "projects" },
   { href: "/servicios", key: "services" },
   { href: "/nosotros", key: "about" },
-  { href: "/vender", key: "sell" },
   { href: "/buscamos", key: "wanted" },
   { href: "/guias", key: "guides" },
   { href: "/contacto", key: "contact" },
