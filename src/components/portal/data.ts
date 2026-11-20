@@ -24,6 +24,8 @@ function toPortal(r: Record<string, unknown>, source: "own" | "mls"): PortalProp
     photos: photos.slice(0, 1), photoCount: r.photoCount != null ? Number(r.photoCount) : photos.length, source,
     isNewProject: source === "own" ? !!r.isNewProject : false,
     developerName: source === "own" ? str(r.developerName) : null,
+    salePriceMax: source === "own" ? num(r.salePriceMax) : null,
+    areaMax: source === "own" ? num(r.areaMax) : null,
   };
 }
 
@@ -58,10 +60,12 @@ async function loadAvailable(strict: boolean): Promise<PortalProperty[]> {
   await ensureColumn("Property", "corregimiento").catch(() => {});
   await ensureColumn("Property", "isNewProject", "INTEGER").catch(() => {});
   await ensureColumn("Property", "developerName").catch(() => {});
+  await ensureColumn("Property", "salePriceMax", "REAL").catch(() => {});
+  await ensureColumn("Property", "areaMax", "REAL").catch(() => {});
   const own = await query<Record<string, unknown>>(
     `SELECT id, title, propertyType, operationType, sector, corregimiento, city, state,
             salePrice, rentPrice, currency, area, bedrooms, bathrooms, parkingSpots,
-            isNewProject, developerName,
+            isNewProject, developerName, salePriceMax, areaMax,
             CASE WHEN json_valid(photos) THEN json_extract(photos, '$[0]') END AS cover,
             CASE WHEN json_valid(photos) THEN json_array_length(photos) ELSE 0 END AS photoCount
      FROM Property WHERE status = 'DISPONIBLE' ORDER BY createdAt DESC LIMIT 300`

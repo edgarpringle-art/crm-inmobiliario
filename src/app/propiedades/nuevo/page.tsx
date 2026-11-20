@@ -11,6 +11,8 @@ import { getProvinces, getDistricts, getSectors } from "@/lib/locations";
 import PhotoUploader from "@/components/PhotoUploader";
 import SectorInput, { CorregimientoInput } from "@/components/SectorInput";
 import { parseFeatures } from "@/lib/publicProperty";
+import UnitModelsEditor from "@/components/UnitModelsEditor";
+import { parseUnitModels, serializeUnitModels, rangeFromModels, type UnitModel } from "@/lib/unitModels";
 
 const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
 const checkboxClass = "w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500";
@@ -51,8 +53,9 @@ export default function NuevaPropiedadPage() {
     hasFurniture: false, hasAppliances: false, hasAC: false, hasBalcony: false, hasGarden: false,
     ownerId: "", ownerName: "", ownerPhone: "",
     driveLink: "", description: "", notes: "",
-    isNewProject: false, developerName: "", deliveryDate: "",
+    isNewProject: false, developerName: "", deliveryDate: "", salePriceMax: "", areaMax: "",
   });
+  const [models, setModels] = useState<UnitModel[]>([]);
 
   useEffect(() => {
     fetch("/api/clients").then((r) => r.json()).then(setClients);
@@ -75,6 +78,22 @@ export default function NuevaPropiedadPage() {
 
   function update(field: string, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  // Project ranges: manual "desde/hasta" win; empty ones are filled from the models.
+  function projectRange() {
+    if (!form.isNewProject) return { salePriceMax: null, areaMax: null, unitModels: null };
+    const toNum = (v: string) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
+    const r = rangeFromModels(models);
+    const beds = models.map((m) => parseInt(m.bedrooms)).filter((n) => Number.isFinite(n));
+    return {
+      salePrice: toNum(form.salePrice) ?? r.priceMin,
+      salePriceMax: toNum(form.salePriceMax) ?? r.priceMax,
+      area: toNum(form.area) ?? r.areaMin,
+      areaMax: toNum(form.areaMax) ?? r.areaMax,
+      bedrooms: toNum(form.bedrooms) ?? (beds.length ? Math.min(...beds) : null),
+      unitModels: serializeUnitModels(models),
+    };
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -110,6 +129,7 @@ export default function NuevaPropiedadPage() {
         address: form.address || null, sector: form.sector || null, corregimiento: form.corregimiento || null, city: form.city || null,
         state: form.state || null, referencePoint: form.referencePoint || null,
         driveLink: form.driveLink || null, description: form.description || null, notes: form.notes || null,
+        ...projectRange(),
       };
       const res = await fetch("/api/properties", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error("Error");
@@ -155,6 +175,13 @@ export default function NuevaPropiedadPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField label="Promotora / Desarrollador"><input className={inputClass} value={form.developerName} onChange={(e) => update("developerName", e.target.value)} placeholder="Ej: Grupo Los Pueblos" /></FormField>
               <FormField label="Entrega (texto libre)"><input className={inputClass} value={form.deliveryDate} onChange={(e) => update("deliveryDate", e.target.value)} placeholder="Ej: 2027, Entrega inmediata, Fase 2" /></FormField>
+              <FormField label="Precio desde"><input type="number" className={inputClass} value={form.salePrice} onChange={(e) => update("salePrice", e.target.value)} placeholder="Ej: 294500" /></FormField>
+              <FormField label="Precio hasta"><input type="number" className={inputClass} value={form.salePriceMax} onChange={(e) => update("salePriceMax", e.target.value)} placeholder="Ej: 1043250" /></FormField>
+              <FormField label="m² desde"><input type="number" step="any" className={inputClass} value={form.area} onChange={(e) => update("area", e.target.value)} placeholder="Ej: 62" /></FormField>
+              <FormField label="m² hasta"><input type="number" step="any" className={inputClass} value={form.areaMax} onChange={(e) => update("areaMax", e.target.value)} placeholder="Ej: 206" /></FormField>
+              <div className="md:col-span-2 pt-2 border-t border-gray-100">
+                <UnitModelsEditor models={models} onChange={setModels} />
+              </div>
             </div>
           )}
         </div>
@@ -191,7 +218,7 @@ export default function NuevaPropiedadPage() {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Precios</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Precio de Venta"><input type="number" className={inputClass} value={form.salePrice} onChange={(e) => update("salePrice", e.target.value)} /></FormField>
+            {!form.isNewProject && <FormField label="Precio de Venta"><input type="number" className={inputClass} value={form.salePrice} onChange={(e) => update("salePrice", e.target.value)} /></FormField>}
             <FormField label="Precio de Alquiler (mensual)"><input type="number" className={inputClass} value={form.rentPrice} onChange={(e) => update("rentPrice", e.target.value)} /></FormField>
             <FormField label="Moneda">
               <select className={inputClass} value={form.currency} onChange={(e) => update("currency", e.target.value)}>
@@ -205,7 +232,7 @@ export default function NuevaPropiedadPage() {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Características</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <FormField label="Área (m²)"><input type="number" className={inputClass} value={form.area} onChange={(e) => update("area", e.target.value)} /></FormField>
+            {!form.isNewProject && <FormField label="Área (m²)"><input type="number" className={inputClass} value={form.area} onChange={(e) => update("area", e.target.value)} /></FormField>}
             <FormField label="Terreno (m²)"><input type="number" className={inputClass} value={form.landArea} onChange={(e) => update("landArea", e.target.value)} /></FormField>
             <FormField label="Habitaciones"><input type="number" className={inputClass} value={form.bedrooms} onChange={(e) => update("bedrooms", e.target.value)} /></FormField>
             <FormField label="Baños"><input type="number" className={inputClass} value={form.bathrooms} onChange={(e) => update("bathrooms", e.target.value)} /></FormField>

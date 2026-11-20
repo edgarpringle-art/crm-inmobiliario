@@ -90,6 +90,8 @@ export interface PortalProperty {
   source?: "own" | "mls";
   isNewProject?: boolean;
   developerName?: string | null;
+  salePriceMax?: number | null;
+  areaMax?: number | null;
 }
 
 /** Location fields of a listing; `n` = how many listings share it (for compact summaries). */

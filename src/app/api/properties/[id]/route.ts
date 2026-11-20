@@ -44,7 +44,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     const body = await request.json();
     await ensureColumn("Property", "corregimiento");
-    for (const c of ["features", "videoUrl", "brochureUrl", "developerName", "deliveryDate"]) await ensureColumn("Property", c);
+    for (const c of ["features", "videoUrl", "brochureUrl", "developerName", "deliveryDate", "unitModels"]) await ensureColumn("Property", c);
+    for (const c of ["salePriceMax", "areaMax"]) await ensureColumn("Property", c, "REAL");
     await ensureColumn("Property", "noMortgage", "INTEGER");
     await ensureColumn("Property", "isNewProject", "INTEGER");
     await update("Property", id, body);

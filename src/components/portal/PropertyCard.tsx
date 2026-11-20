@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatCurrency } from "@/lib/constants";
+import { fmtRange } from "@/lib/unitModels";
 import { optimizePhoto } from "@/lib/publicProperty";
 import { SERIF, propertyHref, waLink, type PortalProperty } from "./brand";
 import { tr, type Lang } from "./i18n";
@@ -35,7 +36,7 @@ export default function PropertyCard({ p, lang = "es" }: { p: PortalProperty; la
           </span>
         )}
         <div className="absolute bottom-3 left-4 right-4 text-white">
-          {p.salePrice != null && <p className="text-xl font-semibold drop-shadow" style={SERIF}>{formatCurrency(p.salePrice, p.currency)}</p>}
+          {p.salePrice != null && <p className="text-xl font-semibold drop-shadow" style={SERIF}>{p.salePriceMax && p.salePriceMax > p.salePrice ? <><span className="text-xs font-normal opacity-80 mr-1">{t.common.from}</span>{formatCurrency(p.salePrice, p.currency)}</> : formatCurrency(p.salePrice, p.currency)}</p>}
           {p.rentPrice != null && (
             <p className={`${p.salePrice != null ? "text-sm" : "text-xl"} font-semibold drop-shadow`} style={SERIF}>
               {formatCurrency(p.rentPrice, p.currency)}<span className="text-xs font-normal opacity-80">{t.common.perMonth}</span>
@@ -56,7 +57,7 @@ export default function PropertyCard({ p, lang = "es" }: { p: PortalProperty; la
         <div className="flex items-center gap-4 text-xs text-[#4A4238] mb-4 flex-wrap pt-3 border-t border-[#F0E8DA]">
           {p.bedrooms != null && <span className="flex items-center gap-1"><IconBed />{p.bedrooms} {t.common.beds}</span>}
           {p.bathrooms != null && <span className="flex items-center gap-1"><IconBath />{p.bathrooms} {t.common.baths}</span>}
-          {p.area != null && <span className="flex items-center gap-1"><IconArea />{p.area} m²</span>}
+          {p.area != null && <span className="flex items-center gap-1"><IconArea />{fmtRange(p.area, p.areaMax)} m²</span>}
           {p.parkingSpots != null && p.parkingSpots > 0 && <span className="flex items-center gap-1"><IconCar />{p.parkingSpots}</span>}
         </div>
 

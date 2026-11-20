@@ -14,6 +14,7 @@ import { BROKER, portalHref } from "@/components/portal/brand";
 import { getLang } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
 import { getAvailableProperties, getPublicProperty } from "@/components/portal/data";
+import { fmtRange, parseUnitModels } from "@/lib/unitModels";
 import { SITE_URL, TYPES, collectLandings, landingPath, pageAlternates, slugify, type OpSlug } from "@/components/portal/seo";
 
 // Type slug used by the search pages for this property type (apartamentos, casas…).
@@ -38,6 +39,7 @@ interface Property {
   hasAC: number; hasBalcony: number; hasGarden: number;
   description: string | null; notes: string | null;
   isNewProject?: number | null; developerName?: string | null; deliveryDate?: string | null;
+  salePriceMax?: number | null; areaMax?: number | null; unitModels?: string | null;
   ownerName: string | null;
   createdBy: string | null;
   photos: string | null;
@@ -63,9 +65,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const p = (await getPublicProperty(id, lang)) as unknown as Property | null;
   if (!p) return { title: t.detail.notFound };
   const loc = [p.sector, p.city].filter((x, i, a): x is string => !!x && a.indexOf(x) === i).join(", ");
-  const price = p.salePrice ? formatCurrency(p.salePrice, p.currency) : p.rentPrice ? `${formatCurrency(p.rentPrice, p.currency)}${t.common.perMonth}` : "";
+  const price = p.salePrice ? (p.salePriceMax && p.salePriceMax > p.salePrice ? `${t.common.from} ${formatCurrency(p.salePrice, p.currency)}` : formatCurrency(p.salePrice, p.currency)) : p.rentPrice ? `${formatCurrency(p.rentPrice, p.currency)}${t.common.perMonth}` : "";
   const op = p.operationType === "ALQUILER" ? t.detail.forRent : p.operationType === "VENTA" ? t.detail.forSale : `${t.detail.forSale} / ${t.detail.forRent}`;
-  const specs = [p.bedrooms != null && `${p.bedrooms} ${t.detail.beds}`, p.area != null && `${p.area} m²`].filter(Boolean).join(", ");
+  const specs = [p.bedrooms != null && `${p.bedrooms} ${t.detail.beds}`, p.area != null && `${fmtRange(p.area, p.areaMax)} m²`].filter(Boolean).join(", ");
   let firstPhoto: string | undefined;
   if (p.photos) { try { const arr = JSON.parse(p.photos); firstPhoto = arr[0]; } catch { /* ignore */ } }
   const description = [`${t.types[p.propertyType] || t.common.property} ${op.toLowerCase()}${loc ? ` · ${loc}` : ""}`, price, specs, snippet(p.description, 110)]
@@ -245,7 +247,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
             <div className="bg-[#F3ECDF] rounded-2xl border border-[#E9E0D0] p-6">
               <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-5">{t.detail.specs}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                {p.area != null && <SpecItem value={p.area} unit={t.detail.area} />}
+                {p.area != null && <SpecItem value={fmtRange(p.area, p.areaMax)} unit={t.detail.area} />}
                 {p.landArea != null && <SpecItem value={p.landArea} unit={t.detail.land} />}
                 {p.bedrooms != null && <SpecItem value={p.bedrooms} unit={t.detail.beds} />}
                 {p.bathrooms != null && <SpecItem value={p.bathrooms} unit={t.detail.baths} />}
@@ -255,6 +257,41 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
               </div>
             </div>
           )}
+
+          {/* Models / typologies (new-development projects) */}
+          {(() => {
+            const models = p.isNewProject ? parseUnitModels(p.unitModels) : [];
+            if (!models.length) return null;
+            return (
+              <div>
+                <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.common.models}</p>
+                <div className="overflow-x-auto rounded-2xl border border-[#E9E0D0]">
+                  <table className="w-full text-sm text-[#4A4238]">
+                    <thead className="bg-[#F3ECDF] text-[10px] uppercase tracking-[0.15em] text-[#8A6A3A]">
+                      <tr>
+                        <th className="text-left font-semibold px-4 py-3">{t.common.model}</th>
+                        <th className="text-left font-semibold px-4 py-3">{t.detail.beds}</th>
+                        <th className="text-left font-semibold px-4 py-3">{t.detail.baths}</th>
+                        <th className="text-left font-semibold px-4 py-3">m²</th>
+                        <th className="text-left font-semibold px-4 py-3">{t.common.priceCol}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {models.map((m, i) => (
+                        <tr key={i} className="border-t border-[#EFE6D6]">
+                          <td className="px-4 py-3 font-medium text-[#1E1A15]">{m.name || "—"}</td>
+                          <td className="px-4 py-3">{m.bedrooms || "—"}</td>
+                          <td className="px-4 py-3">{m.bathrooms || "—"}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">{fmtRange(m.areaMin, m.areaMax) || "—"}</td>
+                          <td className="px-4 py-3 whitespace-nowrap font-medium text-[#1E1A15]">{fmtRange(m.priceMin, m.priceMax, (n) => formatCurrency(n, p.currency)) || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Description */}
           {p.description && (
@@ -352,10 +389,13 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
               <div className="space-y-3">
                 {p.salePrice != null && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">{t.common.sale}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">{t.common.sale}{p.salePriceMax && p.salePriceMax > p.salePrice ? ` · ${t.common.from}` : ""}</p>
                     <p className="text-3xl font-semibold text-[#1E1A15]" style={{ fontFamily: "'Cinzel', serif" }}>
                       {formatCurrency(p.salePrice, p.currency)}
                     </p>
+                    {p.salePriceMax && p.salePriceMax > p.salePrice ? (
+                      <p className="text-sm text-[#6B6155] mt-1">{t.common.upTo} <span className="font-semibold text-[#1E1A15]">{formatCurrency(p.salePriceMax, p.currency)}</span></p>
+                    ) : null}
                   </div>
                 )}
                 {p.rentPrice != null && (
@@ -441,7 +481,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
   );
 }
 
-function SpecItem({ value, unit }: { value: number; unit: string }) {
+function SpecItem({ value, unit }: { value: number | string; unit: string }) {
   return (
     <div>
       <p className="text-2xl font-semibold text-[#1E1A15]" style={{ fontFamily: "'Cinzel', serif" }}>{value}</p>

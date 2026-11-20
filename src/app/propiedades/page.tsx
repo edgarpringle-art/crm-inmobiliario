@@ -10,6 +10,7 @@ import {
   PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES,
   formatCurrency, getLabel, getStatusColor,
 } from "@/lib/constants";
+import { fmtRange } from "@/lib/unitModels";
 import { PRICE_RANGES_SALE, PRICE_RANGES_RENT } from "@/lib/locations";
 import { HiHome, HiLocationMarker, HiFilter, HiX, HiViewGrid, HiViewList, HiSparkles } from "react-icons/hi";
 
@@ -35,6 +36,8 @@ interface Property {
   isNewProject?: number | boolean | null;
   developerName?: string | null;
   deliveryDate?: string | null;
+  salePriceMax?: number | null;
+  areaMax?: number | null;
 }
 
 export default function PropiedadesPage() {
@@ -241,7 +244,7 @@ export default function PropiedadesPage() {
                 <div className="text-xl font-bold text-blue-700 mb-3">
                   {prop.operationType === "ALQUILER"
                     ? `${formatCurrency(prop.rentPrice, prop.currency)}/mes`
-                    : formatCurrency(prop.salePrice, prop.currency)}
+                    : prop.salePriceMax ? fmtRange(prop.salePrice, prop.salePriceMax, (n) => formatCurrency(n, prop.currency)) : prop.salePriceMax ? fmtRange(prop.salePrice, prop.salePriceMax, (n) => formatCurrency(n, prop.currency)) : formatCurrency(prop.salePrice, prop.currency)}
                 </div>
 
                 <div className="flex gap-3 text-sm text-gray-500 pt-3 border-t border-gray-100">
@@ -252,7 +255,7 @@ export default function PropiedadesPage() {
                     </span>
                   )}
                   {prop.bathrooms != null && <span>{prop.bathrooms} banos</span>}
-                  {prop.area != null && <span>{prop.area} m2</span>}
+                  {prop.area != null && <span>{fmtRange(prop.area, prop.areaMax)} m2</span>}
                   {prop.parkingSpots != null && <span>{prop.parkingSpots} parq.</span>}
                 </div>
 
@@ -296,7 +299,7 @@ export default function PropiedadesPage() {
                     {prop.operationType === "ALQUILER" ? formatCurrency(prop.rentPrice, prop.currency) : formatCurrency(prop.salePrice, prop.currency)}
                   </td>
                   <td className="px-6 py-4 text-gray-500 text-xs">
-                    {[prop.bedrooms && `${prop.bedrooms} hab`, prop.bathrooms && `${prop.bathrooms} banos`, prop.area && `${prop.area}m2`].filter(Boolean).join(" | ") || "—"}
+                    {[prop.bedrooms && `${prop.bedrooms} hab`, prop.bathrooms && `${prop.bathrooms} banos`, prop.area && `${fmtRange(prop.area, prop.areaMax)}m2`].filter(Boolean).join(" | ") || "—"}
                   </td>
                   <td className="px-6 py-4">
                     <StatusBadge label={getLabel(PROPERTY_STATUSES, prop.status)} colorClass={getStatusColor(PROPERTY_STATUSES, prop.status)} />

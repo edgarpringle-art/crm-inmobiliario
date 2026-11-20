@@ -16,7 +16,7 @@ const es = {
   },
   common: {
     sale: "Venta", rent: "Alquiler", perMonth: "/mes", viewListing: "Ver ficha", whatsappAria: "Contactar por WhatsApp",
-    beds: "hab", baths: "baños", property: "Propiedad", newProject: "Proyecto Nuevo", developer: "Promotora", delivery: "Entrega",
+    beds: "hab", baths: "baños", property: "Propiedad", newProject: "Proyecto Nuevo", developer: "Promotora", delivery: "Entrega", from: "Desde", upTo: "Hasta", models: "Modelos", model: "Modelo", priceCol: "Precio",
     available: (n: number) => `${n} disponible${n !== 1 ? "s" : ""}`,
     waProperty: (title: string, loc: string, url: string) => `Hola, me interesa la propiedad: ${title}${loc ? ` en ${loc}` : ""}\n${url}`,
   },
@@ -294,7 +294,7 @@ const en: typeof es = {
   },
   common: {
     sale: "Sale", rent: "Rent", perMonth: "/mo", viewListing: "View listing", whatsappAria: "Contact on WhatsApp",
-    beds: "bd", baths: "ba", property: "Property", newProject: "New Development", developer: "Developer", delivery: "Delivery",
+    beds: "bd", baths: "ba", property: "Property", newProject: "New Development", developer: "Developer", delivery: "Delivery", from: "From", upTo: "Up to", models: "Models", model: "Model", priceCol: "Price",
     available: (n: number) => `${n} available`,
     waProperty: (title: string, loc: string, url: string) => `Hi, I'm interested in this property: ${title}${loc ? ` in ${loc}` : ""}\n${url}`,
   },

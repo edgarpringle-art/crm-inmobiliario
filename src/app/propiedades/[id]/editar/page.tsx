@@ -11,6 +11,8 @@ import { HiPlus, HiTrash } from "react-icons/hi";
 import PhotoUploader from "@/components/PhotoUploader";
 import SectorInput, { CorregimientoInput } from "@/components/SectorInput";
 import { parseFeatures } from "@/lib/publicProperty";
+import UnitModelsEditor from "@/components/UnitModelsEditor";
+import { parseUnitModels, serializeUnitModels, rangeFromModels, type UnitModel } from "@/lib/unitModels";
 
 interface PortalLink { name: string; url: string; }
 const PORTAL_NAMES = ["Encuentra24", "Corotos", "SuperCasas", "Lamudi", "Inmobiliaria.com.do", "Otro"];
@@ -65,8 +67,9 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
     hasFurniture: false, hasAppliances: false, hasAC: false, hasBalcony: false, hasGarden: false,
     ownerId: "", ownerName: "", ownerPhone: "",
     driveLink: "", description: "", notes: "",
-    isNewProject: false, developerName: "", deliveryDate: "",
+    isNewProject: false, developerName: "", deliveryDate: "", salePriceMax: "", areaMax: "",
   });
+  const [models, setModels] = useState<UnitModel[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -91,7 +94,9 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         ownerId: data.ownerId || "", ownerName: data.ownerName || "", ownerPhone: data.ownerPhone || "",
         driveLink: data.driveLink || "", description: data.description || "", notes: data.notes || "",
         isNewProject: !!data.isNewProject, developerName: data.developerName || "", deliveryDate: data.deliveryDate || "",
+        salePriceMax: data.salePriceMax?.toString() || "", areaMax: data.areaMax?.toString() || "",
       });
+      setModels(parseUnitModels(data.unitModels));
       if (data.portalLinks) { try { setPortalLinks(JSON.parse(data.portalLinks)); } catch { /* ignore */ } }
       if (data.photos) { try { setPhotos(JSON.parse(data.photos)); } catch { /* ignore */ } }
       if (data.features) { try { setFeaturesText((JSON.parse(data.features) as string[]).join(String.fromCharCode(10))); } catch { /* ignore */ } }
@@ -118,6 +123,22 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
       setSectors(getSectors(value));
       setForm((prev) => ({ ...prev, sector: "", corregimiento: "" }));
     }
+  }
+
+  // Project ranges: manual "desde/hasta" win; empty ones are filled from the models.
+  function projectRange() {
+    if (!form.isNewProject) return { salePriceMax: null, areaMax: null, unitModels: null };
+    const toNum = (v: string) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
+    const r = rangeFromModels(models);
+    const beds = models.map((m) => parseInt(m.bedrooms)).filter((n) => Number.isFinite(n));
+    return {
+      salePrice: toNum(form.salePrice) ?? r.priceMin,
+      salePriceMax: toNum(form.salePriceMax) ?? r.priceMax,
+      area: toNum(form.area) ?? r.areaMin,
+      areaMax: toNum(form.areaMax) ?? r.areaMax,
+      bedrooms: toNum(form.bedrooms) ?? (beds.length ? Math.min(...beds) : null),
+      unitModels: serializeUnitModels(models),
+    };
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -149,6 +170,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         isNewProject: form.isNewProject ? 1 : 0,
         developerName: form.developerName.trim() || null,
         deliveryDate: form.deliveryDate.trim() || null,
+        ...projectRange(),
       };
       const res = await fetch(`/api/properties/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error("Error");
@@ -184,6 +206,13 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField label="Promotora / Desarrollador"><input className={inputClass} value={form.developerName} onChange={(e) => update("developerName", e.target.value)} placeholder="Ej: Grupo Los Pueblos" /></FormField>
               <FormField label="Entrega (texto libre)"><input className={inputClass} value={form.deliveryDate} onChange={(e) => update("deliveryDate", e.target.value)} placeholder="Ej: 2027, Entrega inmediata, Fase 2" /></FormField>
+              <FormField label="Precio desde"><input type="number" className={inputClass} value={form.salePrice} onChange={(e) => update("salePrice", e.target.value)} placeholder="Ej: 294500" /></FormField>
+              <FormField label="Precio hasta"><input type="number" className={inputClass} value={form.salePriceMax} onChange={(e) => update("salePriceMax", e.target.value)} placeholder="Ej: 1043250" /></FormField>
+              <FormField label="m² desde"><input type="number" step="any" className={inputClass} value={form.area} onChange={(e) => update("area", e.target.value)} placeholder="Ej: 62" /></FormField>
+              <FormField label="m² hasta"><input type="number" step="any" className={inputClass} value={form.areaMax} onChange={(e) => update("areaMax", e.target.value)} placeholder="Ej: 206" /></FormField>
+              <div className="md:col-span-2 pt-2 border-t border-gray-100">
+                <UnitModelsEditor models={models} onChange={setModels} />
+              </div>
             </div>
           )}
         </div>
@@ -220,7 +249,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Precios</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Precio Venta"><input type="number" className={inputClass} value={form.salePrice} onChange={(e) => update("salePrice", e.target.value)} /></FormField>
+            {!form.isNewProject && <FormField label="Precio Venta"><input type="number" className={inputClass} value={form.salePrice} onChange={(e) => update("salePrice", e.target.value)} /></FormField>}
             <FormField label="Precio Alquiler"><input type="number" className={inputClass} value={form.rentPrice} onChange={(e) => update("rentPrice", e.target.value)} /></FormField>
             <FormField label="Moneda"><select className={inputClass} value={form.currency} onChange={(e) => update("currency", e.target.value)}>{CURRENCIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select></FormField>
             <FormField label="Mantenimiento"><input type="number" className={inputClass} value={form.maintenanceFee} onChange={(e) => update("maintenanceFee", e.target.value)} /></FormField>
@@ -230,7 +259,7 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Características</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <FormField label="Área (m²)"><input type="number" className={inputClass} value={form.area} onChange={(e) => update("area", e.target.value)} /></FormField>
+            {!form.isNewProject && <FormField label="Área (m²)"><input type="number" className={inputClass} value={form.area} onChange={(e) => update("area", e.target.value)} /></FormField>}
             <FormField label="Terreno (m²)"><input type="number" className={inputClass} value={form.landArea} onChange={(e) => update("landArea", e.target.value)} /></FormField>
             <FormField label="Habitaciones"><input type="number" className={inputClass} value={form.bedrooms} onChange={(e) => update("bedrooms", e.target.value)} /></FormField>
             <FormField label="Baños"><input type="number" className={inputClass} value={form.bathrooms} onChange={(e) => update("bathrooms", e.target.value)} /></FormField>

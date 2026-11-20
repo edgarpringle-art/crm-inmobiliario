@@ -11,6 +11,7 @@ import {
   PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, DEAL_STATUSES,
   formatCurrency, formatDate, getLabel, getStatusColor,
 } from "@/lib/constants";
+import { parseUnitModels, fmtRange } from "@/lib/unitModels";
 
 interface PortalLink { name: string; url: string; }
 
@@ -27,6 +28,8 @@ interface PropertyDetail {
   driveLink: string | null; portalLinks: string | null; description: string | null; notes: string | null;
   owner: { id: string; firstName: string; lastName: string; phone: string | null; email: string | null } | null;
   ownerName: string | null; ownerPhone: string | null;
+  isNewProject?: number | null; developerName?: string | null; deliveryDate?: string | null;
+  salePriceMax?: number | null; areaMax?: number | null; unitModels?: string | null;
   createdAt: string; createdBy: string | null;
   deals: Array<{ id: string; dealType: string; status: string; agreedPrice: number | null; currency: string; client: { id: string; firstName: string; lastName: string } | null }>;
 }
@@ -112,7 +115,9 @@ export default function PropiedadDetailPage({ params }: { params: Promise<{ id: 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {location && <div><p className="text-xs text-gray-500 uppercase tracking-wide">Ubicación</p><p className="text-sm font-medium text-gray-900 mt-1">{location}</p></div>}
             {property.referencePoint && <div><p className="text-xs text-gray-500 uppercase tracking-wide">Referencia</p><p className="text-sm font-medium text-gray-900 mt-1">{property.referencePoint}</p></div>}
-            {property.salePrice != null && <div><p className="text-xs text-gray-500 uppercase tracking-wide">Precio Venta</p><p className="text-lg font-bold text-blue-600 mt-1">{formatCurrency(property.salePrice, property.currency)}</p></div>}
+            {property.salePrice != null && <div><p className="text-xs text-gray-500 uppercase tracking-wide">{property.salePriceMax ? "Precio Venta (rango)" : "Precio Venta"}</p><p className="text-lg font-bold text-blue-600 mt-1">{fmtRange(property.salePrice, property.salePriceMax, (n) => formatCurrency(n, property.currency))}</p></div>}
+            {property.isNewProject && property.developerName ? <div><p className="text-xs text-gray-500 uppercase tracking-wide">Promotora</p><p className="text-sm font-medium text-gray-900 mt-1">{property.developerName}</p></div> : null}
+            {property.isNewProject && property.deliveryDate ? <div><p className="text-xs text-gray-500 uppercase tracking-wide">Entrega</p><p className="text-sm font-medium text-gray-900 mt-1">{property.deliveryDate}</p></div> : null}
             {property.rentPrice != null && <div><p className="text-xs text-gray-500 uppercase tracking-wide">Precio Alquiler</p><p className="text-lg font-bold text-teal-600 mt-1">{formatCurrency(property.rentPrice, property.currency)}/mes</p></div>}
             {property.maintenanceFee != null && <div><p className="text-xs text-gray-500 uppercase tracking-wide">Mantenimiento</p><p className="text-sm font-medium text-gray-900 mt-1">{formatCurrency(property.maintenanceFee, property.currency)}/mes</p></div>}
             <div><p className="text-xs text-gray-500 uppercase tracking-wide">Registrada</p><p className="text-sm font-medium text-gray-900 mt-1">{formatDate(property.createdAt)}</p></div>
@@ -123,7 +128,7 @@ export default function PropiedadDetailPage({ params }: { params: Promise<{ id: 
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Características</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {property.area != null && <div><p className="text-xs text-gray-500 uppercase">Área</p><p className="text-sm font-medium mt-1">{property.area} m²</p></div>}
+            {property.area != null && <div><p className="text-xs text-gray-500 uppercase">Área</p><p className="text-sm font-medium mt-1">{fmtRange(property.area, property.areaMax)} m²</p></div>}
             {property.landArea != null && <div><p className="text-xs text-gray-500 uppercase">Terreno</p><p className="text-sm font-medium mt-1">{property.landArea} m²</p></div>}
             {property.bedrooms != null && <div><p className="text-xs text-gray-500 uppercase">Habitaciones</p><p className="text-sm font-medium mt-1">{property.bedrooms}</p></div>}
             {property.bathrooms != null && <div><p className="text-xs text-gray-500 uppercase">Baños</p><p className="text-sm font-medium mt-1">{property.bathrooms}</p></div>}
@@ -132,6 +137,34 @@ export default function PropiedadDetailPage({ params }: { params: Promise<{ id: 
             {property.yearBuilt != null && <div><p className="text-xs text-gray-500 uppercase">Año</p><p className="text-sm font-medium mt-1">{property.yearBuilt}</p></div>}
           </div>
         </div>
+
+        {(() => {
+          const models = parseUnitModels(property.unitModels);
+          if (!models.length) return null;
+          return (
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Modelos ({models.length})</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="text-left text-xs text-gray-500 uppercase border-b border-gray-100">
+                    <th className="py-2 pr-3">Modelo</th><th className="py-2 pr-3">Rec.</th><th className="py-2 pr-3">Baños</th><th className="py-2 pr-3">m²</th><th className="py-2">Precio</th>
+                  </tr></thead>
+                  <tbody>
+                    {models.map((m, i) => (
+                      <tr key={i} className="border-b border-gray-50 last:border-0">
+                        <td className="py-2 pr-3 font-medium text-gray-900">{m.name || "—"}</td>
+                        <td className="py-2 pr-3">{m.bedrooms || "—"}</td>
+                        <td className="py-2 pr-3">{m.bathrooms || "—"}</td>
+                        <td className="py-2 pr-3">{fmtRange(m.areaMin, m.areaMax) || "—"}</td>
+                        <td className="py-2 font-medium text-blue-600">{fmtRange(m.priceMin, m.priceMax, (n) => formatCurrency(n, property.currency)) || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
 
         {activeAmenities.length > 0 && (
           <div className="bg-white rounded-xl shadow-sm p-6">
