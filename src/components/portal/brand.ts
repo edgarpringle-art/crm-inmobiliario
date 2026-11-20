@@ -28,7 +28,6 @@ export const NAV = [
   { href: "/", key: "home" },
   { href: "/propiedades", key: "properties" },
   { href: "/proyectos", key: "projects" },
-  { href: "/servicios", key: "services" },
   { href: "/nosotros", key: "about" },
   { href: "/buscamos", key: "wanted" },
   { href: "/guias", key: "guides" },

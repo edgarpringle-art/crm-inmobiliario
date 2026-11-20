@@ -55,7 +55,7 @@ export default function PortalHeader({ portal = false, lang = "es" }: { portal?:
           <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
             {NAV.filter((n) => n.href !== "/").map((n) => ( /* the logo already links home */
               <Link key={n.href} href={h(n.href)}
-                className={`group/nav relative text-[12px] xl:text-[13px] font-medium uppercase tracking-[0.12em] xl:tracking-[0.16em] transition-colors py-1 ${
+                className={`group/nav relative whitespace-nowrap text-[12px] xl:text-[13px] font-medium uppercase tracking-[0.12em] xl:tracking-[0.16em] transition-colors py-1 ${
                   isActive(n.href) ? "text-[#1E1A15]" : "text-[#6B6155] hover:text-[#1E1A15]"
                 }`}>
                 {t.nav[n.key]}
