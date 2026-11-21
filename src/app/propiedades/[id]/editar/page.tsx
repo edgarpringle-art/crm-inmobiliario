@@ -9,6 +9,7 @@ import { PROPERTY_TYPES, OPERATION_TYPES, PROPERTY_STATUSES, CURRENCIES } from "
 import { getProvinces, getDistricts, getSectors } from "@/lib/locations";
 import { HiPlus, HiTrash } from "react-icons/hi";
 import PhotoUploader from "@/components/PhotoUploader";
+import FileUploadButton from "@/components/FileUploadButton";
 import SectorInput, { CorregimientoInput } from "@/components/SectorInput";
 import { parseFeatures } from "@/lib/publicProperty";
 import UnitModelsEditor from "@/components/UnitModelsEditor";
@@ -330,7 +331,13 @@ export default function EditarPropiedadPage({ params }: { params: Promise<{ id: 
             <FormField label="Descripción"><textarea className={inputClass} rows={3} value={form.description} onChange={(e) => update("description", e.target.value)} /></FormField>
             <FormField label="Características adicionales (una por línea — se muestran en la web)"><textarea className={inputClass} rows={4} value={featuresText} onChange={(e) => setFeaturesText(e.target.value)} placeholder="Ej: Cuarto de servicio, Vista al mar, Acepta mascotas" /></FormField>
             <FormField label="Video (YouTube)"><input className={inputClass} value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." /></FormField>
-            <FormField label="Catálogo PDF descargable (link — se muestra en la web)"><input className={inputClass} value={brochureUrl} onChange={(e) => setBrochureUrl(e.target.value)} placeholder="/catalogos/archivo.pdf o https://..." /></FormField>
+            <FormField label="Catálogo PDF descargable (se muestra en la web)">
+              <div className="flex flex-col sm:flex-row gap-2 sm:items-start">
+                <input className={inputClass} value={brochureUrl} onChange={(e) => setBrochureUrl(e.target.value)} placeholder="Sube el PDF o pega un link https://..." />
+                <FileUploadButton onUploaded={(url) => { setBrochureUrl(url); toast.success("PDF subido — recuerda guardar"); }} />
+              </div>
+              {brochureUrl && <a href={brochureUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs text-blue-600 hover:underline">Ver catálogo actual</a>}
+            </FormField>
             <label className="flex items-center gap-2 text-sm text-slate-700">
               <input type="checkbox" className={checkboxClass} checked={noMortgage} onChange={(e) => setNoMortgage(e.target.checked)} />
               No aplica para hipoteca (ocultar calculadora en la web)
