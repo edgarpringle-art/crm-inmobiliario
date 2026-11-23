@@ -15,7 +15,7 @@ import { getLang } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
 import { getAvailableProperties, getPublicProperty } from "@/components/portal/data";
 import { fmtRange, parseUnitModels } from "@/lib/unitModels";
-import { SITE_URL, TYPES, collectLandings, landingPath, pageAlternates, slugify, type OpSlug } from "@/components/portal/seo";
+import { SITE_URL, TYPES, collectLandings, isNamedPH, landingPath, pageAlternates, slugify, type OpSlug } from "@/components/portal/seo";
 
 // Type slug used by the search pages for this property type (apartamentos, casas…).
 const typeSlugOf = (propertyType: string) => Object.entries(TYPES).find(([, v]) => v.types.includes(propertyType))?.[0] || null;
@@ -72,9 +72,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (p.photos) { try { const arr = JSON.parse(p.photos); firstPhoto = arr[0]; } catch { /* ignore */ } }
   const description = [`${t.types[p.propertyType] || t.common.property} ${op.toLowerCase()}${loc ? ` · ${loc}` : ""}`, price, specs, snippet(p.description, 110)]
     .filter(Boolean).join(" · ");
-  // MLS listings are syndicated/duplicate content (ids like "mls26108"). Keep them crawlable
-  // for users and link equity, but tell Google not to index duplicates — own listings stay indexable.
-  const isMls = /^mls\d+$/.test(id);
+  // MLS listings (ids like "mls26108") are syndicated duplicates, so they stay noindex — except those that
+  // name their PH ("PH Solok"): Search Console showed those ranking top-10 for the building's name (2026-11-23).
+  const noIndex = /^mls\d+$/.test(id) && !isNamedPH(p.title);
   // Search snippet: title + price (+ place if it still fits) so the result shows what people compare first.
   let seoTitle = p.title;
   for (const part of [price, loc && !(p.sector && p.title.toLowerCase().includes(p.sector.toLowerCase())) ? loc : ""]) {
@@ -85,7 +85,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     title: `${seoTitle} | PanamaInmo`,
     description,
     alternates: pageAlternates(`/p/${p.id}`, lang),
-    robots: isMls ? { index: false, follow: true } : undefined,
+    robots: noIndex ? { index: false, follow: true } : undefined,
     openGraph: {
       title: p.title,
       description,

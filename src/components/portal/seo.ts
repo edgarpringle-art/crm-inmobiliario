@@ -103,3 +103,16 @@ export function collectLandings(props: PortalProperty[]): (Landing & { count: nu
     .filter((l) => (l.zone ? l.count >= MIN_ZONE_LISTINGS : l.count > 0))
     .sort((a, b) => b.count - a.count);
 }
+
+// "PH Solok", "P.H. Lov San Francisco", "en PH Hill Point" → true; "PH con piscina", "en un PH" → false.
+// MLS listings are only indexed when they name their building: those rank for the building's name.
+const PH_STOP = new Set(["con", "de", "del", "en", "el", "la", "los", "las", "frente", "cerca", "ubicado", "nuevo", "moderno", "amoblado", "a", "al", "y", "para", "sin", "full", "venta", "alquiler", "in", "with", "for", "near", "sale", "rent"]);
+export function isNamedPH(title: string | null | undefined): boolean {
+  if (!title) return false;
+  const re = /(?:^|[^\p{L}])[Pp]\.?\s?[Hh]\.?\s+["“']?(\S+)/gu;
+  for (const m of title.matchAll(re)) {
+    const word = m[1].replace(/[^\p{L}\p{N}]/gu, "");
+    if (word && /^[\p{Lu}\p{N}]/u.test(word) && !PH_STOP.has(word.toLowerCase())) return true;
+  }
+  return false;
+}
