@@ -2,7 +2,8 @@
 // Keep amounts hedged ("consulta el monto vigente") — they change by decree.
 
 export interface GuideSection { h: string; p?: string[]; list?: string[] }
-export interface GuideText { title: string; summary: string; sections: GuideSection[] }
+// seoTitle/seoDesc: search-snippet copy (falls back to title/summary); "{year}" becomes the current year.
+export interface GuideText { title: string; summary: string; sections: GuideSection[]; seoTitle?: string; seoDesc?: string }
 export interface Guide { slug: string; minutes: number; img: string; es: GuideText; en: GuideText }
 
 const img = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1400&q=75`;
@@ -122,6 +123,8 @@ export const GUIDES: Guide[] = [
     img: img("1554224155-6726b3ff858f"),
     es: {
       title: "Impuestos al vender una propiedad en Panamá",
+      seoTitle: "Impuestos al vender una propiedad en Panamá ({year}): 2% y 3%",
+      seoDesc: "Al vender pagas 2% de impuesto de transferencia y un adelanto de 3% sobre la ganancia de capital (10%). Cómo se calculan, quién paga y cómo pagar menos legalmente.",
       summary: "Al vender pagas el impuesto de transferencia y el impuesto sobre la ganancia de capital. Te explicamos cómo se calculan.",
       sections: [
         { h: "Impuesto de transferencia (2%)", p: [
@@ -144,6 +147,8 @@ export const GUIDES: Guide[] = [
     },
     en: {
       title: "Taxes when selling property in Panama",
+      seoTitle: "Taxes When Selling Property in Panama ({year}): 2% + 3%",
+      seoDesc: "Sellers pay a 2% transfer tax and a 3% advance on the 10% capital gains tax. How each is calculated, who pays it and how to legally lower your tax bill.",
       summary: "When you sell you pay the transfer tax and the capital gains tax. Here is how they are calculated.",
       sections: [
         { h: "Transfer tax (2%)", p: [
@@ -273,6 +278,8 @@ export const GUIDES: Guide[] = [
     img: img("1500382017468-9049fed747ef"),
     es: {
       title: "Título de propiedad vs. derechos posesorios",
+      seoTitle: "Título de propiedad vs. derechos posesorios: riesgos al comprar",
+      seoDesc: "¿Vas a comprar un terreno con derechos posesorios? Diferencias con el título inscrito, por qué el banco no lo financia, cómo titular ante ANATI y qué revisar antes de pagar.",
       summary: "En playas y en el interior se venden muchos terrenos con derechos posesorios. Te explicamos la diferencia y los riesgos.",
       sections: [
         { h: "Título de propiedad", p: [
@@ -294,6 +301,8 @@ export const GUIDES: Guide[] = [
     },
     en: {
       title: "Titled property vs. possessory rights",
+      seoTitle: "Titled Property vs. Possessory Rights in Panama: Buyer Risks",
+      seoDesc: "Buying land with possessory rights in Panama? How it differs from titled property, why banks will not finance it, how to title it with ANATI and what to check first.",
       summary: "Many beach and countryside lots are sold with possessory rights. Here is the difference and the risks.",
       sections: [
         { h: "Titled property", p: [
@@ -317,3 +326,49 @@ export const GUIDES: Guide[] = [
 ];
 
 export const guideBySlug = (slug: string) => GUIDES.find((g) => g.slug === slug) || null;
+
+// Article dates for structured data (Google expects them on Article markup).
+export const GUIDES_PUBLISHED = "2026-10-24";
+export const GUIDES_MODIFIED = "2026-11-23";
+
+type GuideLink = { path: string; es: string; en: string };
+// Guide → search pages it naturally leads to (internal links both ways help those pages rank).
+export const GUIDE_LANDINGS: Record<string, GuideLink[]> = {
+  "comprar-propiedad-en-panama-siendo-extranjero": [
+    { path: "/venta/apartamentos", es: "Apartamentos en venta", en: "Apartments for sale" },
+    { path: "/venta/casas", es: "Casas en venta", en: "Homes for sale" },
+    { path: "/venta/terrenos", es: "Terrenos en venta", en: "Land for sale" },
+  ],
+  "costos-de-cierre-al-comprar": [
+    { path: "/venta", es: "Propiedades en venta", en: "Properties for sale" },
+    { path: "/venta/casas", es: "Casas en venta", en: "Homes for sale" },
+    { path: "/venta/apartamentos", es: "Apartamentos en venta", en: "Apartments for sale" },
+  ],
+  "impuestos-al-vender-una-propiedad": [
+    { path: "/vender", es: "Valora tu propiedad gratis", en: "Get a free valuation" },
+    { path: "/venta", es: "Propiedades en venta", en: "Properties for sale" },
+  ],
+  "residencia-en-panama-por-pension-o-inversion": [
+    { path: "/venta/casas", es: "Casas en venta", en: "Homes for sale" },
+    { path: "/venta/apartamentos", es: "Apartamentos en venta", en: "Apartments for sale" },
+  ],
+  "alquilar-en-panama-contrato-y-requisitos": [
+    { path: "/alquiler", es: "Propiedades en alquiler", en: "Properties for rent" },
+    { path: "/alquiler/apartamentos", es: "Apartamentos en alquiler", en: "Apartments for rent" },
+    { path: "/alquiler/casas", es: "Casas en alquiler", en: "Homes for rent" },
+  ],
+  "titulo-de-propiedad-vs-derechos-posesorios": [
+    { path: "/venta/terrenos", es: "Terrenos en venta", en: "Land for sale" },
+    { path: "/venta/casas", es: "Casas en venta", en: "Homes for sale" },
+  ],
+};
+
+// Search page → guides worth reading before buying/renting that kind of property.
+export function guidesForLanding(op: "venta" | "alquiler", type: string | null): Guide[] {
+  const slugs = op === "alquiler"
+    ? ["alquilar-en-panama-contrato-y-requisitos"]
+    : type === "terrenos"
+      ? ["titulo-de-propiedad-vs-derechos-posesorios", "costos-de-cierre-al-comprar", "comprar-propiedad-en-panama-siendo-extranjero"]
+      : ["comprar-propiedad-en-panama-siendo-extranjero", "costos-de-cierre-al-comprar", "residencia-en-panama-por-pension-o-inversion"];
+  return slugs.map((s) => guideBySlug(s)).filter((g): g is Guide => !!g);
+}

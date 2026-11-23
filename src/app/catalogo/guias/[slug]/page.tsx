@@ -8,7 +8,7 @@ import PortalFooter from "@/components/portal/PortalFooter";
 import { SANS, SERIF, portalHref, waLink } from "@/components/portal/brand";
 import { IconBack, IconCheck, IconWA } from "@/components/portal/icons";
 import { SITE_URL, pageAlternates } from "@/components/portal/seo";
-import { GUIDES, guideBySlug } from "@/components/portal/guides";
+import { GUIDES, GUIDES_MODIFIED, GUIDES_PUBLISHED, GUIDE_LANDINGS, guideBySlug } from "@/components/portal/guides";
 
 type Params = Promise<{ slug: string }>;
 
@@ -17,10 +17,13 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const g = guideBySlug((await params).slug);
   if (!g) return { title: tr(lang).detail.notFound };
   const x = g[lang];
+  const year = String(new Date().getFullYear());
+  const title = (x.seoTitle || x.title).replace("{year}", year);
+  const description = (x.seoDesc || x.summary).replace("{year}", year);
   return {
-    title: `${x.title} | PanamaInmo`, description: x.summary,
+    title: `${title} | PanamaInmo`, description,
     alternates: pageAlternates(`/guias/${g.slug}`, lang),
-    openGraph: { title: x.title, description: x.summary, type: "article", siteName: "PanamaInmo", images: [{ url: g.img }] },
+    openGraph: { title, description, type: "article", siteName: "PanamaInmo", images: [{ url: g.img }] },
   };
 }
 
@@ -37,8 +40,10 @@ export default async function GuiaPage({ params }: { params: Params }) {
     author: { "@type": "Organization", name: "PanamaInmo" },
     publisher: { "@type": "Organization", name: "PanamaInmo", logo: { "@type": "ImageObject", url: `${SITE_URL}/brand/panamainmo-logo.png` } },
     mainEntityOfPage: pageAlternates(`/guias/${g.slug}`, lang).canonical,
+    datePublished: GUIDES_PUBLISHED, dateModified: GUIDES_MODIFIED,
   };
   const others = GUIDES.filter((o) => o.slug !== g.slug).slice(0, 3);
+  const explore = GUIDE_LANDINGS[g.slug] || [];
 
   return (
     <div className="min-h-screen bg-[#FBF8F3] text-[#1E1A15]" style={SANS}>
@@ -83,6 +88,19 @@ export default async function GuiaPage({ params }: { params: Params }) {
           </a>
         </div>
       </article>
+
+      {explore.length > 0 && (
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-10">
+          <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.explore}</p>
+          <div className="flex flex-wrap gap-2">
+            {explore.map((l) => (
+              <Link key={l.path} href={h(l.path)} className="px-4 py-2 rounded-full bg-white border border-[#E9E0D0] text-sm hover:border-[#B8945F] transition-colors">
+                {l[lang]}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
         <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-5">{t.related}</p>

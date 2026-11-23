@@ -92,6 +92,7 @@ const es = {
     waMsg: "Hola PanamaInmo, me interesan los proyectos nuevos en preventa.",
   },
   detail: {
+    askInfo: "Pedir info",
     notFound: "Propiedad no encontrada", back: "Volver a propiedades", forSale: "En Venta", forRent: "En Alquiler",
     specs: "Características", area: "m² área", land: "m² terreno", beds: "habitaciones", baths: "baños",
     parking: "parqueos", levels: "niveles", year: "año const.", description: "Descripción", amenities: "Amenidades",
@@ -169,8 +170,17 @@ const es = {
       `${type || "Propiedades"} en ${op === "venta" ? "venta" : "alquiler"} en ${zone ? `${zone}, Panamá` : "Panamá"}`,
     intro: (n: number, what: string, from: string | null, to: string | null) =>
       `Encuentra ${n} ${n === 1 ? "opción" : "opciones"} de ${lcFirst(what)}${from ? `, con precios desde ${from}${to && to !== from ? ` hasta ${to}` : ""}` : ""}. Información verificada, fotos y atención directa de PanamaInmo con respaldo legal en todo el proceso.`,
+    metaTitle: (what: string, n: number, from: string | null) =>
+      `${what}: ${n} ${n === 1 ? "opción" : "opciones"}${from ? ` desde ${from}` : ""}`,
     metaDesc: (n: number, what: string, from: string | null) =>
-      `${n} ${lcFirst(what)}${from ? ` desde ${from}` : ""}. Fotos, precios y asesoría legal inmobiliaria con PanamaInmo.`,
+      `${n} ${lcFirst(what)}${from ? ` desde ${from}` : ""}. Fotos, precios verificados y asesoría legal incluida. Agenda tu visita por WhatsApp con PanamaInmo.`,
+    marketTitle: (what: string) => `Mercado de ${lcFirst(what)}`,
+    market: (what: string, place: string, median: string | null, beds: number | null, areas: string[]): string[] => [
+      ...(median ? [`El precio mediano de ${lcFirst(what)} en ${place} es ${median}: la mitad de las opciones cuesta menos y la otra mitad, más.`] : []),
+      ...(beds ? [`La configuración más común es de ${beds} ${beds === 1 ? "recámara" : "recámaras"}.`] : []),
+      ...(areas.length ? [`Las zonas con más oferta ahora mismo son ${areas.slice(0, -1).join(", ")}${areas.length > 1 ? " y " : ""}${areas[areas.length - 1]}.`] : []),
+    ],
+    medianLabel: "Precio mediano", bedsLabel: "Lo más común", countLabel: "Opciones", bedsN: (n: number) => `${n} rec.`,
     otherTypes: (zone: string) => `Otros tipos de propiedad en ${zone}`,
     popularZones: (what: string) => `Zonas populares · ${what}`,
     page: (n: number) => `Página ${n}`, prev: "← Anterior", next: "Siguiente →",
@@ -277,7 +287,7 @@ const es = {
     metaDesc: "Guías claras sobre impuestos, costos de cierre, compra siendo extranjero, residencia y alquileres en Panamá.",
     heroEyebrow: "Guías legales", heroTitle: "Lo que necesitas saber antes de firmar",
     heroSub: "Respuestas claras de nuestro equipo legal a las preguntas más comunes al comprar, vender o alquilar en Panamá.",
-    readMore: "Leer guía", back: "Todas las guías", minutes: (n: number) => `${n} min de lectura`, related: "Otras guías",
+    readMore: "Leer guía", back: "Todas las guías", minutes: (n: number) => `${n} min de lectura`, related: "Otras guías", explore: "Explora propiedades", forLanding: "Guías útiles antes de decidir",
     disclaimer: "Información general con fines orientativos; no constituye asesoría legal. Montos y requisitos pueden cambiar: consulta tu caso con nuestro equipo legal.",
     ctaTitle: "¿Tienes dudas sobre tu caso?", ctaText: "Nuestra abogada revisa tu situación y te explica los pasos.",
     ctaWa: "Hablar con un asesor", waMsg: (title: string) => `Hola PanamaInmo, leí la guía "${title}" y tengo una consulta.`,
@@ -370,6 +380,7 @@ const en: typeof es = {
     waMsg: "Hi PanamaInmo, I'm interested in new pre-sale developments.",
   },
   detail: {
+    askInfo: "Ask for info",
     notFound: "Property not found", back: "Back to properties", forSale: "For Sale", forRent: "For Rent",
     specs: "Features", area: "m² built", land: "m² lot", beds: "bedrooms", baths: "bathrooms",
     parking: "parking", levels: "floors", year: "year built", description: "Description", amenities: "Amenities",
@@ -447,8 +458,17 @@ const en: typeof es = {
       `${type || "Properties"} for ${op === "venta" ? "sale" : "rent"} in ${zone ? `${zone}, Panama` : "Panama"}`,
     intro: (n: number, what: string, from: string | null, to: string | null) =>
       `Browse ${n} ${n === 1 ? "option" : "options"}: ${lcFirst(what)}${from ? `, priced from ${from}${to && to !== from ? ` to ${to}` : ""}` : ""}. Verified information, photos and direct service from PanamaInmo with legal support throughout.`,
+    metaTitle: (what: string, n: number, from: string | null) =>
+      `${what}: ${n} ${n === 1 ? "listing" : "listings"}${from ? ` from ${from}` : ""}`,
     metaDesc: (n: number, what: string, from: string | null) =>
-      `${n} ${lcFirst(what)}${from ? ` from ${from}` : ""}. Photos, prices and real estate legal advice with PanamaInmo.`,
+      `${n} ${lcFirst(what)}${from ? ` from ${from}` : ""}. Real estate listings with photos, verified prices and legal support included. Book a viewing with PanamaInmo.`,
+    marketTitle: (what: string) => `Market snapshot: ${lcFirst(what)}`,
+    market: (what: string, place: string, median: string | null, beds: number | null, areas: string[]): string[] => [
+      ...(median ? [`The median price of ${lcFirst(what)} in ${place} is ${median}: half of the listings cost less and half cost more.`] : []),
+      ...(beds ? [`The most common layout is ${beds} ${beds === 1 ? "bedroom" : "bedrooms"}.`] : []),
+      ...(areas.length ? [`The areas with the most listings right now are ${areas.slice(0, -1).join(", ")}${areas.length > 1 ? " and " : ""}${areas[areas.length - 1]}.`] : []),
+    ],
+    medianLabel: "Median price", bedsLabel: "Most common", countLabel: "Listings", bedsN: (n: number) => `${n} bd`,
     otherTypes: (zone: string) => `Other property types in ${zone}`,
     popularZones: (what: string) => `Popular areas · ${what}`,
     page: (n: number) => `Page ${n}`, prev: "← Previous", next: "Next →",
@@ -555,7 +575,7 @@ const en: typeof es = {
     metaDesc: "Clear guides on taxes, closing costs, buying as a foreigner, residency and rentals in Panama.",
     heroEyebrow: "Legal guides", heroTitle: "What you need to know before you sign",
     heroSub: "Clear answers from our legal team to the most common questions about buying, selling or renting in Panama.",
-    readMore: "Read guide", back: "All guides", minutes: (n: number) => `${n} min read`, related: "More guides",
+    readMore: "Read guide", back: "All guides", minutes: (n: number) => `${n} min read`, related: "More guides", explore: "Browse properties", forLanding: "Helpful guides before you decide",
     disclaimer: "General information for guidance only; not legal advice. Amounts and requirements may change: check your case with our legal team.",
     ctaTitle: "Questions about your case?", ctaText: "Our attorney reviews your situation and explains the steps.",
     ctaWa: "Talk to an advisor", waMsg: (title: string) => `Hi PanamaInmo, I read the guide "${title}" and have a question.`,

@@ -11,9 +11,10 @@ import { tr, type Lang } from "@/components/portal/i18n";
 import { SANS, SERIF, portalHref, type PortalProperty } from "@/components/portal/brand";
 import { IconArrow } from "@/components/portal/icons";
 import {
-  MIN_ZONE_LISTINGS, SITE_URL, TYPES, collectLandings, landingPath, matchesLanding, parseLanding, zoneName,
+  MIN_ZONE_LISTINGS, SITE_URL, TYPES, collectLandings, landingPath, matchesLanding, parseLanding, zoneName, zonesOf,
   type Landing, pageAlternates,
 } from "@/components/portal/seo";
+import { guidesForLanding } from "@/components/portal/guides";
 import { formatCurrency } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ const titleCase = (slug: string) => slug.split("-").map((w) => w.charAt(0).toUpp
 
 interface Resolved {
   landing: Landing; list: PortalProperty[]; all: PortalProperty[];
-  zone: string | null; typeLabel: string | null; title: string; from: string | null; to: string | null;
+  zone: string | null; typeLabel: string | null; title: string; from: string | null; to: string | null; median: string | null;
 }
 
 // Stable order for search pages: own listings first, then those with more photos.
@@ -55,6 +56,7 @@ async function resolve(slug: string[], lang: Lang): Promise<Resolved | null> {
     title: t.title(typeLabel, landing.op, zone),
     from: prices.length ? fmt(prices[0]) : null,
     to: prices.length ? fmt(prices[prices.length - 1]) : null,
+    median: prices.length >= 3 ? fmt(prices[Math.floor(prices.length / 2)]) : null,
   };
 }
 
@@ -65,7 +67,7 @@ export async function generateMetadata({ params, searchParams }: { params: Param
   const page = Number((await searchParams).page) || 1;
   const path = landingPath(r.landing);
   return {
-    title: `${r.title}${page > 1 ? ` · ${tr(lang).landing.page(page)}` : ""} | PanamaInmo`,
+    title: `${page > 1 ? `${r.title} · ${tr(lang).landing.page(page)}` : tr(lang).landing.metaTitle(r.title, r.list.length, r.from)} | PanamaInmo`,
     description: tr(lang).landing.metaDesc(r.list.length, r.title, r.from),
     alternates: pageAlternates(path, lang, page > 1 ? `?page=${page}` : ""),
     robots: r.landing.zone && r.list.length < MIN_ZONE_LISTINGS ? { index: false, follow: true } : undefined,
@@ -97,6 +99,25 @@ export default async function LandingPage({ params, searchParams }: { params: Pa
   // and powers FAQPage rich results. Keeps each page's copy distinct, which helps rankings.
   const topZoneNames = zones.map((l) => zoneName(all, l.zone!) || titleCase(l.zone!));
   const faq = t.landing.faq(typeLabel, landing.op, zone, list.length, r.from, r.to, topZoneNames);
+
+  // Market snapshot: most common bedroom count and the sub-areas with the most listings (linked when they have a page).
+  const bedCounts = new Map<number, number>();
+  for (const p of list) if (p.bedrooms && p.bedrooms > 0) bedCounts.set(p.bedrooms, (bedCounts.get(p.bedrooms) || 0) + 1);
+  const bedsTop = [...bedCounts.entries()].sort((a, b) => b[1] - a[1])[0];
+  const bedsMode = landing.type !== "terrenos" && bedsTop && bedsTop[1] >= 3 ? bedsTop[0] : null;
+  const areaCounts = new Map<string, { name: string; n: number }>();
+  for (const p of list) {
+    const z = zonesOf(p).find((x) => x.slug !== landing.zone);
+    if (z) areaCounts.set(z.slug, { name: z.name, n: (areaCounts.get(z.slug)?.n || 0) + 1 });
+  }
+  const topAreas = [...areaCounts.entries()].sort((a, b) => b[1].n - a[1].n).slice(0, 5)
+    .map(([slug, v]) => ({ ...v, href: landings.some((l) => l.op === landing.op && l.type === landing.type && l.zone === slug) ? landingPath({ ...landing, zone: slug }) : null }));
+  const place = zone || (lang === "en" ? "Panama" : "Panamá");
+  const what = lang === "en"
+    ? `${typeLabel || "Properties"} for ${landing.op === "venta" ? "sale" : "rent"}`
+    : `${typeLabel || "Propiedades"} en ${landing.op}`;
+  const market = t.landing.market(what, place, r.median, bedsMode, topAreas.map((a) => a.name));
+  const guides = guidesForLanding(landing.op, landing.type);
 
   const opLabel = landing.op === "venta" ? t.landing.sale : t.landing.rent;
   const crumbs = [
@@ -169,6 +190,36 @@ export default async function LandingPage({ params, searchParams }: { params: Pa
             </nav>
           )}
 
+          {market.length > 0 && (
+            <div className="mt-14 grid lg:grid-cols-5 gap-8 items-start">
+              <div className="lg:col-span-3">
+                <h2 className="text-2xl mb-4" style={SERIF}>{t.landing.marketTitle(what)} · {place}</h2>
+                {market.map((m) => <p key={m} className="text-[#4A4238] leading-relaxed mb-3">{m}</p>)}
+                {topAreas.some((a) => a.href) && (
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {topAreas.filter((a) => a.href).map((a) => (
+                      <Link key={a.href} href={h(a.href!)} className="px-4 py-2 rounded-full bg-white border border-[#E9E0D0] text-sm hover:border-[#B8945F]">
+                        {a.name} ({a.n})
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <dl className="lg:col-span-2 grid grid-cols-3 gap-3">
+                {[
+                  { k: t.landing.countLabel, v: String(list.length) },
+                  ...(r.median ? [{ k: t.landing.medianLabel, v: r.median }] : []),
+                  ...(bedsMode ? [{ k: t.landing.bedsLabel, v: t.landing.bedsN(bedsMode) }] : []),
+                ].map((s) => (
+                  <div key={s.k} className="bg-white rounded-2xl border border-[#E9E0D0] p-4">
+                    <dt className="text-xs uppercase tracking-[0.15em] text-[#6B6155]">{s.k}</dt>
+                    <dd className="mt-1 text-lg font-semibold text-[#1E1A15] break-words" style={SERIF}>{s.v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
+
           <div className="mt-12">
             <AlertForm lang={lang} prefill={{
               op: landing.op === "alquiler" ? "ALQUILER" : "COMPRA",
@@ -196,6 +247,19 @@ export default async function LandingPage({ params, searchParams }: { params: Pa
                 {zones.map((l) => (
                   <Link key={landingPath(l)} href={h(landingPath(l))} className="px-4 py-2 rounded-full bg-white border border-[#E9E0D0] text-sm hover:border-[#B8945F]">
                     {zoneName(all, l.zone!) || titleCase(l.zone!)} ({l.count})
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+          {guides.length > 0 && (
+            <div className="mt-10">
+              <h2 className="text-xl mb-4" style={SERIF}>{t.guides.forLanding}</h2>
+              <div className="grid sm:grid-cols-3 gap-4">
+                {guides.map((g) => (
+                  <Link key={g.slug} href={h(`/guias/${g.slug}`)} className="bg-white rounded-2xl border border-[#E9E0D0] p-5 hover:border-[#B8945F] transition-colors">
+                    <p className="leading-snug" style={SERIF}>{g[lang].title}</p>
+                    <p className="text-xs text-[#6B6155] mt-2">{t.guides.minutes(g.minutes)}</p>
                   </Link>
                 ))}
               </div>

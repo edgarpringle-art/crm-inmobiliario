@@ -75,8 +75,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   // MLS listings are syndicated/duplicate content (ids like "mls26108"). Keep them crawlable
   // for users and link equity, but tell Google not to index duplicates — own listings stay indexable.
   const isMls = /^mls\d+$/.test(id);
+  // Search snippet: title + price (+ place if it still fits) so the result shows what people compare first.
+  let seoTitle = p.title;
+  for (const part of [price, loc && !(p.sector && p.title.toLowerCase().includes(p.sector.toLowerCase())) ? loc : ""]) {
+    const clean = part ? part.replace(/\.00\b/g, "") : "";
+    if (clean && `${seoTitle} · ${clean}`.length <= 68) seoTitle += ` · ${clean}`;
+  }
   return {
-    title: `${p.title}${loc ? ` · ${loc}` : ""} | PanamaInmo`,
+    title: `${seoTitle} | PanamaInmo`,
     description,
     alternates: pageAlternates(`/p/${p.id}`, lang),
     robots: isMls ? { index: false, follow: true } : undefined,
@@ -425,7 +431,9 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
               </a>
             )}
 
-            <LeadForm lang={lang} propertyId={p.id} waHref={`https://wa.me/${BROKER.phone}?text=${waText}`} />
+            <div id="solicitar" className="scroll-mt-24">
+              <LeadForm lang={lang} propertyId={p.id} waHref={`https://wa.me/${BROKER.phone}?text=${waText}`} />
+            </div>
 
             {/* Contact CTA */}
             <div className="bg-[#1E1A15] text-white rounded-2xl p-6">
@@ -477,6 +485,25 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
         )}
 
       <PortalFooter portal={portal} lang={lang} />
+
+      {/* Mobile: contact bar always in reach (the sidebar sits below all the details on phones) */}
+      <div className="h-20 lg:hidden" aria-hidden />
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#FBF8F3]/95 backdrop-blur-md border-t border-[#E4D9C6] shadow-[0_-8px_24px_-16px_rgba(30,26,21,0.35)] px-4 pt-3 flex items-center gap-2"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs uppercase tracking-[0.15em] text-[#6B6155]">{isAlquiler && !isVenta ? t.common.rent : t.detail.price}</p>
+          <p className="text-base font-semibold text-[#1E1A15] truncate">
+            {(p.salePrice != null ? formatCurrency(p.salePrice, p.currency) : p.rentPrice != null ? `${formatCurrency(p.rentPrice, p.currency)}${t.common.perMonth}` : t.common.property).replace(/\.00\b/g, "")}
+          </p>
+        </div>
+        <a href="#solicitar" className="shrink-0 border border-[#1E1A15] text-[#1E1A15] px-4 py-3 rounded-full text-xs font-semibold uppercase tracking-[0.12em]">
+          {t.detail.askInfo}
+        </a>
+        <a href={`https://wa.me/${BROKER.phone}?text=${waText}`} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+          className="shrink-0 flex items-center gap-2 bg-[#25D366] text-white px-4 py-3 rounded-full text-xs font-semibold uppercase tracking-[0.12em]">
+          <IconWA /> <span className="hidden min-[380px]:inline">WhatsApp</span>
+        </a>
+      </div>
     </div>
   );
 }

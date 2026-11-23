@@ -26,7 +26,7 @@ export type OpSlug = keyof typeof OPS;
 // Type slugs → property types. Apartments include penthouses (that's how people search).
 export const TYPES: Record<string, { types: string[]; es: string; en: string }> = {
   apartamentos: { types: ["APARTAMENTO", "PENTHOUSE"], es: "Apartamentos", en: "Apartments" },
-  casas: { types: ["CASA", "VILLA"], es: "Casas", en: "Houses" },
+  casas: { types: ["CASA", "VILLA"], es: "Casas", en: "Homes" },
   penthouses: { types: ["PENTHOUSE"], es: "Penthouses", en: "Penthouses" },
   terrenos: { types: ["TERRENO"], es: "Terrenos", en: "Land" },
   locales: { types: ["LOCAL"], es: "Locales comerciales", en: "Retail spaces" },
