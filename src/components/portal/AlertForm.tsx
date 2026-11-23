@@ -67,7 +67,7 @@ export default function AlertForm({ lang = "es", prefill = {}, dark = false }: {
         </div>
         {!open && (
           <button type="button" onClick={start}
-            className="shrink-0 bg-[#B8945F] hover:bg-[#A4824F] text-white font-semibold px-6 py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors pi-shine">
+            className="shrink-0 bg-[#B8945F] hover:bg-[#A4824F] text-[#1E1A15] font-semibold px-6 py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors pi-shine">
             🔔 {a.open}
           </button>
         )}
@@ -95,7 +95,7 @@ export default function AlertForm({ lang = "es", prefill = {}, dark = false }: {
           <input type="text" tabIndex={-1} autoComplete="off" value={form.website} onChange={set("website")}
             className="absolute -left-[9999px] w-px h-px opacity-0" aria-hidden="true" />
           {state === "error" && <p className="text-xs text-red-500 sm:col-span-2 lg:col-span-4">{error}</p>}
-          <p className={`text-[11px] sm:col-span-2 lg:col-span-4 ${muted}`}>{a.privacy}</p>
+          <p className={`text-xs sm:col-span-2 lg:col-span-4 ${muted}`}>{a.privacy}</p>
         </form>
       )}
     </div>

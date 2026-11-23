@@ -45,7 +45,7 @@ export default async function ContactoPage() {
                 className="flex items-center gap-4 bg-white rounded-2xl border border-[#E9E0D0] p-4 hover:border-[#B8945F] transition-colors">
                 <span className="w-12 h-12 rounded-full bg-[#F3ECDF] text-[#8A6A3A] flex items-center justify-center shrink-0"><I className="w-5 h-5" /></span>
                 <span>
-                  <span className="block text-[11px] uppercase tracking-[0.2em] text-[#8A6A3A]">{label}</span>
+                  <span className="block text-xs uppercase tracking-[0.2em] text-[#8A6A3A]">{label}</span>
                   <span className="block text-sm text-[#1E1A15] [overflow-wrap:anywhere]">{value}</span>
                 </span>
               </a>

@@ -97,7 +97,7 @@ export default async function CatalogoHome() {
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-16 sm:pt-28 sm:pb-24 lg:pt-32 lg:pb-28 text-center">
           <div className="flex items-center justify-center gap-3 mb-6 pi-enter">
             <span className="h-px w-10 bg-[#D9BE8F]" />
-            <p className="text-[#D9BE8F] text-[11px] font-semibold uppercase tracking-[0.4em]">Real Estate & Legal Advisory</p>
+            <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.4em]">Real Estate & Legal Advisory</p>
             <span className="h-px w-10 bg-[#D9BE8F]" />
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-white leading-[1.1] mb-6 pi-enter" style={{ ...SERIF, animationDelay: "150ms" }}>
@@ -116,15 +116,15 @@ export default async function CatalogoHome() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 grid grid-cols-3 gap-4 text-center text-white">
             <div>
               <p className="text-2xl sm:text-3xl text-[#D9BE8F]" style={SERIF}><CountUp value={properties.length} /></p>
-              <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-white/70 mt-1">{t.home.statProps}</p>
+              <p className="text-xs sm:text-xs uppercase tracking-[0.2em] text-white/70 mt-1">{t.home.statProps}</p>
             </div>
             <div className="border-x border-white/10">
               <p className="text-2xl sm:text-3xl text-[#D9BE8F]" style={SERIF}>{t.home.statLegalTitle}</p>
-              <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-white/70 mt-1">{t.home.statLegal}</p>
+              <p className="text-xs sm:text-xs uppercase tracking-[0.2em] text-white/70 mt-1">{t.home.statLegal}</p>
             </div>
             <div>
               <p className="text-2xl sm:text-3xl text-[#D9BE8F]" style={SERIF}>{BROKER.license}</p>
-              <p className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-white/70 mt-1">{t.home.statLicense}</p>
+              <p className="text-xs sm:text-xs uppercase tracking-[0.2em] text-white/70 mt-1">{t.home.statLicense}</p>
             </div>
           </div>
         </div>
@@ -258,7 +258,7 @@ export default async function CatalogoHome() {
             </div>
           </div>
           <Link href={h("/vender")}
-            className="self-start md:self-auto inline-flex items-center gap-2 bg-[#B8945F] hover:bg-[#A4824F] text-white font-semibold px-7 py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-colors pi-shine">
+            className="self-start md:self-auto inline-flex items-center gap-2 bg-[#B8945F] hover:bg-[#A4824F] text-[#1E1A15] font-semibold px-7 py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-colors pi-shine">
             {t.sell.homeCta} <IconArrow />
           </Link>
         </div>

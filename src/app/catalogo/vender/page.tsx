@@ -47,7 +47,7 @@ export default async function VenderPage() {
               })}
             </div>
             <div className="mt-12 bg-[#1E1A15] text-white rounded-3xl p-8" data-reveal>
-              <p className="text-[#D9BE8F] text-[11px] font-semibold uppercase tracking-[0.3em] mb-5">{t.stepsTitle}</p>
+              <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.3em] mb-5">{t.stepsTitle}</p>
               <ol className="space-y-5">
                 {t.steps.map((s, i) => (
                   <li key={s.t} className="flex gap-4">

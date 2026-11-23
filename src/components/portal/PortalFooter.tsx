@@ -22,37 +22,37 @@ export default function PortalFooter({ portal = false, lang = "es" }: { portal?:
 
         <div>
           <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">{t.footer.explore}</p>
-          <ul className="space-y-3 text-sm">
-            <li><Link href={h("/propiedades")} className="hover:text-white transition-colors">{t.footer.all}</Link></li>
-            <li><Link href={h("/venta")} className="hover:text-white transition-colors">{t.footer.sale}</Link></li>
-            <li><Link href={h("/alquiler")} className="hover:text-white transition-colors">{t.footer.rent}</Link></li>
-            <li><Link href={h("/venta/apartamentos")} className="hover:text-white transition-colors">{t.footer.apartments}</Link></li>
-            <li><Link href={h("/venta/casas")} className="hover:text-white transition-colors">{t.footer.houses}</Link></li>
+          <ul className="space-y-1 text-sm">
+            <li><Link href={h("/propiedades")} className="inline-block py-1 hover:text-white transition-colors">{t.footer.all}</Link></li>
+            <li><Link href={h("/venta")} className="inline-block py-1 hover:text-white transition-colors">{t.footer.sale}</Link></li>
+            <li><Link href={h("/alquiler")} className="inline-block py-1 hover:text-white transition-colors">{t.footer.rent}</Link></li>
+            <li><Link href={h("/venta/apartamentos")} className="inline-block py-1 hover:text-white transition-colors">{t.footer.apartments}</Link></li>
+            <li><Link href={h("/venta/casas")} className="inline-block py-1 hover:text-white transition-colors">{t.footer.houses}</Link></li>
           </ul>
         </div>
 
         <div>
           <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">{t.footer.company}</p>
-          <ul className="space-y-3 text-sm">
-            <li><Link href={h("/servicios")} className="hover:text-white transition-colors">{t.nav.services}</Link></li>
-            <li><Link href={h("/nosotros")} className="hover:text-white transition-colors">{t.nav.about}</Link></li>
-            <li><Link href={h("/vender")} className="hover:text-white transition-colors">{t.sell.footer}</Link></li>
-            <li><Link href={h("/buscamos")} className="hover:text-white transition-colors">{t.nav.wanted}</Link></li>
-            <li><Link href={h("/guias")} className="hover:text-white transition-colors">{t.nav.guides}</Link></li>
-            <li><Link href={h("/contacto")} className="hover:text-white transition-colors">{t.nav.contact}</Link></li>
+          <ul className="space-y-1 text-sm">
+            <li><Link href={h("/servicios")} className="inline-block py-1 hover:text-white transition-colors">{t.nav.services}</Link></li>
+            <li><Link href={h("/nosotros")} className="inline-block py-1 hover:text-white transition-colors">{t.nav.about}</Link></li>
+            <li><Link href={h("/vender")} className="inline-block py-1 hover:text-white transition-colors">{t.sell.footer}</Link></li>
+            <li><Link href={h("/buscamos")} className="inline-block py-1 hover:text-white transition-colors">{t.nav.wanted}</Link></li>
+            <li><Link href={h("/guias")} className="inline-block py-1 hover:text-white transition-colors">{t.nav.guides}</Link></li>
+            <li><Link href={h("/contacto")} className="inline-block py-1 hover:text-white transition-colors">{t.nav.contact}</Link></li>
           </ul>
         </div>
 
         <div>
           <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">{t.footer.contact}</p>
-          <ul className="space-y-3 text-sm">
-            <li><a href={`tel:+${BROKER.phone}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconPhone />{BROKER.phoneDisplay}</a></li>
-            <li><a href={`tel:+${BROKER.landline}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconPhone />{BROKER.landlineDisplay}</a></li>
-            <li><a href={`mailto:${BROKER.email}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconMail /><span className="break-all">{BROKER.email}</span></a></li>
-            <li><a href={`mailto:${BROKER.legalEmail}`} className="flex items-center gap-2 hover:text-white transition-colors"><IconMail /><span className="break-all">{BROKER.legalEmail}</span></a></li>
-            <li><a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors"><IconInstagram />@{BROKER.instagram}</a></li>
-            <li><a href={waLink()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white transition-colors"><IconWA className="w-3.5 h-3.5" />WhatsApp</a></li>
-            <li><a href={BROKER.mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 hover:text-white transition-colors"><IconPin className="w-3.5 h-3.5 mt-1 shrink-0" /><span>{BROKER.office}<br />{BROKER.address}</span></a></li>
+          <ul className="space-y-1 text-sm">
+            <li><a href={`tel:+${BROKER.phone}`} className="flex items-center gap-2 py-1 hover:text-white transition-colors"><IconPhone />{BROKER.phoneDisplay}</a></li>
+            <li><a href={`tel:+${BROKER.landline}`} className="flex items-center gap-2 py-1 hover:text-white transition-colors"><IconPhone />{BROKER.landlineDisplay}</a></li>
+            <li><a href={`mailto:${BROKER.email}`} className="flex items-center gap-2 py-1 hover:text-white transition-colors"><IconMail /><span className="break-all">{BROKER.email}</span></a></li>
+            <li><a href={`mailto:${BROKER.legalEmail}`} className="flex items-center gap-2 py-1 hover:text-white transition-colors"><IconMail /><span className="break-all">{BROKER.legalEmail}</span></a></li>
+            <li><a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 py-1 hover:text-white transition-colors"><IconInstagram />@{BROKER.instagram}</a></li>
+            <li><a href={waLink()} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 py-1 hover:text-white transition-colors"><IconWA className="w-3.5 h-3.5" />WhatsApp</a></li>
+            <li><a href={BROKER.mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 py-1 hover:text-white transition-colors"><IconPin className="w-3.5 h-3.5 mt-1 shrink-0" /><span>{BROKER.office}<br />{BROKER.address}</span></a></li>
           </ul>
         </div>
       </div>

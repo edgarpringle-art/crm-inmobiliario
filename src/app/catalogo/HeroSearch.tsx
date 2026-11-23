@@ -62,7 +62,7 @@ export default function HeroSearch({ portal = false, places = [], lang = "es" }:
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
         </div>
         <button type="submit"
-          className="sm:col-span-2 sm:row-span-2 flex items-center justify-center gap-2 bg-[#B8945F] hover:bg-[#A4824F] text-white text-xs font-semibold uppercase tracking-[0.15em] rounded-lg px-4 py-3 transition-colors">
+          className="sm:col-span-2 sm:row-span-2 flex items-center justify-center gap-2 bg-[#B8945F] hover:bg-[#A4824F] text-[#1E1A15] text-xs font-semibold uppercase tracking-[0.15em] rounded-lg px-4 py-3 transition-colors">
           <IconSearch className="w-4 h-4" /> {t.search.button}
         </button>
         <div className="sm:col-span-3 relative">

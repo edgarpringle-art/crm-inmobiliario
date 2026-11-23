@@ -100,7 +100,7 @@ export default function WaGate() {
         <button type="submit" className="mt-5 w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white font-semibold py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-colors">
           <IconWA /> {t.cta}
         </button>
-        <p className="text-[11px] text-[#9C9182] text-center mt-3">{t.privacy}</p>
+        <p className="text-xs text-[#9C9182] text-center mt-3">{t.privacy}</p>
       </form>
     </div>
   );

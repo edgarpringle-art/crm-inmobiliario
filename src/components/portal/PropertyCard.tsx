@@ -26,12 +26,12 @@ export default function PropertyCard({ p, lang = "es" }: { p: PortalProperty; la
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#1E1A15]/60 via-transparent to-transparent" />
         <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-          {p.isNewProject && <span className="bg-[#B8945F] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.15em] shadow-sm">{t.common.newProject}</span>}
-          {isVenta && <span className="bg-[#1E1A15]/85 backdrop-blur text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.15em]">{t.common.sale}</span>}
-          {isAlquiler && <span className="bg-[#B8945F] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.15em]">{t.common.rent}</span>}
+          {p.isNewProject && <span className="bg-[#B8945F] text-[#1E1A15] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-[0.15em] shadow-sm">{t.common.newProject}</span>}
+          {isVenta && <span className="bg-[#1E1A15]/85 backdrop-blur text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-[0.15em]">{t.common.sale}</span>}
+          {isAlquiler && <span className="bg-[#B8945F] text-[#1E1A15] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-[0.15em]">{t.common.rent}</span>}
         </div>
         {(p.photoCount ?? p.photos.length) > 1 && (
-          <span className="absolute top-3 right-3 bg-black/50 text-white text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 backdrop-blur-sm">
+          <span className="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1 backdrop-blur-sm">
             <IconImages /> {p.photoCount ?? p.photos.length}
           </span>
         )}
@@ -46,7 +46,7 @@ export default function PropertyCard({ p, lang = "es" }: { p: PortalProperty; la
       </Link>
 
       <div className="p-5 flex flex-col flex-1">
-        <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.2em] mb-2">{p.isNewProject && p.developerName ? p.developerName : (t.types[p.propertyType] || t.common.property)}</p>
+        <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.2em] mb-2">{p.isNewProject && p.developerName ? p.developerName : (t.types[p.propertyType] || t.common.property)}</p>
         <Link href={propertyHref(p.id, lang)}>
           <h3 className="font-semibold text-[#1E1A15] leading-snug group-hover:text-[#8A6A3A] transition-colors line-clamp-2 mb-1.5 text-base" style={SERIF}>
             {p.title}

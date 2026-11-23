@@ -45,7 +45,7 @@ export default function SellForm({ lang = "es" }: { lang?: Lang }) {
   const ops = [["VENTA", f.opSell], ["ALQUILER", f.opRent], ["AMBOS", f.opBoth]] as const;
   return (
     <form onSubmit={submit} className="relative bg-white border border-[#E9E0D0] rounded-2xl p-6 sm:p-8 space-y-3 shadow-[0_10px_30px_-18px_rgba(30,26,21,0.25)]">
-      <p className="text-[11px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-2">{f.title}</p>
+      <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-2">{f.title}</p>
       <div>
         <p className="text-xs text-[#6B6155] mb-1.5">{f.op}</p>
         <div className="grid grid-cols-3 gap-2">
@@ -74,10 +74,10 @@ export default function SellForm({ lang = "es" }: { lang?: Lang }) {
         className="absolute -left-[9999px] w-px h-px opacity-0" aria-hidden="true" />
       {state === "error" && <p className="text-xs text-red-600">{error}</p>}
       <button type="submit" disabled={state === "sending"}
-        className="w-full bg-[#B8945F] hover:bg-[#A4824F] text-white font-semibold py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-colors disabled:opacity-60 pi-shine">
+        className="w-full bg-[#B8945F] hover:bg-[#A4824F] text-[#1E1A15] font-semibold py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-colors disabled:opacity-60 pi-shine">
         {state === "sending" ? f.sending : f.cta}
       </button>
-      <p className="text-[11px] text-[#9C9182] leading-snug">{f.privacy}</p>
+      <p className="text-xs text-[#9C9182] leading-snug">{f.privacy}</p>
     </form>
   );
 }

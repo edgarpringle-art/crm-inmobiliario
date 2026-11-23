@@ -28,13 +28,14 @@ export default function PortalHeader({ portal = false, lang = "es" }: { portal?:
 
   return (
     <>
+      <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:bg-[#1E1A15] focus:text-white focus:px-4 focus:py-2.5 focus:rounded-full focus:text-sm">{t.header.skip}</a>
       {/* Utility bar */}
       <div className="hidden md:block bg-[#1E1A15] text-[#CFC4B2] text-xs">
-        <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 py-1 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <a href={`tel:+${BROKER.phone}`} className="flex items-center gap-1.5 hover:text-white transition-colors"><IconPhone /> {BROKER.phoneDisplay}</a>
-            <a href={`mailto:${BROKER.email}`} className="flex items-center gap-1.5 hover:text-white transition-colors"><IconMail /> {BROKER.email}</a>
-            <a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-white transition-colors"><IconInstagram /> @{BROKER.instagram}</a>
+            <a href={`tel:+${BROKER.phone}`} className="flex items-center gap-1.5 py-1 hover:text-white transition-colors"><IconPhone /> {BROKER.phoneDisplay}</a>
+            <a href={`mailto:${BROKER.email}`} className="flex items-center gap-1.5 py-1 hover:text-white transition-colors"><IconMail /> {BROKER.email}</a>
+            <a href={BROKER.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 py-1 hover:text-white transition-colors"><IconInstagram /> @{BROKER.instagram}</a>
           </div>
           <div className="flex items-center gap-5">
             <span className="flex items-center gap-1.5">
@@ -64,10 +65,10 @@ export default function PortalHeader({ portal = false, lang = "es" }: { portal?:
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <LangToggle lang={lang} className="md:hidden text-[#1E1A15]" />
-            <a href={waLink(t.header.waMsg)} target="_blank" rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-2 bg-[#B8945F] hover:bg-[#A4824F] text-white px-3.5 xl:px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors pi-shine">
+            <a href={waLink(t.header.waMsg)} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+              className="hidden sm:flex items-center gap-2 bg-[#B8945F] hover:bg-[#A4824F] text-[#1E1A15] px-3.5 xl:px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors pi-shine">
               <IconWA /> <span className="hidden xl:inline">WhatsApp</span>
             </a>
             <button onClick={() => setOpen(!open)} className="lg:hidden p-2 text-[#1E1A15]" aria-label={t.header.menu}>
@@ -86,18 +87,19 @@ export default function PortalHeader({ portal = false, lang = "es" }: { portal?:
                 </Link>
               ))}
               <a href={waLink(t.header.waMsg)} target="_blank" rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 bg-[#B8945F] text-white py-3 rounded-full text-xs font-semibold uppercase tracking-[0.15em]">
+                className="flex items-center justify-center gap-2 bg-[#B8945F] text-[#1E1A15] py-3 rounded-full text-xs font-semibold uppercase tracking-[0.15em]">
                 <IconWA /> WhatsApp
               </a>
-              <div className="border-t border-[#E4D9C6] pt-4 flex flex-col gap-2 text-xs text-[#6B6155]">
-                <a href={`tel:+${BROKER.phone}`} className="flex items-center gap-2"><IconPhone />{BROKER.phoneDisplay}</a>
-                <a href={`mailto:${BROKER.email}`} className="flex items-center gap-2"><IconMail />{BROKER.email}</a>
+              <div className="border-t border-[#E4D9C6] pt-4 flex flex-col gap-1 text-xs text-[#6B6155]">
+                <a href={`tel:+${BROKER.phone}`} className="flex items-center gap-2 py-1"><IconPhone />{BROKER.phoneDisplay}</a>
+                <a href={`mailto:${BROKER.email}`} className="flex items-center gap-2 py-1"><IconMail />{BROKER.email}</a>
                 <span className="flex items-center gap-2"><IconBadge />{t.header.license} {BROKER.license}</span>
               </div>
             </div>
           </div>
         )}
       </header>
+      <div id="contenido" tabIndex={-1} className="outline-none" />
     </>
   );
 }

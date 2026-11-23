@@ -214,13 +214,13 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Title + badges */}
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              {p.isNewProject ? <span className="bg-[#B8945F] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">{t.common.newProject}</span> : null}
-              {isVenta && <span className="bg-[#1E1A15] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">{t.detail.forSale}</span>}
-              {isAlquiler && <span className="bg-[#8A6A3A] text-white text-[10px] font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">{t.detail.forRent}</span>}
-              <span className="text-[10px] text-[#9C9182] font-semibold uppercase tracking-[0.2em] border border-[#E4D9C6] px-3 py-1 rounded-full">
+              {p.isNewProject ? <span className="bg-[#B8945F] text-[#1E1A15] text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">{t.common.newProject}</span> : null}
+              {isVenta && <span className="bg-[#1E1A15] text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">{t.detail.forSale}</span>}
+              {isAlquiler && <span className="bg-[#8A6A3A] text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-[0.2em]">{t.detail.forRent}</span>}
+              <span className="text-xs text-[#9C9182] font-semibold uppercase tracking-[0.2em] border border-[#E4D9C6] px-3 py-1 rounded-full">
                 {t.types[p.propertyType] || t.common.property}
               </span>
-              <span className="text-[10px] text-[#9C9182] font-semibold uppercase tracking-[0.2em]">{refCode}</span>
+              <span className="text-xs text-[#9C9182] font-semibold uppercase tracking-[0.2em]">{refCode}</span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-medium text-[#1E1A15] leading-tight mb-3" style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.01em" }}>
@@ -245,7 +245,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Specs grid */}
           {(p.area || p.landArea || p.bedrooms || p.bathrooms || p.parkingSpots || p.floors || p.yearBuilt) && (
             <div className="bg-[#F3ECDF] rounded-2xl border border-[#E9E0D0] p-6">
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-5">{t.detail.specs}</p>
+              <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-5">{t.detail.specs}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                 {p.area != null && <SpecItem value={fmtRange(p.area, p.areaMax)} unit={t.detail.area} />}
                 {p.landArea != null && <SpecItem value={p.landArea} unit={t.detail.land} />}
@@ -264,10 +264,10 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
             if (!models.length) return null;
             return (
               <div>
-                <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.common.models}</p>
+                <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.common.models}</p>
                 <div className="overflow-x-auto rounded-2xl border border-[#E9E0D0]">
                   <table className="w-full text-sm text-[#4A4238]">
-                    <thead className="bg-[#F3ECDF] text-[10px] uppercase tracking-[0.15em] text-[#8A6A3A]">
+                    <thead className="bg-[#F3ECDF] text-xs uppercase tracking-[0.15em] text-[#8A6A3A]">
                       <tr>
                         <th className="text-left font-semibold px-4 py-3">{t.common.model}</th>
                         <th className="text-left font-semibold px-4 py-3">{t.detail.beds}</th>
@@ -296,7 +296,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Description */}
           {p.description && (
             <div>
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.description}</p>
+              <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.description}</p>
               <p className="text-sm text-[#4A4238] whitespace-pre-wrap leading-relaxed">{p.description}</p>
             </div>
           )}
@@ -304,7 +304,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Amenities */}
           {activeAmenities.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.amenities}</p>
+              <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.amenities}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {activeAmenities.map(([, label]) => (
                   <div key={label} className="flex items-center gap-2 text-sm text-[#4A4238] py-2 border-b border-[#EFE6D6]">
@@ -319,7 +319,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Extra features */}
           {features.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.moreFeatures}</p>
+              <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.moreFeatures}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
                 {features.map((f) => (
                   <div key={f} className="flex items-center gap-2 text-sm text-[#4A4238] py-2 border-b border-[#EFE6D6]">
@@ -334,7 +334,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Video */}
           {videoEmbed && (
             <div>
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.video}</p>
+              <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.video}</p>
               <div className="aspect-video rounded-2xl overflow-hidden border border-[#E9E0D0] bg-[#EDE3D2]">
                 <iframe src={videoEmbed} title={`Video ${p.title}`} className="w-full h-full" loading="lazy"
                   allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
@@ -345,12 +345,12 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Map */}
           {(p.sector || p.city || p.address) && (
             <div>
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.location}</p>
+              <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.location}</p>
               <div className="h-72 rounded-2xl overflow-hidden border border-[#E9E0D0] bg-[#EDE3D2]">
                 <iframe src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`}
                   title="Mapa" className="w-full h-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
               </div>
-              <p className="text-[11px] text-[#9C9182] mt-2">{t.detail.approx}</p>
+              <p className="text-xs text-[#9C9182] mt-2">{t.detail.approx}</p>
             </div>
           )}
 
@@ -359,7 +359,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Related search pages (internal links for SEO) */}
           {related.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.landing.popularTitle}</p>
+              <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.landing.popularTitle}</p>
               <div className="flex flex-wrap gap-2">
                 {related.map((l) => (
                   <Link key={l.path} href={portalHref(l.path, portal, lang)} className="px-4 py-2 rounded-full bg-white border border-[#E9E0D0] text-sm text-[#4A4238] hover:border-[#B8945F]">
@@ -373,7 +373,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
           {/* Notes */}
           {p.notes && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-              <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-[0.3em] mb-2">{t.detail.notes}</p>
+              <p className="text-xs font-semibold text-amber-700 uppercase tracking-[0.3em] mb-2">{t.detail.notes}</p>
               <p className="text-sm text-amber-900 whitespace-pre-wrap leading-relaxed">{p.notes}</p>
             </div>
           )}
@@ -385,11 +385,11 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
 
             {/* Prices card */}
             <div className="bg-white border border-[#E9E0D0] rounded-2xl p-6">
-              <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.price}</p>
+              <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-4">{t.detail.price}</p>
               <div className="space-y-3">
                 {p.salePrice != null && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">{t.common.sale}{p.salePriceMax && p.salePriceMax > p.salePrice ? ` · ${t.common.from}` : ""}</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">{t.common.sale}{p.salePriceMax && p.salePriceMax > p.salePrice ? ` · ${t.common.from}` : ""}</p>
                     <p className="text-3xl font-semibold text-[#1E1A15]" style={{ fontFamily: "'Cinzel', serif" }}>
                       {formatCurrency(p.salePrice, p.currency)}
                     </p>
@@ -400,7 +400,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
                 )}
                 {p.rentPrice != null && (
                   <div className={p.salePrice != null ? "pt-3 border-t border-[#EFE6D6]" : ""}>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">{t.common.rent}</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">{t.common.rent}</p>
                     <p className="text-3xl font-semibold text-[#8A6A3A]" style={{ fontFamily: "'Cinzel', serif" }}>
                       {formatCurrency(p.rentPrice, p.currency)}<span className="text-base text-[#6B6155] font-normal">{t.common.perMonth}</span>
                     </p>
@@ -408,7 +408,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
                 )}
                 {p.maintenanceFee != null && (
                   <div className="pt-3 border-t border-[#EFE6D6]">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">{t.detail.maintenance}</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-[#9C9182] mb-0.5">{t.detail.maintenance}</p>
                     <p className="text-base font-semibold text-[#4A4238]">
                       {formatCurrency(p.maintenanceFee, p.currency)}<span className="text-xs text-[#6B6155] font-normal">{t.common.perMonth}</span>
                     </p>
@@ -419,7 +419,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
 
             {p.brochureUrl && (
               <a href={p.brochureUrl} target="_blank" rel="noopener noreferrer" download
-                className="flex items-center justify-center gap-2 w-full bg-[#B8945F] hover:bg-[#8A6A3A] text-white rounded-2xl px-6 py-4 text-sm font-semibold uppercase tracking-[0.15em] transition-colors">
+                className="flex items-center justify-center gap-2 w-full bg-[#B8945F] hover:bg-[#8A6A3A] text-[#1E1A15] hover:text-white rounded-2xl px-6 py-4 text-sm font-semibold uppercase tracking-[0.15em] transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" /></svg>
                 {t.detail.brochure}
               </a>
@@ -434,7 +434,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
                 <img src="/brand/pi-isotipo-blanco.png" alt="PI" className="h-10 w-auto" />
                 <div>
                   <p className="text-sm font-medium tracking-[0.15em]" style={{ fontFamily: "'Cinzel', serif" }}>PANAMAINMO</p>
-                  <p className="text-[10px] text-[#9C9182] uppercase tracking-[0.2em]">Real Estate &amp; Legal Advisory</p>
+                  <p className="text-xs text-[#9C9182] uppercase tracking-[0.2em]">Real Estate &amp; Legal Advisory</p>
                 </div>
               </div>
               <p className="text-[#CFC4B2] text-sm leading-relaxed mb-5">
@@ -470,7 +470,7 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
               </div>
             )}
             <div>
-              <p className="text-[10px] text-[#8A6A3A] uppercase tracking-[0.2em]">{t.detail.publishedBy}</p>
+              <p className="text-xs text-[#8A6A3A] uppercase tracking-[0.2em]">{t.detail.publishedBy}</p>
               <p className="text-sm text-[#1E1A15] font-medium">{publisher.fullName}</p>
             </div>
           </div>
@@ -485,7 +485,7 @@ function SpecItem({ value, unit }: { value: number | string; unit: string }) {
   return (
     <div>
       <p className="text-2xl font-semibold text-[#1E1A15]" style={{ fontFamily: "'Cinzel', serif" }}>{value}</p>
-      <p className="text-[11px] text-[#6B6155] uppercase tracking-[0.15em] mt-0.5">{unit}</p>
+      <p className="text-xs text-[#6B6155] uppercase tracking-[0.15em] mt-0.5">{unit}</p>
     </div>
   );
 }

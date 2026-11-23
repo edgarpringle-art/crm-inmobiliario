@@ -134,7 +134,7 @@ export default async function LandingPage({ params, searchParams }: { params: Pa
       <section className="relative bg-[#1E1A15] overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(184,148,95,0.35),transparent_60%)]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
-          <nav aria-label="Breadcrumb" className="text-[11px] uppercase tracking-[0.2em] text-[#CFC4B2] mb-4 flex flex-wrap gap-x-2 gap-y-1">
+          <nav aria-label="Breadcrumb" className="text-xs uppercase tracking-[0.2em] text-[#CFC4B2] mb-4 flex flex-wrap gap-x-2 gap-y-1">
             {crumbs.map((c, i) => (
               <span key={c.path} className="flex items-center gap-2">
                 {i > 0 && <span className="text-[#8A6A3A]">›</span>}

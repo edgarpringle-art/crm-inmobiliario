@@ -12,9 +12,9 @@ export default function LangToggle({ lang, className = "" }: { lang: Lang; class
     window.location.assign((l === "en" ? (base === "/" ? "/en" : `/en${base}`) : base) + search + hash);
   };
   const btn = (l: Lang) =>
-    `px-2 py-0.5 rounded-full transition-colors ${l === lang ? "bg-[#B8945F] text-white" : "hover:text-[#B8945F]"}`;
+    `px-2 py-1 rounded-full transition-colors ${l === lang ? "bg-[#B8945F] text-[#1E1A15]" : "hover:text-[#B8945F]"}`;
   return (
-    <div className={`inline-flex items-center gap-0.5 text-[11px] font-semibold tracking-[0.12em] ${className}`} role="group" aria-label="Language / Idioma">
+    <div className={`inline-flex items-center gap-0.5 text-xs font-semibold tracking-[0.12em] ${className}`} role="group" aria-label="Language / Idioma">
       <button type="button" onClick={() => pick("es")} className={btn("es")} aria-pressed={lang === "es"}>ES</button>
       <span className="opacity-40">|</span>
       <button type="button" onClick={() => pick("en")} className={btn("en")} aria-pressed={lang === "en"}>EN</button>

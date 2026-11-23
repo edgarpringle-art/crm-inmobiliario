@@ -77,67 +77,76 @@ export default function Listing({ properties, initial, basePath, lang = "es" }: 
 
   const hasFilters = f.op || f.type || f.prov || f.dist || f.zone || f.q || f.beds || f.maxPrice;
   const field = "w-full appearance-none bg-white border border-[#E4D9C6] text-[#1E1A15] text-sm rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#B8945F] transition-colors";
+  // On phones the dropdowns fold behind "Más filtros" so listings show above the fold.
+  const [moreOpen, setMoreOpen] = useState(false);
+  const activeSelects = [f.type, f.maxPrice, f.prov, f.dist, f.zone, f.beds].filter(Boolean).length;
+  const sel = `relative ${moreOpen ? "" : "hidden sm:block"}`;
 
   return (
     <section className="px-4 sm:px-6 pb-20">
       <div className="max-w-7xl mx-auto">
         {/* Filters */}
         <div className="-mt-6 relative z-10 bg-white rounded-2xl border border-[#E9E0D0] shadow-[0_20px_40px_-28px_rgba(30,26,21,0.45)] p-4 sm:p-5">
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 mb-4">
             {[{ v: "", l: t.search.all }, { v: "VENTA", l: t.search.buy }, { v: "ALQUILER", l: t.search.rent }].map((o) => (
-              <button key={o.v} onClick={() => set("op", o.v)}
-                className={`px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] rounded-full border transition-all ${
+              <button key={o.v} onClick={() => set("op", o.v)} aria-pressed={f.op === o.v}
+                className={`px-2 sm:px-5 py-2.5 sm:py-2 cursor-pointer text-xs font-semibold uppercase tracking-[0.1em] sm:tracking-[0.15em] rounded-full border transition-all ${
                   f.op === o.v ? "bg-[#1E1A15] text-white border-[#1E1A15]" : "border-[#E4D9C6] text-[#6B6155] hover:border-[#B8945F] hover:text-[#1E1A15]"
                 }`}>
                 {o.l}
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-            <div className="col-span-2 relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <div className="sm:col-span-2 relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9C9182] pointer-events-none"><IconSearch className="w-4 h-4" /></span>
               <input value={f.q} onChange={(e) => set("q", e.target.value)} placeholder={t.listing.searchPh} className={`${field} pl-9`} />
             </div>
-            <div className="relative">
+            <div className={sel}>
               <select value={f.type} onChange={(e) => set("type", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
                 {PROPERTY_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.value ? t.types[o.value] : t.allTypes}</option>)}
               </select>
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
             </div>
-            <div className="relative">
+            <div className={sel}>
               <select value={f.maxPrice} onChange={(e) => set("maxPrice", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
                 <option value="">{t.listing.noLimit}</option>
                 {PRICE_STEPS.map((v) => <option key={v} value={v}>{t.listing.upTo(`$${Number(v).toLocaleString("en-US")}`)}</option>)}
               </select>
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
             </div>
-            <div className="relative">
+            <div className={sel}>
               <select value={f.prov} onChange={(e) => set("prov", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
                 <option value="">{t.search.allProvinces}</option>
                 {places.map((o) => <option key={o.name} value={o.name}>{o.name} ({o.count})</option>)}
               </select>
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
             </div>
-            <div className="relative">
+            <div className={sel}>
               <select value={f.dist} onChange={(e) => set("dist", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
                 <option value="">{t.search.allDistricts}</option>
                 {districts.map((o) => <option key={o.name} value={o.name}>{o.name} ({o.count})</option>)}
               </select>
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
             </div>
-            <div className="relative">
+            <div className={sel}>
 <ZoneSelect lang={lang} groups={zoneGroups} value={f.zone} onChange={(v) => set("zone", v)} className={`${field} pr-9 cursor-pointer`} />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
             </div>
-            <div className="relative">
+            <div className={sel}>
               <select value={f.beds} onChange={(e) => set("beds", e.target.value)} className={`${field} pr-9 cursor-pointer`}>
                 <option value="">{t.listing.beds}</option>
                 {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{t.listing.bedsN(n)}</option>)}
               </select>
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C9182]"><IconChevron /></span>
             </div>
-
           </div>
+          <button type="button" onClick={() => setMoreOpen((o) => !o)} aria-expanded={moreOpen}
+            className="sm:hidden mt-3 w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold uppercase tracking-[0.15em] text-[#8A6A3A] cursor-pointer">
+            {moreOpen ? t.listing.lessFilters : t.listing.moreFilters}
+            {!moreOpen && activeSelects > 0 && <span className="min-w-5 h-5 px-1.5 rounded-full bg-[#1E1A15] text-white text-xs flex items-center justify-center">{activeSelects}</span>}
+            <span className={`inline-flex transition-transform duration-200 ${moreOpen ? "rotate-180" : ""}`}><IconChevron /></span>
+          </button>
         </div>
 
         <div className="flex items-center justify-between mt-8 mb-6">
@@ -158,7 +167,7 @@ export default function Listing({ properties, initial, basePath, lang = "es" }: 
             <p className="text-lg mb-1" style={SERIF}>{t.listing.emptyTitle}</p>
             <p className="text-sm text-[#6B6155] mb-5">{t.listing.emptyText}</p>
             <a href={waLink(t.listing.emptyWaMsg)} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#1E1A15] hover:bg-[#B8945F] text-white font-semibold px-6 py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors">
+              className="inline-flex items-center gap-2 bg-[#1E1A15] hover:bg-[#8A6A3A] text-white font-semibold px-6 py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors">
               <IconWA /> {t.listing.emptyWa}
             </a>
           </div>

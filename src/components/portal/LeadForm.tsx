@@ -51,7 +51,7 @@ export default function LeadForm({ propertyId, waHref, title, cta, lang = "es" }
 
   return (
     <form onSubmit={submit} className="relative bg-white border border-[#E9E0D0] rounded-2xl p-6 space-y-3 shadow-[0_10px_30px_-18px_rgba(30,26,21,0.25)]">
-      <p className="text-[11px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-1">{title || t.title}</p>
+      <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-1">{title || t.title}</p>
       <input className={input} placeholder={t.name} value={form.name} onChange={set("name")} maxLength={100} autoComplete="name" />
       <input className={input} placeholder={t.phone} value={form.phone} onChange={set("phone")} maxLength={30} type="tel" autoComplete="tel" />
       <input className={input} placeholder={t.email} value={form.email} onChange={set("email")} maxLength={150} type="email" autoComplete="email" />
@@ -61,10 +61,10 @@ export default function LeadForm({ propertyId, waHref, title, cta, lang = "es" }
         className="absolute -left-[9999px] w-px h-px opacity-0" aria-hidden="true" />
       {state === "error" && <p className="text-xs text-red-600">{error}</p>}
       <button type="submit" disabled={state === "sending"}
-        className="w-full bg-[#1E1A15] hover:bg-[#B8945F] text-white font-semibold py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors disabled:opacity-60 cursor-pointer">
+        className="w-full bg-[#1E1A15] hover:bg-[#8A6A3A] text-white font-semibold py-3 rounded-full text-xs uppercase tracking-[0.15em] transition-colors disabled:opacity-60 cursor-pointer">
         {state === "sending" ? t.sending : cta || t.cta}
       </button>
-      <p className="text-[11px] text-[#9C9182] leading-snug">{t.privacy}</p>
+      <p className="text-xs text-[#9C9182] leading-snug">{t.privacy}</p>
     </form>
   );
 }

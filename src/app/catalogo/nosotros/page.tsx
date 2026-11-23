@@ -125,7 +125,7 @@ export default async function NosotrosPage() {
                   </div>
                   <div className="p-5">
                     <p className="text-lg" style={SERIF}>{m.name}</p>
-                    <p className="text-[11px] uppercase tracking-[0.2em] text-[#8A6A3A] mt-1">{m.role}</p>
+                    <p className="text-xs uppercase tracking-[0.2em] text-[#8A6A3A] mt-1">{m.role}</p>
                     {m.detail && <p className="text-xs text-[#6B6155] mt-1">{m.detail}</p>}
                     {m.phone && (
                       <a href={`https://wa.me/${m.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"

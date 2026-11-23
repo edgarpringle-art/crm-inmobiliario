@@ -8,7 +8,7 @@ const lcFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
 const es = {
   nav: { home: "Inicio", properties: "Propiedades", projects: "Proyectos Nuevos", services: "Servicios", about: "Nosotros", wanted: "Buscamos", sell: "Vender", guides: "Guías", contact: "Contacto" },
-  header: { license: "Licencia", menu: "Menú", home: "PanamaInmo — Inicio", waMsg: "Hola PanamaInmo, me interesa una propiedad." },
+  header: { license: "Licencia", menu: "Menú", skip: "Saltar al contenido", home: "PanamaInmo — Inicio", waMsg: "Hola PanamaInmo, me interesa una propiedad." },
   footer: {
     tagline: "Real Estate & Legal Advisory en Panamá. Compra, venta, alquiler y asesoría legal inmobiliaria con transparencia y respaldo profesional.",
     license: "Licencia", explore: "Explorar", all: "Todas las propiedades", sale: "En venta", rent: "En alquiler",
@@ -74,7 +74,7 @@ const es = {
     heroEyebrow: "Catálogo", heroTitle: "Propiedades disponibles",
     heroSub: "Filtra por operación, tipo, zona y habitaciones. Todas con información verificada.",
     searchPh: "Buscar...", beds: "Habitaciones", bedsN: (n: number) => `${n}+ hab`,
-    noLimit: "Sin límite", upTo: (v: string) => `Hasta ${v}`,
+    noLimit: "Sin límite", moreFilters: "Más filtros", lessFilters: "Menos filtros", upTo: (v: string) => `Hasta ${v}`,
     results: (n: number): string => (n === 1 ? "propiedad" : "propiedades"), clear: "Limpiar filtros",
     emptyTitle: "Sin resultados", emptyText: "Cuéntanos qué buscas y te avisamos cuando tengamos opciones.",
     emptyWa: "Consultar disponibilidad", emptyWaMsg: "Hola PanamaInmo, busco una propiedad en Panamá.",
@@ -286,7 +286,7 @@ const es = {
 
 const en: typeof es = {
   nav: { home: "Home", properties: "Properties", projects: "New Developments", services: "Services", about: "About us", wanted: "Wanted", sell: "Sell", guides: "Guides", contact: "Contact" },
-  header: { license: "License", menu: "Menu", home: "PanamaInmo — Home", waMsg: "Hi PanamaInmo, I'm interested in a property." },
+  header: { license: "License", menu: "Menu", skip: "Skip to content", home: "PanamaInmo — Home", waMsg: "Hi PanamaInmo, I'm interested in a property." },
   footer: {
     tagline: "Real Estate & Legal Advisory in Panama. Buying, selling, renting and real estate legal advice with transparency and professional support.",
     license: "License", explore: "Explore", all: "All properties", sale: "For sale", rent: "For rent",
@@ -352,7 +352,7 @@ const en: typeof es = {
     heroEyebrow: "Listings", heroTitle: "Available properties",
     heroSub: "Filter by operation, type, area and bedrooms. All with verified information.",
     searchPh: "Search...", beds: "Bedrooms", bedsN: (n: number) => `${n}+ bd`,
-    noLimit: "Any price", upTo: (v: string) => `Up to ${v}`,
+    noLimit: "Any price", moreFilters: "More filters", lessFilters: "Fewer filters", upTo: (v: string) => `Up to ${v}`,
     results: (n: number) => (n === 1 ? "property" : "properties"), clear: "Clear filters",
     emptyTitle: "No results", emptyText: "Tell us what you're looking for and we'll let you know when we have options.",
     emptyWa: "Ask about availability", emptyWaMsg: "Hi PanamaInmo, I'm looking for a property in Panama.",

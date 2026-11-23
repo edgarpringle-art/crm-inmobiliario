@@ -19,7 +19,7 @@ export default function MortgageCalc({ price, lang = "es" }: { price: number; la
   const slider = "w-full accent-[#B8945F]";
   return (
     <div data-reveal className="bg-white border border-[#E9E0D0] rounded-2xl p-6">
-      <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-1">{t.eyebrow}</p>
+      <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-1">{t.eyebrow}</p>
       <p className="text-xl text-[#1E1A15] mb-5" style={{ fontFamily: "'Cinzel', serif" }}>{t.title}</p>
       <div className="grid sm:grid-cols-2 gap-6">
         <div className="space-y-5">
@@ -37,7 +37,7 @@ export default function MortgageCalc({ price, lang = "es" }: { price: number; la
           </label>
         </div>
         <div className="rounded-2xl bg-[#1E1A15] text-white p-6 flex flex-col justify-center">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-[#D9BE8F] mb-2">{t.monthly}</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-[#D9BE8F] mb-2">{t.monthly}</p>
           <p className="text-4xl text-[#D9BE8F]" style={{ fontFamily: "'Cinzel', serif" }}>{money(monthly)}</p>
           <div className="mt-4 pt-4 border-t border-white/10 space-y-1 text-xs text-[#CFC4B2]">
             <p className="flex justify-between"><span>{t.loan}</span><span>{money(loan)}</span></p>
@@ -45,7 +45,7 @@ export default function MortgageCalc({ price, lang = "es" }: { price: number; la
           </div>
         </div>
       </div>
-      <p className="text-[11px] text-[#9C9182] mt-4">{t.note}</p>
+      <p className="text-xs text-[#9C9182] mt-4">{t.note}</p>
     </div>
   );
 }

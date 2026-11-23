@@ -65,7 +65,7 @@ export default async function BuscamosPage() {
               <p className="text-xl mb-2" style={SERIF}>{t.empty}</p>
               <p className="text-sm text-[#6B6155] mb-6">{t.emptySub}</p>
               <Link href={portalHref("/contacto", portal, lang)}
-                className="inline-flex bg-[#1E1A15] hover:bg-[#B8945F] text-white px-6 py-3 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors">
+                className="inline-flex bg-[#1E1A15] hover:bg-[#8A6A3A] text-white px-6 py-3 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors">
                 {t.emptyCta}
               </Link>
             </div>
@@ -80,8 +80,8 @@ export default async function BuscamosPage() {
                   return (
                     <article key={s.code} className="bg-white rounded-2xl border border-[#E9E0D0] p-5 flex flex-col gap-3">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="px-2.5 py-1 rounded-full bg-[#F3ECDF] text-[#8A6A3A] text-[11px] font-semibold uppercase tracking-[0.12em]">{t.op[s.op] || s.op}</span>
-                        <span className="text-[11px] text-[#9C9182] tracking-wider">{s.code}</span>
+                        <span className="px-2.5 py-1 rounded-full bg-[#F3ECDF] text-[#8A6A3A] text-xs font-semibold uppercase tracking-[0.12em]">{t.op[s.op] || s.op}</span>
+                        <span className="text-xs text-[#9C9182] tracking-wider">{s.code}</span>
                       </div>
                       <div>
                         <h2 className="text-lg leading-snug" style={SERIF}>{typeOf(s)}</h2>
@@ -93,9 +93,9 @@ export default async function BuscamosPage() {
                           {specs && <p className="text-[#6B6155]">{specs}</p>}
                         </div>
                       )}
-                      {s.publishedAt && <p className="text-[11px] text-[#9C9182]">{t.published(dateOf(s.publishedAt)!)}</p>}
+                      {s.publishedAt && <p className="text-xs text-[#9C9182]">{t.published(dateOf(s.publishedAt)!)}</p>}
                       <a href={waLink(t.waMsg(s.code, what))} data-wa-direct target="_blank" rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white py-2.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.15em] transition-colors">
+                        className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1EBE5A] text-white py-2.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors">
                         <IconWA /> {t.wa}
                       </a>
                       <OfferForm code={s.code} lang={lang} />

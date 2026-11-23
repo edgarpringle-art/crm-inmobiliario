@@ -9,7 +9,7 @@ export default function PageHero({ eyebrow, title, subtitle, image }: { eyebrow:
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="flex items-center gap-3 mb-4 pi-enter">
           <span className="h-px w-10 bg-[#D9BE8F]" />
-          <p className="text-[#D9BE8F] text-[11px] font-semibold uppercase tracking-[0.35em]">{eyebrow}</p>
+          <p className="text-[#D9BE8F] text-xs font-semibold uppercase tracking-[0.35em]">{eyebrow}</p>
         </div>
         <h1 className="text-4xl sm:text-5xl text-white font-medium max-w-3xl leading-tight pi-enter" style={{ ...SERIF, animationDelay: "120ms" }}>{title}</h1>
         {subtitle && <p className="text-[#E6DCCB] mt-4 max-w-2xl text-sm sm:text-lg leading-relaxed pi-enter" style={{ animationDelay: "240ms" }}>{subtitle}</p>}

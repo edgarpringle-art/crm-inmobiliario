@@ -37,7 +37,7 @@ export default function OfferForm({ code, lang }: { code: string; lang: Lang }) 
   if (!open) {
     return (
       <button onClick={() => setOpen(true)}
-        className="w-full border border-[#E4D9C6] hover:border-[#B8945F] text-[#1E1A15] py-2.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.15em] transition-colors cursor-pointer">
+        className="w-full border border-[#E4D9C6] hover:border-[#B8945F] text-[#1E1A15] py-2.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors cursor-pointer">
         {t.form}
       </button>
     );
@@ -58,7 +58,7 @@ export default function OfferForm({ code, lang }: { code: string; lang: Lang }) 
         className="absolute -left-[9999px] w-px h-px opacity-0" aria-hidden="true" />
       {state === "error" && <p className="text-xs text-red-600">{error}</p>}
       <button type="submit" disabled={state === "sending"}
-        className="w-full bg-[#1E1A15] hover:bg-[#B8945F] text-white py-2.5 rounded-full text-[11px] font-semibold uppercase tracking-[0.15em] transition-colors disabled:opacity-60 cursor-pointer">
+        className="w-full bg-[#1E1A15] hover:bg-[#8A6A3A] text-white py-2.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors disabled:opacity-60 cursor-pointer">
         {state === "sending" ? t.f.sending : t.f.send}
       </button>
     </form>

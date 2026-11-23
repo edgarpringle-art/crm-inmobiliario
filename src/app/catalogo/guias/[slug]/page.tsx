@@ -48,7 +48,7 @@ export default async function GuiaPage({ params }: { params: Params }) {
         <Link href={h("/guias")} className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6155] hover:text-[#1E1A15] uppercase tracking-[0.15em]">
           <IconBack /> {t.back}
         </Link>
-        <p className="mt-8 text-[11px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] pi-enter">{t.heroEyebrow} · {t.minutes(g.minutes)}</p>
+        <p className="mt-8 text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] pi-enter">{t.heroEyebrow} · {t.minutes(g.minutes)}</p>
         <h1 className="mt-3 text-3xl sm:text-4xl leading-tight pi-enter" style={{ ...SERIF, animationDelay: "120ms" }}>{x.title}</h1>
         <p className="mt-4 text-lg text-[#6B6155] leading-relaxed pi-enter" style={{ animationDelay: "240ms" }}>{x.summary}</p>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -85,7 +85,7 @@ export default async function GuiaPage({ params }: { params: Params }) {
       </article>
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
-        <p className="text-[11px] font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-5">{t.related}</p>
+        <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.3em] mb-5">{t.related}</p>
         <div className="grid sm:grid-cols-3 gap-4">
           {others.map((o) => (
             <Link key={o.slug} href={h(`/guias/${o.slug}`)} data-reveal

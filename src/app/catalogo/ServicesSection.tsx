@@ -19,7 +19,7 @@ export default function ServicesSection({ href, lang = "es" }: { href: string; l
             <SectionTitle dark align="left" eyebrow={t.eyebrow} title={t.title} />
             <p className="text-[#CFC4B2] mt-5 leading-relaxed">{t.text}</p>
           </div>
-          <Link href={href} className="relative mt-8 inline-flex items-center gap-2 self-start bg-[#B8945F] hover:bg-[#A4824F] text-white px-6 py-3 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors pi-shine">
+          <Link href={href} className="relative mt-8 inline-flex items-center gap-2 self-start bg-[#B8945F] hover:bg-[#A4824F] text-[#1E1A15] px-6 py-3 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-colors pi-shine">
             {t.cta} <IconArrow />
           </Link>
           {/* eslint-disable-next-line @next/next/no-img-element */}

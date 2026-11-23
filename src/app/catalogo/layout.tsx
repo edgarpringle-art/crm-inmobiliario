@@ -28,7 +28,7 @@ export default function CatalogoLayout({ children }: { children: React.ReactNode
         rel="stylesheet"
       />
       <script dangerouslySetInnerHTML={{ __html: MOTION_BOOT }} />
-      {children}
+      <div className="pi-site">{children}</div>
       <ScrollReveal />
       <WaGate />
       <WebTracker />

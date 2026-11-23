@@ -9,7 +9,7 @@ export default function SectionTitle({
     <div data-reveal className={center ? "text-center" : ""}>
       <div className={`flex items-center gap-3 mb-3 ${center ? "justify-center" : ""}`}>
         <span className="pi-line pi-line-l h-px w-8 bg-[#B8945F]" />
-        <p className={`text-[11px] font-semibold uppercase tracking-[0.35em] ${dark ? "text-[#D9BE8F]" : "text-[#8A6A3A]"}`}>{eyebrow}</p>
+        <p className={`text-xs font-semibold uppercase tracking-[0.35em] ${dark ? "text-[#D9BE8F]" : "text-[#7A5D32]"}`}>{eyebrow}</p>
         {center && <span className="pi-line pi-line-r h-px w-8 bg-[#B8945F]" />}
       </div>
       <h2 className={`text-3xl sm:text-4xl font-medium leading-tight ${dark ? "text-white" : "text-[#1E1A15]"}`} style={SERIF}>{title}</h2>

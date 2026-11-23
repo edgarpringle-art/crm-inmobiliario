@@ -37,7 +37,7 @@ export default async function GuiasPage() {
                   <img src={g.img} alt="" loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
                 <div className="p-6 flex flex-col flex-1">
-                  <p className="text-[10px] font-semibold text-[#8A6A3A] uppercase tracking-[0.2em] mb-2">{t.minutes(g.minutes)}</p>
+                  <p className="text-xs font-semibold text-[#8A6A3A] uppercase tracking-[0.2em] mb-2">{t.minutes(g.minutes)}</p>
                   <h2 className="text-lg leading-snug mb-2 group-hover:text-[#8A6A3A] transition-colors" style={SERIF}>{x.title}</h2>
                   <p className="text-sm text-[#6B6155] leading-relaxed flex-1">{x.summary}</p>
                   <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#1E1A15]">

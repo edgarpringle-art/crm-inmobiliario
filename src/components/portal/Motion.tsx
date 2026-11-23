@@ -14,11 +14,11 @@ export function ScrollReveal() {
       for (const e of entries) {
         if (!e.isIntersecting) continue;
         const el = e.target as HTMLElement;
-        if (!el.style.transitionDelay) el.style.transitionDelay = `${Math.min(n++, 5) * 90}ms`;
+        if (!el.style.transitionDelay) el.style.transitionDelay = `${Math.min(n++, 5) * 60}ms`;
         el.classList.add("is-in");
         io.unobserve(el);
       }
-    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    }, { rootMargin: "0px 0px 10% 0px", threshold: 0.01 });
     const scan = () => document.querySelectorAll("[data-reveal]:not(.is-in)").forEach((el) => io.observe(el));
     scan();
     const mo = new MutationObserver(scan);
