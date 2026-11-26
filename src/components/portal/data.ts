@@ -104,3 +104,16 @@ export async function getPublicProperty(id: string, lang: Lang = "es"): Promise<
   const rows = await query<Record<string, unknown>>("SELECT * FROM Property WHERE id = ?", [id]).catch(() => []);
   return rows[0] || null;
 }
+
+/**
+ * Category of an MLS listing that is no longer available (sold / pulled from ACOBIR).
+ * Used to 301-redirect its dead /p/ URL to the matching search page instead of serving a 404.
+ */
+export async function getMlsCategory(id: string): Promise<{ operationType: string; propertyType: string } | null> {
+  if (!/^mls\d+$/.test(id)) return null;
+  const rows = await ensureMlsTable()
+    .then(() => query<Record<string, unknown>>("SELECT operationType, propertyType FROM MlsListing WHERE id = ?", [id]))
+    .catch(() => []);
+  const m = rows[0];
+  return m ? { operationType: String(m.operationType), propertyType: String(m.propertyType) } : null;
+}

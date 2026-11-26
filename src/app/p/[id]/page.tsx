@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { query } from "@/lib/db";
 import { formatCurrency } from "@/lib/constants";
 import type { Metadata } from "next";
@@ -13,7 +13,7 @@ import { optimizePhoto, youtubeEmbedUrl } from "@/lib/publicProperty";
 import { BROKER, portalHref } from "@/components/portal/brand";
 import { getLang } from "@/components/portal/portalHost";
 import { tr } from "@/components/portal/i18n";
-import { getAvailableProperties, getPublicProperty } from "@/components/portal/data";
+import { getAvailableProperties, getMlsCategory, getPublicProperty } from "@/components/portal/data";
 import { fmtRange, parseUnitModels } from "@/lib/unitModels";
 import { SITE_URL, TYPES, collectLandings, isNamedPH, landingPath, pageAlternates, slugify, type OpSlug } from "@/components/portal/seo";
 
@@ -75,14 +75,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   // MLS listings (ids like "mls26108") are syndicated duplicates, so they stay noindex — except those that
   // name their PH ("PH Solok"): Search Console showed those ranking top-10 for the building's name (2026-11-23).
   const noIndex = /^mls\d+$/.test(id) && !isNamedPH(p.title);
-  // Search snippet: title + price (+ place if it still fits) so the result shows what people compare first.
+  // Search snippet: title + operation + price (+ place if it still fits). GSC showed PH pages
+  // ranking top-10 with 0% CTR — the result must state what it is, for sale/rent and the price.
   let seoTitle = p.title;
-  for (const part of [price, loc && !(p.sector && p.title.toLowerCase().includes(p.sector.toLowerCase())) ? loc : ""]) {
+  const titleHasOp = /venta|alquiler|vende|alquila|rent|sale/i.test(p.title);
+  const opPart = titleHasOp ? "" : op;
+  const placePart = loc && !(p.sector && p.title.toLowerCase().includes(p.sector.toLowerCase())) ? loc : "";
+  for (const part of [opPart, price, placePart]) {
     const clean = part ? part.replace(/\.00\b/g, "") : "";
-    if (clean && `${seoTitle} · ${clean}`.length <= 68) seoTitle += ` · ${clean}`;
+    if (clean && `${seoTitle} · ${clean}`.length <= 65) seoTitle += ` · ${clean}`;
   }
+  // Keep the brand only when it still fits a ~60-char title Google won't truncate.
+  const title = seoTitle.length <= 48 ? `${seoTitle} | PanamaInmo` : seoTitle;
   return {
-    title: `${seoTitle} | PanamaInmo`,
+    title,
     description,
     alternates: pageAlternates(`/p/${p.id}`, lang),
     robots: noIndex ? { index: false, follow: true } : undefined,
@@ -115,7 +121,16 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
   const lang = await getLang();
   const t = tr(lang);
   const p = (await getPublicProperty(id, lang)) as unknown as Property | null;
-  if (!p) notFound();
+  if (!p) {
+    // Sold / pulled MLS listing: 301 to its category instead of a dead 404 (keeps the SEO signal).
+    const cat = await getMlsCategory(id);
+    if (cat) {
+      const op = cat.operationType === "ALQUILER" ? "alquiler" : "venta";
+      const tslug = typeSlugOf(cat.propertyType);
+      permanentRedirect(portalHref(`/${op}${tslug ? `/${tslug}` : ""}`, portal, lang));
+    }
+    notFound();
+  }
 
   // Agente que publicó la propiedad (createdBy = nombre completo del agente)
   let publisher: PublisherAgent | null = null;
@@ -173,14 +188,16 @@ export default async function PublicPropertyPage({ params }: { params: Promise<{
       "@context": "https://schema.org", "@type": "RealEstateListing",
       name: p.title, url: `${SITE_URL}/p/${p.id}`,
       description: (p.description || "").slice(0, 500) || undefined,
-      image: photos.slice(0, 6),
-      offers: {
+      // Only emit fields when present: an Offer with no price or an empty image array
+      // triggers Search Console structured-data errors.
+      image: photos.length ? photos.slice(0, 6) : undefined,
+      offers: (p.salePrice ?? p.rentPrice) != null ? {
         "@type": "Offer",
-        price: p.salePrice ?? p.rentPrice ?? undefined,
+        price: p.salePrice ?? p.rentPrice,
         priceCurrency: p.currency || "USD",
         availability: "https://schema.org/InStock",
         businessFunction: p.salePrice != null ? "http://purl.org/goodrelations/v1#Sell" : "http://purl.org/goodrelations/v1#LeaseOut",
-      },
+      } : undefined,
       about: {
         "@type": p.propertyType === "CASA" || p.propertyType === "VILLA" ? "SingleFamilyResidence" : p.propertyType === "APARTAMENTO" || p.propertyType === "PENTHOUSE" ? "Apartment" : "Place",
         address: { "@type": "PostalAddress", addressLocality: p.sector || p.city || undefined, addressRegion: p.state || undefined, addressCountry: "PA" },
